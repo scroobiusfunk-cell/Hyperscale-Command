@@ -7,7 +7,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # write is needed only for the "Publish APK to a branch" step below, which
+  # force-pushes the built APK to a single-file orphan branch so it can be
+  # fetched over git. Delete that step and this drops back to read.
+  contents: write
 
 jobs:
   build:
@@ -54,6 +57,27 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 90
+
+      # The Actions artifact lives on a blob host that is not reachable from every
+      # environment. Force-pushing the APK to a throwaway single-file branch makes it
+      # retrievable over plain git as well. The branch keeps no history.
+      - name: Publish APK to the apk-latest branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          apk=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          staging=$(mktemp -d)
+          cp "$apk" "$staging/hyperscale-debug.apk"
+          cd "$staging"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -b apk-latest
+          git add hyperscale-debug.apk
+          git commit -q -m "Debug APK built from ${GITHUB_SHA}"
+          git push -q --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" apk-latest
 
       - name: Upload test and lint reports on failure
         if: failure()
