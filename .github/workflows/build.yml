@@ -33,11 +33,12 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --stacktrace
-
-      - name: Assemble debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      # One invocation: a second cold Gradle start on a 2-core runner costs minutes.
+      # --no-daemon keeps a single JVM alive for the build rather than leaving a
+      # daemon competing for RAM with the Kotlin compile daemon.
+      - name: Build and test
+        run: ./gradlew testDebugUnitTest assembleDebug --no-daemon --stacktrace
+        timeout-minutes: 45
 
       - name: Report APK details
         run: |
