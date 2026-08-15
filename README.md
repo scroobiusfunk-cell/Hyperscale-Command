@@ -89,7 +89,14 @@ Material You dynamic colour is on. The Discover screen's radar is informative ra
 decorative: ring distance encodes signal strength, and devices with no radio reading sit on the
 outer ring rather than being given an invented position.
 
-## Building
+## Getting the APK
+
+Every push builds a signed debug APK in CI and attaches it to the run. Open the
+[Actions tab](../../actions/workflows/build.yml), pick the latest green run, and download the
+`hyperscale-debug-apk` artifact from the bottom of the page. It is a debug build, so it is signed
+with the standard debug key and sideloads onto a phone directly with no signing setup.
+
+## Building locally
 
 ```bash
 ./gradlew assembleDebug      # build
