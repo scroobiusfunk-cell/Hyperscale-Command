@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+      Local smart-home hardware (Homey Pro, Shelly, ESPHome, Hue, Tuya, Sonos, …) almost
+      universally serves plain HTTP on the LAN and presents self-signed certs when it does
+      offer TLS. Cleartext must therefore be permitted for the app to function at all.
+      Traffic to the public internet still uses HTTPS via OkHttp's default configuration.
+    -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

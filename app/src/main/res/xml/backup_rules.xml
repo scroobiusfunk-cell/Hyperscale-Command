@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="sharedpref" path="." />
+    <!-- The Homey Personal Access Token is a credential; never leaves the device. -->
+    <exclude domain="sharedpref" path="hyperscale_secure.xml" />
+</full-backup-content>
