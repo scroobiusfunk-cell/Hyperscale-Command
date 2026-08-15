@@ -11,3 +11,6 @@
 local.properties
 *.keystore
 !debug.keystore
+
+# The Gradle wrapper jar is intentionally committed so CI and fresh clones can build.
+!gradle/wrapper/gradle-wrapper.jar
