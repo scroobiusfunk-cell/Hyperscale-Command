@@ -317,3 +317,48 @@ is cleared here, and the cost of a wrong value is queue volume rather than a
 wrongly passed inspection. The number to watch once the pilot has real data is
 what fraction of queue entries a person resolves by simply agreeing with the
 reconciler's top candidate; if that is most of them, the threshold is too tight.
+
+---
+
+## Q13 — Where does a referenced standard sit in the precedence order?
+
+**Status:** open · raised 2026-09-17 · blocks: nothing; the resolver surfaces these
+
+`ARCHITECTURE.md` gives the order as contract documents over approved submittal
+over manufacturer IOM, with approved deviations and RFI responses as the two
+exceptions. It lists `standard` as a document type but never says where a
+referenced standard ranks against the others.
+
+**Position taken:** a standard is ranked last, but a standard that disagrees with
+a higher-ranked document is surfaced as a conflict rather than silently losing.
+The reasoning is that a standard is usually incorporated *by* the contract rather
+than competing with it, so "loses quietly" is the wrong default: if the spec and
+the standard it cites disagree, somebody needs to know.
+
+**Cost if this is wrong:** curation load. Every spec-versus-standard disagreement
+lands in front of a person. If that turns out to be constant noise on a real
+document set, the fix is to rank standards properly rather than to stop
+surfacing them.
+
+---
+
+## Q14 — Safety conflicts are always surfaced, which raises curation cost
+
+**Status:** open · raised 2026-09-17 · implemented, worth challenging
+
+The precedence resolver refuses to resolve *any* group of competing requirements
+where at least one is `criticality: safety`, even when the document hierarchy
+gives a clear answer. A qualified person picks.
+
+This is a judgment call, not something the architecture doc states. The argument
+for it: the doc already requires every safety requirement to be human-approved
+before it goes live, so these conflicts reach a person regardless; having the
+resolver pick a winner first would only mean the person reviews a decision
+already made, which is how a rubber stamp starts.
+
+The argument against: it inflates the curation queue on a document set with many
+safety requirements, and curation time is the cost the doc tells us to budget
+honestly. If the pilot shows this is the bulk of the queue, the narrower rule is
+to surface only where the *losing* candidate is safety.
+
+Worth revisiting once there is a real spec section to measure against.
