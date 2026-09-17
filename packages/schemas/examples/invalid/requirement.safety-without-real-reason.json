@@ -1,0 +1,35 @@
+{
+  "_why_invalid": "criticality is safety but why_it_matters is a stub. A safety rule nobody explained cannot be curated or defended later.",
+  "_expect": "why_it_matters",
+  "id": "4f1c9a2e-8b3d-4c6a-9e51-0d7b2f8a1c34",
+  "applies_to": {
+    "equipment_class": [
+      "switchboard"
+    ],
+    "system": null,
+    "location_type": null
+  },
+  "statement": "Arc flash label fitted.",
+  "verification_method": "visual",
+  "evidence_spec": [
+    {
+      "capture_recipe_id": "9c2f7b10-4e88-4a15-b3d2-6f0a9e4c7b21",
+      "version": "1.2.0"
+    }
+  ],
+  "pass_criteria": {
+    "kind": "presence",
+    "expected": "present",
+    "subject": "arc flash label"
+  },
+  "criticality": "safety",
+  "source": {
+    "doc_id": "1a8e4d70-5c92-4f31-8b6a-2e9d0c7f5a13",
+    "clause": "26 05 00",
+    "page": 14
+  },
+  "precedence_rank": 0,
+  "why_it_matters": "Safety.",
+  "status": "approved",
+  "ruleset_version": "1.0.0"
+}

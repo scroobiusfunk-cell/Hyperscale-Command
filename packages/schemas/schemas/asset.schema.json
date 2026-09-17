@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.fieldinspectionengine.dev/asset.schema.json",
+  "title": "Asset",
+  "description": "One piece of physical equipment. Field names are taken verbatim from docs/ARCHITECTURE.md section 2.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "tag": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+      "description": "Canonical tag after normalization."
+    },
+    "aliases": {
+      "description": "Every tag variant seen across sources. The raw form is kept, not the normalized one, so the reconciler can be re-run and audited against what each source actually said.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/alias"
+      },
+      "uniqueItems": true
+    },
+    "equipment_class": {
+      "$ref": "common/definitions.schema.json#/$defs/equipment_class"
+    },
+    "system": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+      "description": "e.g. normal power, UPS output, chilled water."
+    },
+    "location": {
+      "$ref": "common/definitions.schema.json#/$defs/location"
+    },
+    "parent_asset": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Feeds-from or houses relationship."
+    },
+    "cxalloy_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Identity in the system of record. Null means this asset was found in the field or on a drawing and has no CxAlloy counterpart yet, which is a reconciliation problem, not a normal state."
+    },
+    "submittal_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common/definitions.schema.json#/$defs/uuid"
+      },
+      "uniqueItems": true,
+      "description": "Approved submittals governing this asset."
+    },
+    "reconciliation_status": {
+      "type": "string",
+      "enum": [
+        "auto_matched",
+        "human_confirmed",
+        "unresolved"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "tag",
+    "aliases",
+    "equipment_class",
+    "system",
+    "location",
+    "parent_asset",
+    "cxalloy_id",
+    "submittal_ids",
+    "reconciliation_status"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "alias": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "$ref": "common/definitions.schema.json#/$defs/non_empty_string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "cxalloy",
+            "drawing_schedule",
+            "submittal",
+            "nameplate"
+          ],
+          "description": "Listed in the order these sources are trusted for identity."
+        },
+        "first_seen_at": {
+          "$ref": "common/definitions.schema.json#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "value",
+        "source",
+        "first_seen_at"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

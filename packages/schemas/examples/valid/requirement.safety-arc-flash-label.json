@@ -1,0 +1,28 @@
+{
+  "id": "4f1c9a2e-8b3d-4c6a-9e51-0d7b2f8a1c34",
+  "applies_to": {
+    "equipment_class": ["switchboard", "panelboard"],
+    "system": "normal_power",
+    "location_type": "electrical_room"
+  },
+  "statement": "An arc flash warning label is fitted to the front of the enclosure and is readable from standing position.",
+  "verification_method": "visual",
+  "evidence_spec": [
+    { "capture_recipe_id": "9c2f7b10-4e88-4a15-b3d2-6f0a9e4c7b21", "version": "1.2.0" }
+  ],
+  "pass_criteria": {
+    "kind": "presence",
+    "expected": "present",
+    "subject": "arc flash warning label on the enclosure front"
+  },
+  "criticality": "safety",
+  "source": {
+    "doc_id": "1a8e4d70-5c92-4f31-8b6a-2e9d0c7f5a13",
+    "clause": "26 05 00 - 1.7.B",
+    "page": 14
+  },
+  "precedence_rank": 0,
+  "why_it_matters": "Without the label, someone opening this board has no way to know what protective equipment they need, and they can be badly burned.",
+  "status": "approved",
+  "ruleset_version": "1.0.0"
+}

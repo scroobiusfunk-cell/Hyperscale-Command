@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.fieldinspectionengine.dev/grader-result.schema.json",
+  "title": "GraderResult",
+  "description": "The single output contract every grader returns, from docs/ARCHITECTURE.md section 4. Nothing produces one of these in Phase 1. It is defined now so ChecklistItem.grader_result_id has a real referent and the contract is fixed before any grader exists to bend it.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "checklist_item_id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "insufficient_evidence"
+      ],
+      "description": "insufficient_evidence is a first-class verdict, not an error. The failure mode this system is designed against is a grader answering fluently when it should say it cannot tell."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The grader's own estimate, calibrated downstream. Never compared against a hardcoded threshold."
+    },
+    "evidence_used": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence_reference"
+      },
+      "minItems": 1,
+      "description": "Which evidence, and which regions of it, the verdict relied on. A verdict that used no evidence is not a verdict."
+    },
+    "observed_value": {
+      "description": "What was actually read or measured, so a reviewer can check the grader rather than re-checking the photo.",
+      "type": [
+        "object",
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "expected_value": {
+      "description": "From the requirement's pass_criteria, resolved at grading time.",
+      "type": [
+        "object",
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "explanation": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+      "description": "One or two sentences for the tech, in plain language. No jargon.",
+      "maxLength": 500,
+      "type": "string"
+    },
+    "grader_id": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string"
+    },
+    "grader_version": {
+      "$ref": "common/definitions.schema.json#/$defs/semver"
+    },
+    "model_version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The pinned provider model behind this result, or null for a grader with no model. Model providers change behaviour without notice; this is what lets the eval harness notice."
+    },
+    "created_at": {
+      "$ref": "common/definitions.schema.json#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "id",
+    "checklist_item_id",
+    "verdict",
+    "confidence",
+    "evidence_used",
+    "observed_value",
+    "expected_value",
+    "explanation",
+    "grader_id",
+    "grader_version",
+    "model_version",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "$comment": "A grader that cannot tell must not also claim to be sure. Capping confidence on insufficient_evidence keeps a confident non-answer from clearing anything once auto-clear exists.",
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "insufficient_evidence"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "confidence": {
+            "type": "number",
+            "maximum": 0.5
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "evidence_reference": {
+      "type": "object",
+      "properties": {
+        "evidence_id": {
+          "$ref": "common/definitions.schema.json#/$defs/uuid"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "common/definitions.schema.json#/$defs/region"
+          },
+          "description": "Bounding boxes the verdict relied on. Empty means the whole image."
+        }
+      },
+      "required": [
+        "evidence_id",
+        "regions"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

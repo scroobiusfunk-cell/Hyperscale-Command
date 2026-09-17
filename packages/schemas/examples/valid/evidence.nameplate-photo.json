@@ -1,0 +1,28 @@
+{
+  "id": "3c7e9b25-0a48-4b61-8d29-6e1b4a7c5f03",
+  "client_id": "5a1f8d36-7b92-4e05-8c47-3d0a6f2b9e18",
+  "checklist_item_id": "8f3d1a6b-4e70-4c95-a2f8-5b0d9c3e7a24",
+  "capture_recipe_id": "b41d8c60-7e29-4f53-a0c8-5d3f9b2e6a17",
+  "capture_recipe_version": "2.0.1",
+  "step_index": 0,
+  "media_type": "photo",
+  "storage_key": "projects/dc-07/evidence/8f3d1a6b/5a1f8d36.jpg",
+  "content_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "byte_size": 2841177,
+  "mime_type": "image/jpeg",
+  "captured_at": "2026-09-15T10:31:08Z",
+  "received_at": "2026-09-15T15:47:52Z",
+  "captured_by": "c7a25e94-6b31-4d08-8f52-3e9b1a7c0d46",
+  "device_metadata": {
+    "model": "Pixel 8",
+    "os_version": "Android 15",
+    "app_version": "0.1.0"
+  },
+  "gate_results": [
+    { "gate_id": "sharpness_floor", "outcome": "passed", "measured_value": 184.2, "threshold": 120 },
+    { "gate_id": "frame_fill", "outcome": "passed", "measured_value": 0.41, "threshold": 0.3 },
+    { "gate_id": "tech_attestation", "outcome": "passed", "measured_value": true, "threshold": true }
+  ],
+  "retake_of": null,
+  "status": "stored"
+}

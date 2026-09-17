@@ -1,0 +1,16 @@
+{
+  "_why_invalid": "A pass verdict citing no evidence at all. A verdict that used nothing is not a verdict, and a reviewer auditing it would have nothing to look at.",
+  "_expect": "evidence_used",
+  "id": "0b7c4e91-6a23-4f58-9d0e-8c2b5a3f7e16",
+  "checklist_item_id": "8f3d1a6b-4e70-4c95-a2f8-5b0d9c3e7a24",
+  "verdict": "pass",
+  "confidence": 0.99,
+  "evidence_used": [],
+  "observed_value": "SWBD-101",
+  "expected_value": "SWBD-101",
+  "explanation": "The tag matches.",
+  "grader_id": "ocr_compare",
+  "grader_version": "1.0.0",
+  "model_version": null,
+  "created_at": "2026-09-15T15:48:10Z"
+}

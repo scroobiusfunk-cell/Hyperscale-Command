@@ -1,0 +1,30 @@
+{
+  "_why_invalid": "status is approved but evidence_spec is empty, so instantiation would produce checklist items a tech cannot act on.",
+  "_expect": "evidence_spec",
+  "id": "7b3e1f95-2a4c-4d88-91f6-3c5b8e0a7d42",
+  "applies_to": {
+    "equipment_class": [
+      "switchboard"
+    ],
+    "system": null,
+    "location_type": null
+  },
+  "statement": "The nameplate shows the panel tag.",
+  "verification_method": "visual",
+  "evidence_spec": [],
+  "pass_criteria": {
+    "kind": "presence",
+    "expected": "present",
+    "subject": "nameplate"
+  },
+  "criticality": "quality",
+  "source": {
+    "doc_id": "1a8e4d70-5c92-4f31-8b6a-2e9d0c7f5a13",
+    "clause": "26 05 53",
+    "page": 3
+  },
+  "precedence_rank": 1,
+  "why_it_matters": "A mislabelled panel sends the next person to the wrong board.",
+  "status": "approved",
+  "ruleset_version": "1.0.0"
+}

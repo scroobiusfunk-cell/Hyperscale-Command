@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.fieldinspectionengine.dev/requirement.schema.json",
+  "title": "Requirement",
+  "description": "One compiled, human-approved rule from the project's documents. Field names are taken verbatim from docs/ARCHITECTURE.md section 1.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid",
+      "description": "Stable across rule set versions where the requirement is unchanged."
+    },
+    "applies_to": {
+      "description": "What this requirement governs. A ChecklistItem is instantiated for each asset matching all three.",
+      "type": "object",
+      "properties": {
+        "equipment_class": {
+          "type": "array",
+          "items": {
+            "$ref": "common/definitions.schema.json#/$defs/equipment_class"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "system": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. normal_power, ups_output, chilled_water. Null means every system."
+        },
+        "location_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. electrical_room. Null means every location type.",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      },
+      "required": [
+        "equipment_class",
+        "system",
+        "location_type"
+      ],
+      "additionalProperties": false
+    },
+    "statement": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+      "description": "Plain-language requirement as the tech will read it. No jargon."
+    },
+    "verification_method": {
+      "$ref": "common/definitions.schema.json#/$defs/verification_method"
+    },
+    "evidence_spec": {
+      "description": "Which capture recipes produce the evidence needed to judge this. Empty is legal only while status is draft or needs_review; an approved requirement with nothing to capture cannot be walked.",
+      "type": "array",
+      "items": {
+        "$ref": "common/definitions.schema.json#/$defs/capture_recipe_ref"
+      },
+      "uniqueItems": true
+    },
+    "pass_criteria": {
+      "$ref": "#/$defs/pass_criteria"
+    },
+    "criticality": {
+      "$ref": "common/definitions.schema.json#/$defs/criticality"
+    },
+    "source": {
+      "description": "Always shown to tech and reviewer. A requirement that cannot point at its clause is not curatable.",
+      "type": "object",
+      "properties": {
+        "doc_id": {
+          "$ref": "common/definitions.schema.json#/$defs/uuid"
+        },
+        "clause": {
+          "$ref": "common/definitions.schema.json#/$defs/non_empty_string"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "doc_id",
+        "clause",
+        "page"
+      ],
+      "additionalProperties": false
+    },
+    "precedence_rank": {
+      "type": "integer",
+      "description": "From the precedence resolution step. Lower wins. Set by code, never by the extraction model.",
+      "minimum": 0
+    },
+    "why_it_matters": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+      "description": "What fails in service if this is missed. Written or approved by a human, in plain language."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "needs_review",
+        "approved",
+        "retired"
+      ],
+      "description": "Anything the extraction model could not place is needs_review, never a guess."
+    },
+    "ruleset_version": {
+      "$ref": "common/definitions.schema.json#/$defs/semver"
+    }
+  },
+  "required": [
+    "id",
+    "applies_to",
+    "statement",
+    "verification_method",
+    "evidence_spec",
+    "pass_criteria",
+    "criticality",
+    "source",
+    "precedence_rank",
+    "why_it_matters",
+    "status",
+    "ruleset_version"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "$comment": "A safety requirement must carry a human-written reason. The curation UI enforces approval; this makes the record itself unable to represent an unexplained safety rule.",
+      "if": {
+        "properties": {
+          "criticality": {
+            "const": "safety"
+          }
+        },
+        "required": [
+          "criticality"
+        ]
+      },
+      "then": {
+        "properties": {
+          "why_it_matters": {
+            "type": "string",
+            "minLength": 20
+          }
+        }
+      }
+    },
+    {
+      "$comment": "An approved requirement must say what to capture. Without this, instantiation produces checklist items a tech cannot act on.",
+      "if": {
+        "properties": {
+          "status": {
+            "const": "approved"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence_spec": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "pass_criteria": {
+      "description": "Tagged union. The architecture doc calls pass_criteria 'structured' and names four shapes: tolerance, expected value, presence/absence, pattern. All four are defined so a spec section can be ingested whole; Phase 1 only instantiates checklist items for presence and pattern, because those are the only two with capture recipes.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/pass_criteria_presence"
+        },
+        {
+          "$ref": "#/$defs/pass_criteria_pattern"
+        },
+        {
+          "$ref": "#/$defs/pass_criteria_expected_value"
+        },
+        {
+          "$ref": "#/$defs/pass_criteria_tolerance"
+        }
+      ]
+    },
+    "pass_criteria_presence": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "presence"
+        },
+        "expected": {
+          "type": "string",
+          "enum": [
+            "present",
+            "absent"
+          ]
+        },
+        "subject": {
+          "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+          "description": "What must be present or absent, in plain words, e.g. 'arc flash warning label'."
+        }
+      },
+      "required": [
+        "kind",
+        "expected",
+        "subject"
+      ],
+      "additionalProperties": false
+    },
+    "pass_criteria_pattern": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "pattern"
+        },
+        "pattern": {
+          "type": "string",
+          "format": "regex",
+          "description": "Applied to normalized text read from the evidence."
+        },
+        "description": {
+          "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+          "description": "The rule in plain words. Shown to the tech; the regex never is."
+        },
+        "case_sensitive": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "kind",
+        "pattern",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "pass_criteria_expected_value": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "expected_value"
+        },
+        "value": {
+          "type": [
+            "string",
+            "number",
+            "boolean"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_of_truth": {
+          "type": "string",
+          "enum": [
+            "submittal",
+            "schedule",
+            "specification",
+            "literal"
+          ],
+          "description": "Where the expected value came from, so a reviewer can check the comparison and not just the photo."
+        }
+      },
+      "required": [
+        "kind",
+        "value",
+        "unit",
+        "source_of_truth"
+      ],
+      "additionalProperties": false
+    },
+    "pass_criteria_tolerance": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "tolerance"
+        },
+        "nominal": {
+          "type": "number"
+        },
+        "plus": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minus": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "$ref": "common/definitions.schema.json#/$defs/non_empty_string"
+        }
+      },
+      "required": [
+        "kind",
+        "nominal",
+        "plus",
+        "minus",
+        "unit"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "0b7c4e91-6a23-4f58-9d0e-8c2b5a3f7e16",
+  "checklist_item_id": "8f3d1a6b-4e70-4c95-a2f8-5b0d9c3e7a24",
+  "verdict": "insufficient_evidence",
+  "confidence": 0.31,
+  "evidence_used": [
+    {
+      "evidence_id": "3c7e9b25-0a48-4b61-8d29-6e1b4a7c5f03",
+      "regions": [{ "x": 0.22, "y": 0.35, "width": 0.4, "height": 0.18 }]
+    }
+  ],
+  "observed_value": null,
+  "expected_value": { "kind": "presence", "expected": "present" },
+  "explanation": "The label is in the photo but glare covers the text, so it cannot be read. Take the shot again from a slight angle.",
+  "grader_id": "vlm_presence",
+  "grader_version": "0.3.0",
+  "model_version": "claude-opus-5",
+  "created_at": "2026-09-15T15:48:10Z"
+}

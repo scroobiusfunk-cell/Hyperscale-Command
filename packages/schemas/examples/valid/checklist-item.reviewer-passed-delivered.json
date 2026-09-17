@@ -1,0 +1,21 @@
+{
+  "id": "8f3d1a6b-4e70-4c95-a2f8-5b0d9c3e7a24",
+  "asset_id": "2d9f6a41-3b7e-4c92-8f05-1a6d4e8b3c70",
+  "requirement_id": "4f1c9a2e-8b3d-4c6a-9e51-0d7b2f8a1c34",
+  "ruleset_version": "1.0.0",
+  "state": "reviewer_passed",
+  "assigned_tech": "c7a25e94-6b31-4d08-8f52-3e9b1a7c0d46",
+  "reviewer": "a19c7f52-8d64-4b03-9e71-2f5a8c0d3b96",
+  "evidence_ids": ["3c7e9b25-0a48-4b61-8d29-6e1b4a7c5f03"],
+  "grader_result_id": null,
+  "resolved_at": "2026-09-15T16:04:12Z",
+  "resolved_by": "a19c7f52-8d64-4b03-9e71-2f5a8c0d3b96",
+  "blocked_reason": null,
+  "blocked_note": null,
+  "blocked_at": null,
+  "cxalloy_delivery_state": "delivery_confirmed",
+  "export_key": "8f3d1a6b-4e70-4c95-a2f8-5b0d9c3e7a24:2026-09-15T16:04:12Z",
+  "cxalloy_exported_at": "2026-09-16T08:00:00Z",
+  "cxalloy_delivery_confirmed_at": "2026-09-16T11:22:40Z",
+  "cxalloy_delivery_confirmed_by": "d80b3e47-2c95-4a16-8f73-1e6c9b5a0d28"
+}

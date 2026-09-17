@@ -218,3 +218,46 @@ tasks do not happen, and the consequence here is not cosmetic: an undelivered
 **Position taken:** assume weekly, matching the existing reporting cadence, and
 build the undelivered-rulings metric so the gap is visible whether or not the
 cadence holds. Needs a named owner before the pilot starts.
+
+---
+
+## Q10 — Append-only rulings have nowhere to live
+
+**Status:** open · raised 2026-09-17 · blocks: reviewer console, migrations
+
+CLAUDE.md: "Reviewer rulings on safety items are append-only. Corrections are
+new rulings." `ChecklistItem` cannot satisfy that. It has one `resolved_by` and
+one `resolved_at`, both mutable — a correction overwrites the original, which is
+exactly what append-only forbids. The architecture doc never defines a Ruling
+record, so there is currently nowhere for a ruling's history to go.
+
+This surfaced while drafting the schemas: writing the `reviewer_passed`
+constraint made it obvious that the fields it constrains can only ever describe
+the *latest* ruling.
+
+Three things need the same missing record:
+
+1. **Corrections.** A superseded ruling has to remain readable, with both
+   reviewers named and both timestamps intact.
+2. **Recapture requests** (Q5, confirmed). A recapture returns the item to
+   `open`, so it leaves no trace on `ChecklistItem` at all. Without a record,
+   the count of recapture requests — the Phase 1 evidence-quality signal —
+   cannot be computed.
+3. **LabeledExample.** Its `human_verdict`, `human_note`, `reviewer_id` and
+   `labeled_at` are a projection of a ruling. Deriving them from a mutable
+   field means the training data silently changes when a correction is made.
+
+**Position taken:** none yet — this needs a decision before the reviewer console
+or the migrations land.
+
+**Proposal:** add a `Ruling` record, append-only, never updated or deleted:
+`id`, `checklist_item_id`, `verdict` (`pass` / `fail` / `recapture_requested`),
+`note`, `reviewer_id`, `created_at`, `supersedes` (nullable ruling id). The
+existing `ChecklistItem.state`, `resolved_at` and `resolved_by` become a
+denormalized projection of the newest ruling, kept for query convenience but
+never the source of truth. `LabeledExample` is derived from rulings, and a
+`recapture_requested` ruling produces none, since it is not a judgment on the
+installation.
+
+That adds a sixth schema to `packages/schemas/`, which CLAUDE.md scopes to five,
+so it is a question rather than a change already made.

@@ -4,17 +4,21 @@
   "private": true,
   "description": "JSON Schema contracts shared by the API, field app, and reviewer console",
   "type": "module",
-  "files": ["schemas", "dist"],
+  "files": [
+    "schemas",
+    "dist"
+  ],
   "exports": {
     "./schemas/*": "./schemas/*",
-    "./types": "./dist/types.d.ts"
+    "./types/*": "./dist/*.schema.d.ts"
   },
   "scripts": {
     "generate:ts": "json2ts --input 'schemas/*.schema.json' --output dist --cwd schemas",
-    "validate": "ajv compile -s 'schemas/*.schema.json' --spec=draft2020 --strict=true -r 'schemas/common/*.schema.json'"
+    "validate": "node validate.mjs"
   },
   "devDependencies": {
-    "ajv-cli": "^5.0.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "json-schema-to-typescript": "^15.0.4"
   }
 }

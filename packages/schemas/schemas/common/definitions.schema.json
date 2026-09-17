@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.fieldinspectionengine.dev/common/definitions.schema.json",
+  "title": "Shared definitions",
+  "description": "Primitives reused across the record schemas. Nothing here is a record in its own right.",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "semver": {
+      "description": "Rule set and recipe versions. Major.minor.patch, no pre-release suffixes.",
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339, always UTC."
+    },
+    "non_empty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+    "user_id": {
+      "$ref": "#/$defs/uuid",
+      "description": "Identity from company SSO. A ruling is worthless without a real one behind it."
+    },
+    "equipment_class": {
+      "description": "Deliberately not a closed enum. The architecture doc calls this an enum and gives `switchboard` as an example, but the curator extends the safety-relevant lists per project, and a closed set here would mean a schema change for every new class on every project. Constrained to snake_case so the tag reconciler can normalize against it.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "minLength": 2,
+      "maxLength": 64
+    },
+    "criticality": {
+      "description": "Closed by design. This is the safety control: `safety` never auto-clears and never self-clears, and a value outside this set must not validate.",
+      "type": "string",
+      "enum": [
+        "safety",
+        "contractual",
+        "quality"
+      ]
+    },
+    "verification_method": {
+      "type": "string",
+      "enum": [
+        "visual",
+        "measured",
+        "tested",
+        "documentary"
+      ]
+    },
+    "location": {
+      "type": "object",
+      "description": "Model coordinates stay optional until scan integration in Phase 4.",
+      "properties": {
+        "room": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "grid_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_coordinates": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "z"
+          ],
+          "additionalProperties": false
+        },
+        "location_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. electrical_room. Matches Requirement.applies_to.location_type.",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      },
+      "required": [
+        "room",
+        "grid_ref",
+        "model_coordinates",
+        "location_type"
+      ],
+      "additionalProperties": false
+    },
+    "region": {
+      "description": "A rectangle on one piece of evidence, normalized 0-1 so it survives resizing.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "capture_recipe_ref": {
+      "description": "Recipes are versioned and shared across projects; a requirement may reference more than one.",
+      "type": "object",
+      "properties": {
+        "capture_recipe_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "version": {
+          "$ref": "#/$defs/semver"
+        }
+      },
+      "required": [
+        "capture_recipe_id",
+        "version"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

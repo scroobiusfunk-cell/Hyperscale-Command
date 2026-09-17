@@ -1,0 +1,23 @@
+{
+  "_why_invalid": "state is blocked with no blocked_reason. This is the silent deferral the architecture doc calls out by name.",
+  "_expect": "blocked_reason",
+  "id": "6e0b4c73-1f85-4a29-b7d3-9c2a5e8f0d61",
+  "asset_id": "2d9f6a41-3b7e-4c92-8f05-1a6d4e8b3c70",
+  "requirement_id": "4f1c9a2e-8b3d-4c6a-9e51-0d7b2f8a1c34",
+  "ruleset_version": "1.0.0",
+  "state": "blocked",
+  "assigned_tech": "c7a25e94-6b31-4d08-8f52-3e9b1a7c0d46",
+  "reviewer": null,
+  "evidence_ids": [],
+  "grader_result_id": null,
+  "resolved_at": null,
+  "resolved_by": null,
+  "blocked_reason": null,
+  "blocked_note": null,
+  "blocked_at": null,
+  "cxalloy_delivery_state": "not_applicable",
+  "export_key": null,
+  "cxalloy_exported_at": null,
+  "cxalloy_delivery_confirmed_at": null,
+  "cxalloy_delivery_confirmed_by": null
+}

@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.fieldinspectionengine.dev/checklist-item.schema.json",
+  "title": "ChecklistItem",
+  "description": "One requirement bound to one asset. Field names are taken verbatim from docs/ARCHITECTURE.md section 2; the blocked_* and cxalloy_* groups are additions recorded in docs/OPEN_QUESTIONS.md Q4 and docs/adr/0001.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "asset_id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "requirement_id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "ruleset_version": {
+      "$ref": "common/definitions.schema.json#/$defs/semver",
+      "description": "Which rule set generated this item. A spec revision produces new items, not a silent rewrite of these."
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "open",
+        "evidence_captured",
+        "auto_cleared",
+        "routed",
+        "reviewer_passed",
+        "reviewer_failed",
+        "blocked"
+      ],
+      "description": "auto_cleared is unreachable in Phase 1: nothing produces a grader result, and the policy layer routes everything."
+    },
+    "assigned_tech": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/user_id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reviewer": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/user_id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common/definitions.schema.json#/$defs/uuid"
+      },
+      "uniqueItems": true
+    },
+    "grader_result_id": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Latest grading. Always null in Phase 1."
+    },
+    "resolved_at": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "resolved_by": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/user_id"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "See docs/OPEN_QUESTIONS.md Q10: this single mutable field cannot represent the append-only correction history that CLAUDE.md requires for safety rulings."
+    },
+    "blocked_reason": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "no_access",
+            "energized",
+            "not_installed_yet",
+            "equipment_missing",
+            "tool_unavailable",
+            "other"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The architecture doc requires deferrals to record a reason but gives the state enum no deferred value; blocked plus a reason is that deferral."
+    },
+    "blocked_note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blocked_at": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cxalloy_delivery_state": {
+      "type": "string",
+      "enum": [
+        "not_applicable",
+        "pending_export",
+        "exported",
+        "delivery_confirmed"
+      ],
+      "description": "CxAlloy's API is read only, so a ruling reaches the system of record only when a person imports it. not_applicable is any item with no ruling yet.",
+      "default": "not_applicable"
+    },
+    "export_key": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Stable key carried into the export so a re-import is detectable as a duplicate rather than landing twice."
+    },
+    "cxalloy_exported_at": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cxalloy_delivery_confirmed_at": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cxalloy_delivery_confirmed_by": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/user_id"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "A person confirms delivery. The platform cannot confirm it on their behalf."
+    }
+  },
+  "required": [
+    "id",
+    "asset_id",
+    "requirement_id",
+    "ruleset_version",
+    "state",
+    "assigned_tech",
+    "reviewer",
+    "evidence_ids",
+    "grader_result_id",
+    "resolved_at",
+    "resolved_by",
+    "blocked_reason",
+    "blocked_note",
+    "blocked_at",
+    "cxalloy_delivery_state",
+    "export_key",
+    "cxalloy_exported_at",
+    "cxalloy_delivery_confirmed_at",
+    "cxalloy_delivery_confirmed_by"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "$comment": "A blocked item must say why. Silent deferral is the failure the architecture doc calls out by name.",
+      "if": {
+        "properties": {
+          "state": {
+            "const": "blocked"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "blocked_reason": {
+            "type": "string"
+          },
+          "blocked_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "blocked_reason",
+          "blocked_at"
+        ]
+      }
+    },
+    {
+      "$comment": "A reviewer ruling must name the reviewer and when. An item cannot be resolved by nobody.",
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "reviewer_passed",
+              "reviewer_failed"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "resolved_by": {
+            "type": "string"
+          },
+          "resolved_at": {
+            "type": "string"
+          },
+          "reviewer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resolved_by",
+          "resolved_at",
+          "reviewer"
+        ]
+      }
+    },
+    {
+      "$comment": "A ruling is not in the system of record until someone confirms the import. Delivery cannot be confirmed without naming who confirmed it and when.",
+      "if": {
+        "properties": {
+          "cxalloy_delivery_state": {
+            "const": "delivery_confirmed"
+          }
+        },
+        "required": [
+          "cxalloy_delivery_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "cxalloy_delivery_confirmed_by": {
+            "type": "string"
+          },
+          "cxalloy_delivery_confirmed_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cxalloy_delivery_confirmed_by",
+          "cxalloy_delivery_confirmed_at"
+        ]
+      }
+    }
+  ]
+}

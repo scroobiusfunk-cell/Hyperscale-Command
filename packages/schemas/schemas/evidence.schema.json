@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.fieldinspectionengine.dev/evidence.schema.json",
+  "title": "Evidence",
+  "description": "One capture from the field. docs/ARCHITECTURE.md names Evidence as a core record but never gives it a field table, so this is the one Phase 1 schema designed rather than transcribed. See docs/OPEN_QUESTIONS.md Q3. Two properties are deliberate: evidence carries no verdict of any kind, and it records both the device clock and the server clock.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid",
+      "description": "Server-assigned."
+    },
+    "client_id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid",
+      "description": "Device-generated, unique. The idempotency key: replaying the event log must never produce a second row for the same client_id."
+    },
+    "checklist_item_id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "capture_recipe_id": {
+      "$ref": "common/definitions.schema.json#/$defs/uuid"
+    },
+    "capture_recipe_version": {
+      "$ref": "common/definitions.schema.json#/$defs/semver"
+    },
+    "step_index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Which step of the recipe this capture satisfies."
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "photo",
+        "video",
+        "document",
+        "measurement"
+      ],
+      "description": "Phase 1 emits photo only."
+    },
+    "storage_key": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of the bytes. Dedupes retried uploads and makes tampering detectable after the fact."
+    },
+    "byte_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mime_type": {
+      "$ref": "common/definitions.schema.json#/$defs/non_empty_string"
+    },
+    "captured_at": {
+      "$ref": "common/definitions.schema.json#/$defs/timestamp",
+      "description": "Device clock. Not trustworthy: phones on a construction site drift, and an offline walk can sit for days before sync."
+    },
+    "received_at": {
+      "$ref": "common/definitions.schema.json#/$defs/timestamp",
+      "description": "Server clock at sync. Use this for anything that must be ordered or audited."
+    },
+    "captured_by": {
+      "$ref": "common/definitions.schema.json#/$defs/user_id"
+    },
+    "device_metadata": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "os_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "app_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "model",
+        "os_version",
+        "app_version"
+      ],
+      "additionalProperties": false,
+      "description": "Phase 2 needs this to explain grader variance that turns out to be camera variance."
+    },
+    "gate_results": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/gate_result"
+      },
+      "description": "What the on-device gate checked and what it measured. Recorded even when the gate passed, so Phase 2 can ask what a CV gate would have caught that this one did not."
+    },
+    "retake_of": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The evidence this replaces, so a recapture chain stays visible instead of the original quietly disappearing."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_upload",
+        "stored",
+        "superseded",
+        "rejected"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "client_id",
+    "checklist_item_id",
+    "capture_recipe_id",
+    "capture_recipe_version",
+    "step_index",
+    "media_type",
+    "storage_key",
+    "content_hash",
+    "byte_size",
+    "mime_type",
+    "captured_at",
+    "received_at",
+    "captured_by",
+    "device_metadata",
+    "gate_results",
+    "retake_of",
+    "status"
+  ],
+  "additionalProperties": false,
+  "$comment": "There is deliberately no verdict, pass, fail, or quality field here. A judgment about evidence lives on ChecklistItem or GraderResult. Leaving the field off means no future code can write one by accident.",
+  "$defs": {
+    "gate_result": {
+      "type": "object",
+      "properties": {
+        "gate_id": {
+          "$ref": "common/definitions.schema.json#/$defs/non_empty_string",
+          "description": "e.g. sharpness_floor, frame_fill, shot_count, tech_attestation."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "skipped"
+          ]
+        },
+        "measured_value": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        },
+        "threshold": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "gate_id",
+        "outcome",
+        "measured_value",
+        "threshold"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
