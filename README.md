@@ -90,5 +90,9 @@ you have a release you trust.
   `auto_cleared`, and `ruling` and `labeled_example` reject UPDATE and DELETE.
   These are triggers in the migration, so they hold for the API, a Celery task,
   and a person at a psql prompt alike.
+- **The tag reconciler never invents an asset and never guesses an identity.**
+  Anything it will not decide goes to the reconciliation queue with its
+  candidates and scores attached. Open queue size is a tracked metric: growth
+  there means the field is walking to wrong assets.
 - Tests are required for the policy layer, precedence resolver, tag reconciler,
   and event replay before those merge.

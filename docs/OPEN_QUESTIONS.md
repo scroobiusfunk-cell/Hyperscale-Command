@@ -288,3 +288,32 @@ rule about not building ahead of the phase. The counter-argument is that the
 architecture doc already assumes multiple projects when it says recipes are
 shared across them, and that adding a tenancy column to eight populated tables
 later is the kind of change that goes wrong. Say the word and it comes out.
+
+---
+
+## Q12 — Where do project tag prefixes come from?
+
+**Status:** open · raised 2026-09-17 · blocks: nothing; the reconciler works without them
+
+The reconciler can strip leading project or discipline prefixes before
+comparing tags, so `DC07-SWBD-101` from a nameplate matches `SWBD-101` in
+CxAlloy. It takes that prefix set as a parameter and currently nothing supplies
+one, so the default is "strip nothing" — which is the conservative default:
+failing to strip a prefix sends an item to the queue, whereas stripping the
+wrong thing could match the wrong asset.
+
+**Needs deciding:** whether prefixes are configured per project by the curator,
+inferred from the equipment list (the common leading segment across most tags),
+or both. Inference is tempting and is exactly the kind of cleverness that
+silently merges two buildings' worth of assets, so a configured list reviewed by
+a person is the safer starting point.
+
+**Also unsettled:** the three match thresholds (`auto_match` 0.93,
+`review_floor` 0.55, `ambiguity_margin` 0.05) are starting values, not measured
+ones. They are named constants passed as a parameter rather than inlined, so
+tuning them is a visible change. These are *reconciliation* thresholds, not the
+auto-clear thresholds CLAUDE.md requires to come from calibration data — nothing
+is cleared here, and the cost of a wrong value is queue volume rather than a
+wrongly passed inspection. The number to watch once the pilot has real data is
+what fraction of queue entries a person resolves by simply agreeing with the
+reconciler's top candidate; if that is most of them, the threshold is too tight.
