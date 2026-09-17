@@ -87,12 +87,17 @@ you have a release you trust.
   together so the eval harness can compare runs by swapping the spec.
 - **Schemas in `packages/schemas/` are the contract.** Generate types from
   them; do not hand-write a second copy in an app.
-- **No schema edits outside an Alembic migration.** A test asserts that the
+- **No schema edits outside an Alembic migration.** `apps/api/alembic/README.md`
+  documents the Postgres enum traps autogenerate walks into — three of them have
+  bitten this project already. A test asserts that the
   models and the migration agree, so a model changed without one fails CI.
 - **Some invariants live in the database.** `safety` requirements cannot reach
   `auto_cleared`, and `ruling` and `labeled_example` reject UPDATE and DELETE.
   These are triggers in the migration, so they hold for the API, a Celery task,
   and a person at a psql prompt alike.
+- **Ingestion never guesses at a scan.** A document without a text layer is
+  stored and flagged for a person, never silently OCR'd and never dropped. The
+  compiler refuses to run on it with a reason.
 - **The tag reconciler never invents an asset and never guesses an identity.**
   Anything it will not decide goes to the reconciliation queue with its
   candidates and scores attached. Open queue size is a tracked metric: growth

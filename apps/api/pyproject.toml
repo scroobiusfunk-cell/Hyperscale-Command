@@ -17,6 +17,7 @@ dependencies = [
     "boto3>=1.35",
     "structlog>=24.4",
     "anthropic>=0.69",
+    "pypdfium2>=5.0",
     "python-multipart>=0.0.20",
 ]
 
@@ -28,6 +29,7 @@ dev = [
     "ruff>=0.9",
     "mypy>=1.14",
     "types-boto3>=1.35",
+    "reportlab>=4.2",
 ]
 
 [build-system]
@@ -56,7 +58,7 @@ warn_unreachable = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["celery.*", "pgvector.*"]
+module = ["celery.*", "pgvector.*", "pypdfium2.*", "reportlab.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

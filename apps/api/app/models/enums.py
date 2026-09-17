@@ -39,6 +39,14 @@ class DocumentType(StrEnum):
     RFI_RESPONSE = "rfi_response"
 
 
+class TextLayerStatus(StrEnum):
+    """Whether an ingested document carries machine-readable text."""
+
+    PRESENT = "present"
+    PARTIAL = "partial"
+    MISSING = "missing"
+
+
 class ReconciliationStatus(StrEnum):
     AUTO_MATCHED = "auto_matched"
     HUMAN_CONFIRMED = "human_confirmed"

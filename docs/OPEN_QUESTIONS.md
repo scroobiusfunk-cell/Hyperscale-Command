@@ -396,9 +396,9 @@ its approver.
 
 ---
 
-## Q16 — Document ingestion is not built yet
+## Q16 — Document ingestion
 
-**Status:** open · raised 2026-09-17 · blocks: running the compiler on a real spec
+**Status:** settled 2026-09-17 — built
 
 Everything downstream of ingestion exists — extraction, precedence, curation,
 versioning — but nothing yet turns a PDF into the section text and page images
@@ -409,7 +409,47 @@ those steps consume. `SourceDocument` has a `storage_key` and no reader.
 requirement can show its source, and the text-layer check from Q2 that flags a
 scanned document to the curator rather than silently OCR'ing or dropping it.
 
-**Why it is last rather than first:** it is the piece with a real external
-dependency (a PDF library, page rendering, object storage) and the least
-interesting logic. Building it after the rules it feeds means the rules were
-testable from the start without a fixture PDF for every case.
+**Built with pypdfium2** (permissively licensed, extracts text and renders page
+images from one library). Page text lives in Postgres because the splitter and
+extraction read it constantly; page images live in object storage because they
+are large and only read when someone opens a clause. Re-uploading the same file
+is a no-op, keyed on a sha256 of the bytes, because a spec gets re-sent whenever
+somebody is unsure it landed.
+
+The text-layer check from Q2 is implemented: `present`, `partial` or `missing`.
+A scanned document is stored and flagged rather than rejected — the page images
+are still worth having and a person needs to see that the file arrived — and the
+compiler refuses to run on it with a reason rather than producing nothing.
+
+---
+
+## Q17 — When do two requirements govern the same check?
+
+**Status:** open · raised 2026-09-17 · blocks: precedence resolution across documents
+
+The precedence resolver takes a *group* of competing requirements and ranks
+them. It does not decide what a group is, and that turns out to be the harder
+half of the problem. Compilation currently sets each requirement's
+`precedence_rank` from its document type's base rank and never groups anything,
+so conflicts between a spec and a submittal are not being detected yet.
+
+Grouping needs a rule for "these two requirements check the same thing on the
+same equipment". Candidates, roughly in order of how much they can go wrong:
+
+1. **Exact match on `applies_to` plus `pass_criteria`.** Cheap, deterministic,
+   and will miss almost every real conflict, because two documents describing
+   the same check word it differently.
+2. **`applies_to` plus a curator-assigned check key.** A person tags equivalent
+   requirements. Accurate and slow, and it adds to the curation cost the
+   architecture doc already tells us to budget honestly.
+3. **Model-proposed grouping, human-confirmed.** The model suggests "these two
+   are the same check"; the curator confirms. Fits the platform's existing shape
+   — the model proposes, a person decides — but it is a second model call per
+   requirement pair and needs its own prompt version and eval.
+
+**Position taken:** none yet, and nothing is being grouped silently in the
+meantime. An ungrouped requirement set means duplicate checklist items rather
+than a wrong one, which is the right way round to fail.
+
+Worth deciding once the pilot has one spec section and its submittals compiled,
+where the real conflicts can actually be counted.

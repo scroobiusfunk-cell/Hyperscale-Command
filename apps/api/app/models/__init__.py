@@ -7,6 +7,7 @@ from app.models.asset import Asset, AssetAlias, AssetSubmittal
 from app.models.capture_recipe import CaptureRecipe
 from app.models.checklist_item import ChecklistItem
 from app.models.document import SourceDocument
+from app.models.document_page import DocumentPage
 from app.models.evidence import Evidence
 from app.models.grader_result import GraderResult
 from app.models.identity import AppUser, Project
@@ -27,6 +28,7 @@ __all__ = [
     "AssetSubmittal",
     "CaptureRecipe",
     "ChecklistItem",
+    "DocumentPage",
     "Evidence",
     "GraderResult",
     "LabeledExample",
