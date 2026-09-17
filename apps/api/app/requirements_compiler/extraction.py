@@ -51,6 +51,11 @@ it in `unplaceable` with the reason. A requirement a person has to place by hand
 is much better than one you guessed at.
 - Quote `source_clause` exactly as the document numbers it, and give the page it \
 appears on.
+- `access_constraints` says what a tech needs before they can check this. Use \
+`requires_deenergized` when the check cannot be done with the equipment live, \
+`requires_ladder` when it is out of reach from the floor, and \
+`requires_confined_space_entry` where that applies. Leave it empty when the \
+check can be done from the floor on live equipment.
 - `check_subject` is how two documents describing the same check are recognised \
 as the same check. Name the thing being checked in the plainest words you can, \
 with no values, tolerances or qualifiers: "arc flash warning label", not "arc \
@@ -62,7 +67,7 @@ the equipment nameplate, both should say "equipment nameplate".
 #: new version here, so the eval harness can tell two runs apart.
 EXTRACTION_PROMPT_V1 = PromptSpec(
     prompt_id="requirements.extract",
-    version="1.1.0",
+    version="1.2.0",
     model="claude-opus-5",
     system=EXTRACTION_SYSTEM_PROMPT,
     max_tokens=16_000,

@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy.orm import Session
 
+from app.capture.recipes import evidence_spec_for, recipe_for_criteria
 from app.ingestion.service import sections_for
 from app.llm.base import LLMProvider, PromptSpec
 from app.logging import get_logger
@@ -91,6 +92,14 @@ def compile_document(
 
         for compiled in outcome.requirements:
             extracted = compiled.extracted
+            criteria = extracted.pass_criteria.model_dump(mode="json")
+            # A requirement with nothing to capture cannot be approved — there
+            # is a check constraint saying so — and a curator has no way to
+            # invent a recipe. So compilation points it at one, and a
+            # requirement whose method has no Phase 1 recipe stays unpointed and
+            # visibly unapprovable rather than quietly approvable and unwalkable.
+            recipe = recipe_for_criteria(extracted.verification_method, criteria)
+            evidence_spec = evidence_spec_for(session, recipe) if recipe else []
             session.add(
                 Requirement(
                     id=uuid.uuid4(),
@@ -102,9 +111,10 @@ def compile_document(
                     applies_to_location_type=extracted.applies_to.location_type,
                     statement=extracted.statement,
                     verification_method=extracted.verification_method,
-                    evidence_spec=[],
-                    pass_criteria=extracted.pass_criteria.model_dump(mode="json"),
+                    evidence_spec=evidence_spec,
+                    pass_criteria=criteria,
                     criticality=extracted.criticality,
+                    access_constraints=list(extracted.access_constraints),
                     source_doc_id=document.id,
                     source_clause=extracted.source_clause,
                     source_page=extracted.source_page,

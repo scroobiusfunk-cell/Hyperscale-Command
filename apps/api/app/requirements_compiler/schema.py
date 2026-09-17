@@ -17,7 +17,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
-from app.models.enums import Criticality, VerificationMethod
+from app.models.enums import AccessConstraint, Criticality, VerificationMethod
 
 
 class PresenceCriteria(BaseModel):
@@ -88,6 +88,13 @@ class ExtractedRequirement(BaseModel):
     source_page: int = Field(ge=1)
     why_it_matters: str = Field(
         min_length=1, description="Draft only. A human writes or approves the final wording."
+    )
+    access_constraints: list[AccessConstraint] = Field(
+        default_factory=list,
+        description=(
+            "What a tech needs before they can check this, if anything. Leave empty for "
+            "something checkable from the floor with the equipment live."
+        ),
     )
     uncertain_about: list[str] = Field(
         default_factory=list,

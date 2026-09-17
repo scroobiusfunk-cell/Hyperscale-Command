@@ -11,7 +11,7 @@ recorded, code matches), `deferred` (not needed until a later phase).
 
 ## Q1 — Are the Phase 1 on-device capture gates allowed to use computer vision?
 
-**Status:** settled 2026-09-17 — non-CV gates confirmed · blocks: nothing
+**Status:** settled 2026-09-17 — non-CV gates confirmed, and built into the two recipes
 
 `ARCHITECTURE.md` §3 specifies the gate for `visual, presence` as "object
 detector confirms class present" and for `visual, readable` as "OCR returns
@@ -513,3 +513,48 @@ keeping the observed false-pass rates within a type similar to each other.
 
 Nothing is blocked meanwhile: `NoCalibration` has no answer for any item type,
 so every item routes to a reviewer regardless of what the string says.
+
+---
+
+## Q19 — Walk sequencing is by room, not by route
+
+**Status:** open · raised 2026-09-17 · blocks: nothing; costs the tech walking time
+
+The Capture Plan Compiler sequences stops by room, then grid reference, then
+tag. That is stable and followable, and it is not a route: it does not know
+which rooms are next to each other, which way the corridors run, or that the
+riser is quicker than the stairs.
+
+Real sequencing needs floor geometry, which nothing in the platform has. The
+model coordinates on `Asset` are optional and stay empty until scan integration
+in Phase 4.
+
+**Position taken:** room order, and say plainly that it is not optimised. A
+wrong route costs a tech minutes of walking; a clever route built on data nobody
+has would cost them trust in the whole walk.
+
+**Worth measuring on the pilot:** whether techs reorder the walk themselves. If
+they consistently do, the fix is probably to let them, rather than to guess
+better.
+
+---
+
+## Q20 — Access constraints are extracted, and nobody has checked them
+
+**Status:** open · raised 2026-09-17 · blocks: nothing yet; worth a look during curation
+
+`Requirement.access_constraints` is new, and the extraction model populates it:
+whether a check needs the equipment dead, a ladder, or a confined space permit.
+The capture plan defers items whose constraints the tech's declared state does
+not satisfy, so a wrong value has real consequences in both directions — a
+missing `requires_deenergized` sends someone to open a live board, and a spurious
+one defers work that could have been done.
+
+The doc's own list of constraints ("which rooms are open, what is energized,
+whether a ladder is available") implies this field has to exist, but the field
+table does not include it, so this is an addition.
+
+**Needs deciding:** whether the curation screen should surface
+`access_constraints` as something a curator explicitly confirms rather than
+something they have to notice. Given what a missed `requires_deenergized` costs,
+the answer is probably yes for any requirement the model marks safety.

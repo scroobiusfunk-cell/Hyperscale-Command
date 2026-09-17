@@ -39,6 +39,19 @@ class DocumentType(StrEnum):
     RFI_RESPONSE = "rfi_response"
 
 
+class AccessConstraint(StrEnum):
+    """What a tech needs before they can check something.
+
+    The architecture doc gates a walk on "which rooms are open, what is
+    energized, whether a ladder is available", which only means anything if
+    something records which items need what. This is that.
+    """
+
+    REQUIRES_DEENERGIZED = "requires_deenergized"
+    REQUIRES_LADDER = "requires_ladder"
+    REQUIRES_CONFINED_SPACE_ENTRY = "requires_confined_space_entry"
+
+
 class TextLayerStatus(StrEnum):
     """Whether an ingested document carries machine-readable text."""
 

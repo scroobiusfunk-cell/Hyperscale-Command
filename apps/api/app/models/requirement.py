@@ -21,7 +21,12 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base
 from app.models._types import pg_enum
 from app.models.base import TimestampMixin
-from app.models.enums import Criticality, RequirementStatus, VerificationMethod
+from app.models.enums import (
+    AccessConstraint,
+    Criticality,
+    RequirementStatus,
+    VerificationMethod,
+)
 
 
 class Requirement(TimestampMixin, Base):
@@ -77,6 +82,17 @@ class Requirement(TimestampMixin, Base):
     pass_criteria: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     criticality: Mapped[Criticality] = mapped_column(
         pg_enum(Criticality, "criticality"), nullable=False
+    )
+    access_constraints: Mapped[list[AccessConstraint]] = mapped_column(
+        ARRAY(pg_enum(AccessConstraint, "access_constraint")),
+        nullable=False,
+        default=list,
+        server_default="{}",
+        comment=(
+            "What the tech needs before they can check this. The capture plan defers an "
+            "item whose constraints the tech's declared state does not satisfy, with the "
+            "reason recorded."
+        ),
     )
 
     # source: doc id, clause, page
