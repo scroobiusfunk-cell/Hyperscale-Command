@@ -478,3 +478,38 @@ reach a tech, and resolving a conflict is a person picking the winner, which
 retires the losers rather than deleting them — which document lost and who
 decided is the answer when someone later asks why the submittal's version is not
 being checked.
+
+---
+
+## Q18 — What is an "item type"?
+
+**Status:** open · raised 2026-09-17 · blocks: nothing in Phase 1; blocks calibration in Phase 2
+
+Calibration, golden sets, competency scores and the spot-check audit are all
+computed *per item type*, and `ARCHITECTURE.md` never says what one is. The
+policy layer takes it as a string and nothing computes it yet, which is harmless
+while nothing is calibrated and a landmine the day something is.
+
+The choice decides how much data each threshold is computed from, and the
+architecture doc says an item type needs roughly 200 reviewed examples before it
+counts as calibrated. Too fine a grain and nothing ever reaches 200; too coarse
+and one threshold covers checks with genuinely different error rates.
+
+Candidates:
+
+1. **Per requirement.** Finest grain, most defensible statistically per item,
+   and almost nothing will reach 200 examples on a single project.
+2. **Per (verification method, capture recipe).** e.g. `visual_presence`,
+   `visual_readable`. Coarse enough to accumulate data quickly; lumps "is there
+   a label" together with "is there a firestop collar", which fail differently.
+3. **Per (equipment class, check subject).** Uses the `check_key` machinery Q17
+   already added. Middle grain, and it is the grouping a reviewer would
+   recognise as "the same kind of check".
+
+**Leaning towards 3**, reusing `check_key` without the system and location
+parts, but this should be decided against real labelled data rather than in the
+abstract — the honest answer is whichever grain reaches 200 examples while
+keeping the observed false-pass rates within a type similar to each other.
+
+Nothing is blocked meanwhile: `NoCalibration` has no answer for any item type,
+so every item routes to a reviewer regardless of what the string says.

@@ -78,7 +78,12 @@ you have a release you trust.
 ## Things worth knowing before you change anything
 
 - **Safety items never clear without a named reviewer.** This is enforced in
-  code, and any path that could bypass it is a bug, not a feature request.
+  code, and any path that could bypass it is a bug, not a feature request. The
+  policy layer's safety test runs before anything looks at a threshold, and the
+  guarantee is tested by exhausting the input space rather than by example.
+- **Auto-clear thresholds come from a calibration source, never a constant.** In
+  Phase 1 that source has no answer for anything, so every item routes to a
+  reviewer.
 - **CxAlloy's API is read only.** Results leave as an export package that a
   person imports. See `docs/adr/0001-cxalloy-read-only-results-export.md`,
   which also covers the failure mode this introduces.
