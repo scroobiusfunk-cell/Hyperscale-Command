@@ -39,7 +39,12 @@ class LabeledExample(UUIDPrimaryKeyMixin, Base):
         UUID(as_uuid=True), ForeignKey("checklist_item.id", ondelete="RESTRICT"), nullable=False
     )
     requirement_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("requirement.id", ondelete="RESTRICT"), nullable=False
+        UUID(as_uuid=True),
+        nullable=False,
+        comment=(
+            "Copied from the checklist item. No foreign key: requirement identity is "
+            "(id, ruleset_version) and the checklist item already guarantees integrity."
+        ),
     )
     evidence_ids: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
     item_type: Mapped[str] = mapped_column(

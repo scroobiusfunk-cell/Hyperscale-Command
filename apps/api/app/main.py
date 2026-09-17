@@ -11,7 +11,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.routes import curation
 from app.config import Settings, load_settings
+from app.db import build_session_factory
 from app.logging import configure_logging, get_logger
 
 log = get_logger(__name__)
@@ -33,6 +35,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = resolved
+    app.state.session_factory = build_session_factory(resolved)
+    app.include_router(curation.router)
 
     @app.get("/health", tags=["ops"])
     def health() -> dict[str, str]:

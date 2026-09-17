@@ -17,6 +17,7 @@ from app.models.reconciliation import (
     ReconciliationQueueStatus,
 )
 from app.models.requirement import Requirement
+from app.models.rule_set import RuleSet, RuleSetStatus
 from app.models.ruling import Ruling
 
 __all__ = [
@@ -34,6 +35,8 @@ __all__ = [
     "ReconciliationQueueReason",
     "ReconciliationQueueStatus",
     "Requirement",
+    "RuleSet",
+    "RuleSetStatus",
     "Ruling",
     "SourceDocument",
 ]

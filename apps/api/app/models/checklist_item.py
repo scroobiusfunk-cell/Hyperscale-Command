@@ -11,7 +11,15 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -47,6 +55,16 @@ class ChecklistItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "AND cxalloy_delivery_confirmed_at IS NOT NULL)",
             name="ck_checklist_item_delivery_confirmed_by_a_person",
         ),
+        # Requirement identity is (id, ruleset_version); see the note on
+        # Requirement. An item therefore points at one requirement *as it was in
+        # the rule set that generated the item*, which is what makes a published
+        # rule set immutable from the field's point of view.
+        ForeignKeyConstraint(
+            ["requirement_id", "ruleset_version"],
+            ["requirement.id", "requirement.ruleset_version"],
+            name="fk_checklist_item_requirement",
+            ondelete="RESTRICT",
+        ),
         Index("ix_checklist_item_state", "state"),
         Index("ix_checklist_item_reviewer_state", "reviewer", "state"),
         Index(
@@ -59,9 +77,7 @@ class ChecklistItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     asset_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("asset.id", ondelete="RESTRICT"), nullable=False
     )
-    requirement_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("requirement.id", ondelete="RESTRICT"), nullable=False
-    )
+    requirement_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     ruleset_version: Mapped[str] = mapped_column(String(20), nullable=False)
     state: Mapped[ChecklistItemState] = mapped_column(
         pg_enum(ChecklistItemState, "checklist_item_state"), nullable=False

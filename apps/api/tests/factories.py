@@ -19,6 +19,7 @@ from app.models import (
     Evidence,
     Project,
     Requirement,
+    RuleSet,
     SourceDocument,
 )
 from app.models.enums import (
@@ -66,22 +67,38 @@ def make_document(db: Session, project: Project) -> SourceDocument:
     return doc
 
 
+def make_rule_set(db: Session, project: Project, version: str = "1.0.0") -> RuleSet:
+    rule_set = RuleSet(project_id=project.id, version=version)
+    db.add(rule_set)
+    db.flush()
+    return rule_set
+
+
 def make_requirement(
     db: Session,
     project: Project,
     document: SourceDocument,
     *,
+    rule_set: RuleSet | None = None,
+    requirement_id: uuid.UUID | None = None,
+    statement: str = "The equipment nameplate shows the panel tag.",
     criticality: Criticality = Criticality.QUALITY,
     status: RequirementStatus = RequirementStatus.APPROVED,
     why_it_matters: str = "A mislabelled panel sends the next person to the wrong board.",
     evidence_spec: list[dict[str, str]] | None = None,
 ) -> Requirement:
+    rule_set = rule_set or make_rule_set(db, project)
+    # An approved requirement must name its approver, so the factory supplies
+    # one rather than making every caller remember.
+    approver = make_user(db, UserRole.CURATOR) if status is RequirementStatus.APPROVED else None
     requirement = Requirement(
+        id=requirement_id or uuid.uuid4(),
         project_id=project.id,
+        rule_set_id=rule_set.id,
         applies_to_equipment_class=["switchboard"],
         applies_to_system="normal_power",
         applies_to_location_type="electrical_room",
-        statement="The equipment nameplate shows the panel tag.",
+        statement=statement,
         verification_method=VerificationMethod.VISUAL,
         evidence_spec=(
             evidence_spec
@@ -96,7 +113,9 @@ def make_requirement(
         precedence_rank=0,
         why_it_matters=why_it_matters,
         status=status,
-        ruleset_version="1.0.0",
+        approved_by=approver.id if approver else None,
+        approved_at=datetime.now(UTC) if approver else None,
+        ruleset_version=rule_set.version,
     )
     db.add(requirement)
     db.flush()

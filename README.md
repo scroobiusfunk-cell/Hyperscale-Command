@@ -82,6 +82,9 @@ you have a release you trust.
 - **CxAlloy's API is read only.** Results leave as an export package that a
   person imports. See `docs/adr/0001-cxalloy-read-only-results-export.md`,
   which also covers the failure mode this introduces.
+- **All LLM calls go through `app/llm/`.** One module imports the Anthropic SDK
+  and nothing else may. A `PromptSpec` pins the prompt, model and version
+  together so the eval harness can compare runs by swapping the spec.
 - **Schemas in `packages/schemas/` are the contract.** Generate types from
   them; do not hand-write a second copy in an app.
 - **No schema edits outside an Alembic migration.** A test asserts that the

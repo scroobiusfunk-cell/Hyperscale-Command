@@ -362,3 +362,54 @@ honestly. If the pilot shows this is the bulk of the queue, the narrower rule is
 to surface only where the *losing* candidate is safety.
 
 Worth revisiting once there is a real spec section to measure against.
+
+---
+
+## Q15 — Requirement identity is (id, ruleset_version), not id alone
+
+**Status:** settled by the doc 2026-09-17 · implemented
+
+`ARCHITECTURE.md` describes `Requirement.id` as "stable across versions where the
+requirement is unchanged". The core records migration took `id` as the primary
+key on its own, which quietly contradicts that: a spec revision produces a new
+rule set carrying the same requirement, and two rows cannot share a primary key.
+Left alone, every revision would have minted new ids and the version diff the doc
+asks for — "a new version and a diff, not a silent overwrite" — would have had
+nothing stable to diff against.
+
+**Implemented:** the primary key is `(id, ruleset_version)`. `ChecklistItem`
+already records both, so its foreign key is composite, which also gives the
+useful property that an item points at one requirement *as it was in the rule set
+that generated the item*. `LabeledExample.requirement_id` keeps no foreign key —
+its checklist item already guarantees integrity — and is documented as a
+denormalized copy.
+
+This is the doc being implemented rather than a deviation from it, but it changed
+a shipped migration's shape, so it is recorded here.
+
+**One real deviation alongside it:** `Requirement` gains `approved_by` and
+`approved_at`, which the doc's field table does not list. A safety requirement
+that went live with nobody's name on it cannot be defended later, and
+`RuleSet.published_by` only records who published the set, not who approved each
+requirement in it. A check constraint enforces that an approved requirement names
+its approver.
+
+---
+
+## Q16 — Document ingestion is not built yet
+
+**Status:** open · raised 2026-09-17 · blocks: running the compiler on a real spec
+
+Everything downstream of ingestion exists — extraction, precedence, curation,
+versioning — but nothing yet turns a PDF into the section text and page images
+those steps consume. `SourceDocument` has a `storage_key` and no reader.
+
+**What it needs, per `ARCHITECTURE.md` section 1:** PDF to text plus layout
+(headings, tables, clause numbers), the page image stored alongside so every
+requirement can show its source, and the text-layer check from Q2 that flags a
+scanned document to the curator rather than silently OCR'ing or dropping it.
+
+**Why it is last rather than first:** it is the piece with a real external
+dependency (a PDF library, page rendering, object storage) and the least
+interesting logic. Building it after the rules it feeds means the rules were
+testable from the start without a fixture PDF for every case.
