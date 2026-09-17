@@ -16,6 +16,31 @@ jobs:
     defaults:
       run:
         working-directory: apps/api
+
+    # The database-level guards (safety never auto-clears, rulings are
+    # append-only) live in the migration, so the tests that cover them need a
+    # real Postgres. REQUIRE_TEST_DATABASE turns a missing one into a failure
+    # rather than a silent skip.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: fie
+          POSTGRES_PASSWORD: fie_ci
+          POSTGRES_DB: fie_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fie -d fie_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      REQUIRE_TEST_DATABASE: "1"
+      TEST_DATABASE_URL: postgresql+psycopg://fie:fie_ci@localhost:5432/fie_test
+      DATABASE_URL: postgresql+psycopg://fie:fie_ci@localhost:5432/fie_test
+
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +65,12 @@ jobs:
 
       - name: Pytest
         run: pytest -q
+
+      - name: Migration round trip
+        run: |
+          alembic upgrade head
+          alembic downgrade base
+          alembic upgrade head
 
   reviewer:
     name: Reviewer console — typecheck

@@ -40,9 +40,15 @@ Requires Python 3.12, Node 22, and Docker.
 cp .env.example .env
 make setup      # API virtualenv and dependencies
 make up         # Postgres, Redis, MinIO
+make migrate    # apply Alembic migrations
 make check      # lint, typecheck, tests
 make api        # http://localhost:8000/health
 ```
+
+Most of the API test suite needs a migrated Postgres and **skips** without one,
+so run `make up && make migrate` first. Set `REQUIRE_TEST_DATABASE=1` to turn
+that skip into a failure — CI does, so a misconfigured database cannot quietly
+delete the safety tests from the run.
 
 `make help` lists the rest. The two TypeScript apps use plain npm:
 
@@ -78,6 +84,11 @@ you have a release you trust.
   which also covers the failure mode this introduces.
 - **Schemas in `packages/schemas/` are the contract.** Generate types from
   them; do not hand-write a second copy in an app.
-- **No schema edits outside an Alembic migration.**
+- **No schema edits outside an Alembic migration.** A test asserts that the
+  models and the migration agree, so a model changed without one fails CI.
+- **Some invariants live in the database.** `safety` requirements cannot reach
+  `auto_cleared`, and `ruling` and `labeled_example` reject UPDATE and DELETE.
+  These are triggers in the migration, so they hold for the API, a Celery task,
+  and a person at a psql prompt alike.
 - Tests are required for the policy layer, precedence resolver, tag reconciler,
   and event replay before those merge.

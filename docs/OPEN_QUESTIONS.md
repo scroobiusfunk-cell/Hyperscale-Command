@@ -223,7 +223,7 @@ cadence holds. Needs a named owner before the pilot starts.
 
 ## Q10 — Append-only rulings have nowhere to live
 
-**Status:** open · raised 2026-09-17 · blocks: reviewer console, migrations
+**Status:** settled 2026-09-17 — `Ruling` record approved and implemented
 
 CLAUDE.md: "Reviewer rulings on safety items are append-only. Corrections are
 new rulings." `ChecklistItem` cannot satisfy that. It has one `resolved_by` and
@@ -247,10 +247,11 @@ Three things need the same missing record:
    `labeled_at` are a projection of a ruling. Deriving them from a mutable
    field means the training data silently changes when a correction is made.
 
-**Position taken:** none yet — this needs a decision before the reviewer console
-or the migrations land.
+**Resolution:** the proposal below was approved and is implemented in the core
+records migration. `ruling` and `labeled_example` are append-only, enforced by a
+database trigger rather than by convention.
 
-**Proposal:** add a `Ruling` record, append-only, never updated or deleted:
+**Proposal, as built:** a `Ruling` record, append-only, never updated or deleted:
 `id`, `checklist_item_id`, `verdict` (`pass` / `fail` / `recapture_requested`),
 `note`, `reviewer_id`, `created_at`, `supersedes` (nullable ruling id). The
 existing `ChecklistItem.state`, `resolved_at` and `resolved_by` become a
@@ -261,3 +262,29 @@ installation.
 
 That adds a sixth schema to `packages/schemas/`, which CLAUDE.md scopes to five,
 so it is a question rather than a change already made.
+
+---
+
+## Q11 — Three supporting tables the architecture doc does not describe
+
+**Status:** open · raised 2026-09-17 · already implemented, easy to reverse
+
+The core records could not be given real foreign keys without somewhere for
+their references to point, so the core records migration also creates:
+
+| Table | Why | What it would mean to drop it |
+| --- | --- | --- |
+| `app_user` | `assigned_tech`, `reviewer`, `resolved_by`, `captured_by` and `Ruling.reviewer_id` are all user ids. A ruling that cannot name a real person is precisely what CLAUDE.md forbids | Those columns become unvalidated UUIDs and "named reviewer" stops being enforceable |
+| `source_document` | `Requirement.source` is doc id, clause and page. A requirement that cannot point at its clause is not curatable | `source_doc_id` becomes a dangling UUID |
+| `project` | Requirements, assets and rule sets are per project; recipes are explicitly shared across projects. Retrofitting tenancy after data exists is expensive | Single-project-only, with a painful migration later |
+
+All three are deliberately thin — SSO owns identity, the Requirements Compiler
+will own document content, and `project` holds little more than a name and the
+CxAlloy project id.
+
+`project` is the one worth arguing about. It is the only one added for a reason
+that is partly about later rather than now, which brushes against the CLAUDE.md
+rule about not building ahead of the phase. The counter-argument is that the
+architecture doc already assumes multiple projects when it says recipes are
+shared across them, and that adding a tenancy column to eight populated tables
+later is the kind of change that goes wrong. Say the word and it comes out.
