@@ -11,7 +11,7 @@ recorded, code matches), `deferred` (not needed until a later phase).
 
 ## Q1 — Are the Phase 1 on-device capture gates allowed to use computer vision?
 
-**Status:** open · raised 2026-09-17 · blocks: Capture Plan Compiler, field app
+**Status:** settled 2026-09-17 — non-CV gates confirmed · blocks: nothing
 
 `ARCHITECTURE.md` §3 specifies the gate for `visual, presence` as "object
 detector confirms class present" and for `visual, readable` as "OCR returns
@@ -119,7 +119,7 @@ actually asks for.
 
 ## Q5 — The reviewer needs a recapture ruling, not just pass and fail
 
-**Status:** open · raised 2026-09-17 · blocks: reviewer console, ChecklistItem model
+**Status:** settled 2026-09-17 — recapture action confirmed · blocks: nothing
 
 The policy layer in `ARCHITECTURE.md` §4 routes `insufficient_evidence` to
 recapture, but that verdict comes from a grader, and Phase 1 has no graders. The
@@ -141,20 +141,18 @@ pass and fail do.
 
 ---
 
-## Q6 — CxAlloy API surface is unconfirmed
+## Q6 — CxAlloy API surface
 
-**Status:** open · raised 2026-09-17 · blocks: write-back queue implementation
+**Status:** settled 2026-09-17 — API is READ ONLY
 
-`ARCHITECTURE.md` "Sync and integrations" requires confirming the API surface
-available on the current CxAlloy plan before committing to write-back, and lists
-scheduled export-import as the fallback. This is also an unchecked box in the
-doc's own pre-Phase-1 list.
+The API on the current plan supports reads only. The write-back path in
+`ARCHITECTURE.md` is superseded; results leave as an export package and the read
+API is used for equipment-list sync. Recorded in
+[ADR-0001](adr/0001-cxalloy-read-only-results-export.md), which also covers the
+new failure mode this introduces (rulings held in this platform that the system
+of record does not yet know about).
 
-**Position taken:** write-back sits behind a `CxAlloyClient` interface with a
-logging no-op implementation. The queue, retry, and idempotency machinery are
-real and tested; the transport is stubbed. Nothing in the platform reads from
-CxAlloy as a source of truth beyond the initial equipment list import, which is
-a file import in Phase 1.
+Follow-on questions the answer opened: Q8.
 
 ---
 
@@ -166,7 +164,7 @@ Carried over from `ARCHITECTURE.md` "Open questions to settle before Phase 1".
 Recorded here so they have one home.
 
 1. Which equipment class and building for the pilot. *Affects seed data and the first rule set only; code is class-agnostic.*
-2. CxAlloy API access level, and write-back versus export-import. *See Q6.*
+2. ~~CxAlloy API access level, and write-back versus export-import.~~ **Answered: read only, export-import.** See Q6 and ADR-0001.
 3. Who curates the first rule set, and how many hours they have. *Curation is the critical path to a usable rule set; no code depends on the answer.*
 4. Target false-pass rates per criticality. *Phase 2. Deferred.*
 5. Whether the reviewer role sits with the project or a central team. *Affects how reviewers are scoped to projects in the auth model; Phase 1 assumes project-scoped, which is the narrower grant.*
@@ -177,3 +175,46 @@ whether it is available in a dev tenant. Safety rulings carry a reviewer's real
 identity, so Phase 1 cannot ship on fake logins. Position taken: build against
 OIDC with the provider configured per environment, and use a local dev identity
 provider that is refused at startup outside development.
+
+---
+
+## Q8 — What does CxAlloy's import accept?
+
+**Status:** open · raised 2026-09-17 · blocks: export package format
+
+ADR-0001 commits to delivering results as an import file, but the importer's
+actual capabilities are unknown. Three things decide the export format, and we
+are guessing at all three:
+
+1. **File format and columns.** Which file types the importer takes, and which
+   columns it matches checklist lines on. Best guess: the column layout of the
+   checklist *export*, on the assumption that import mirrors export. Unverified.
+2. **Attachments.** Whether photos can be imported at all. If not, evidence
+   stays in this platform's storage and the manifest carries URLs into it —
+   which makes this platform a dependency of the permanent record rather than a
+   feeder to it. ADR-0001 argues that is worth paying to avoid.
+3. **Issues.** Whether construction issues can be created by import, or only by
+   hand. Decides whether failed items are an import file or a worklist.
+
+**Position taken:** the export renderer sits behind a `ResultsExporter`
+interface with one implementation that writes a documented, deterministic CSV
+plus a photo directory. The format is expected to change once someone runs a
+real import; nothing upstream of the renderer depends on its shape.
+
+**How to settle it cheaply:** hand-build one import file against a test project
+in CxAlloy before the exporter is written. An afternoon of someone clicking
+through the importer saves rebuilding the format twice.
+
+---
+
+## Q9 — Who imports the export package, and how often?
+
+**Status:** open · raised 2026-09-17 · blocks: nothing in code; blocks the pilot running
+
+ADR-0001 turns results delivery into a recurring manual task. Unowned recurring
+tasks do not happen, and the consequence here is not cosmetic: an undelivered
+*failed* item is a defect nobody has been told to fix.
+
+**Position taken:** assume weekly, matching the existing reporting cadence, and
+build the undelivered-rulings metric so the gap is visible whether or not the
+cadence holds. Needs a named owner before the pilot starts.

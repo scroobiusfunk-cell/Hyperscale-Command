@@ -234,6 +234,11 @@ Conflict rule: if a reviewer changed an item's state while the tech was offline,
 
 CxAlloy write-back: on `auto_cleared`, `reviewer_passed`, or `reviewer_failed`, update the corresponding checklist line, attach the evidence photos, and open an issue for failures with the grader's observed versus expected values in the description. Write-back is a separate queue with retries, so a CxAlloy outage never blocks the field. Confirm the API surface available on the CxAlloy plan before committing to this path; if write access is limited, a scheduled export import is the fallback.
 
+> **Superseded 2026-09-17.** Confirmed: the CxAlloy API on the current plan is read
+> only. The fallback applies. Results leave as an export package and the read API is
+> used for equipment-list sync. See
+> [ADR-0001](adr/0001-cxalloy-read-only-results-export.md).
+
 Scan data: ingest deviation reports from the scanning software as a batch per scan milestone, keyed by asset tag and model element id. Store the measured offsets on the asset; the scan lookup grader reads from there. No point cloud processing in the platform itself.
 
 ## Technology stack
