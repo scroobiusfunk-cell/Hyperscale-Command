@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Field Inspection",
+    "slug": "fie-field",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fieldinspectionengine.field",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to photograph equipment as evidence for inspection checklist items."
+      }
+    },
+    "android": {
+      "package": "com.fieldinspectionengine.field",
+      "permissions": ["CAMERA"]
+    },
+    "plugins": ["expo-camera", "expo-sqlite"]
+  }
+}
