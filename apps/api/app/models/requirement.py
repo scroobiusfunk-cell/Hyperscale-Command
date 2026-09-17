@@ -88,6 +88,16 @@ class Requirement(TimestampMixin, Base):
     source_clause: Mapped[str] = mapped_column(String(200), nullable=False)
     source_page: Mapped[int] = mapped_column(Integer, nullable=False)
 
+    check_key: Mapped[str | None] = mapped_column(
+        String(300),
+        nullable=True,
+        comment=(
+            "What this requirement checks, normalized. Two requirements sharing a check_key "
+            "are competing to govern the same check and go through precedence resolution "
+            "together. Computed at compile time; a curator can edit it to group requirements "
+            "the rule missed. See docs/OPEN_QUESTIONS.md Q17."
+        ),
+    )
     precedence_rank: Mapped[int] = mapped_column(Integer, nullable=False)
     why_it_matters: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[RequirementStatus] = mapped_column(

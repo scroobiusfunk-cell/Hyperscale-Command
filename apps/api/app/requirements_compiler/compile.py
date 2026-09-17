@@ -23,6 +23,7 @@ from app.requirements_compiler.extraction import (
     ExtractionOutcome,
     extract_from_section,
 )
+from app.requirements_compiler.grouping import compute_check_key
 from app.requirements_compiler.precedence import BASE_RANK
 from app.requirements_compiler.schema import UnplaceableSpan
 
@@ -107,9 +108,15 @@ def compile_document(
                     source_doc_id=document.id,
                     source_clause=extracted.source_clause,
                     source_page=extracted.source_page,
-                    # The document type's base rank. Resolving conflicts between
-                    # documents needs the requirements grouped by what they
-                    # check, which is not settled — see OPEN_QUESTIONS Q17.
+                    check_key=compute_check_key(
+                        equipment_class=list(extracted.applies_to.equipment_class),
+                        system=extracted.applies_to.system,
+                        location_type=extracted.applies_to.location_type,
+                        check_subject=extracted.check_subject,
+                    ),
+                    # A starting rank from the document type. Once a second
+                    # document is compiled into the same rule set,
+                    # resolve_precedence regrades every contested group.
                     precedence_rank=BASE_RANK[document.doc_type],
                     why_it_matters=extracted.why_it_matters,
                     status=compiled.status,

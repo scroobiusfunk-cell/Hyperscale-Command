@@ -6,6 +6,7 @@ Every model is imported here so Alembic's autogenerate sees the full metadata.
 from app.models.asset import Asset, AssetAlias, AssetSubmittal
 from app.models.capture_recipe import CaptureRecipe
 from app.models.checklist_item import ChecklistItem
+from app.models.conflict import ConflictStatus, RequirementConflict
 from app.models.document import SourceDocument
 from app.models.document_page import DocumentPage
 from app.models.evidence import Evidence
@@ -28,6 +29,7 @@ __all__ = [
     "AssetSubmittal",
     "CaptureRecipe",
     "ChecklistItem",
+    "ConflictStatus",
     "DocumentPage",
     "Evidence",
     "GraderResult",
@@ -37,6 +39,7 @@ __all__ = [
     "ReconciliationQueueReason",
     "ReconciliationQueueStatus",
     "Requirement",
+    "RequirementConflict",
     "RuleSet",
     "RuleSetStatus",
     "Ruling",

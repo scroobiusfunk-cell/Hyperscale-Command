@@ -54,6 +54,7 @@ def ingest(db: Session, project: Project, data: bytes) -> SourceDocument:
 def one_requirement_per_section(
     criticality: Criticality = Criticality.QUALITY,
     uncertain: list[str] | None = None,
+    subject: str = "equipment nameplate",
 ) -> FakeProvider:
     def handler(spec: PromptSpec, section_text: str) -> ExtractionResponse:
         first_line = section_text.strip().splitlines()[-1][:80]
@@ -62,6 +63,7 @@ def one_requirement_per_section(
                 ExtractedRequirement(
                     applies_to=AppliesTo(equipment_class=["switchboard"]),
                     statement=first_line,
+                    check_subject=subject,
                     verification_method="visual",
                     pass_criteria=PresenceCriteria(
                         kind="presence", expected="present", subject="label"
@@ -183,6 +185,7 @@ class TestWhenThingsGoWrong:
                     ExtractedRequirement(
                         applies_to=AppliesTo(equipment_class=["switchboard"]),
                         statement="Provide a nameplate.",
+                        check_subject="equipment nameplate",
                         verification_method="visual",
                         pass_criteria=PresenceCriteria(
                             kind="presence", expected="present", subject="nameplate"
@@ -217,3 +220,125 @@ class TestWhenThingsGoWrong:
                 document_id=uuid.uuid4(),
                 rule_set_id=rule_set.id,
             )
+
+
+class TestTwoDocumentsGoverningTheSameCheck:
+    """The thing Q17 left undone: a spec and its submittal disagreeing."""
+
+    def _ingest_as(
+        self, db: Session, project: Project, doc_type: DocumentType, title: str, body: str
+    ) -> SourceDocument:
+        return ingest_pdf(
+            db,
+            InMemoryStorage(),
+            project_id=project.id,
+            doc_type=doc_type,
+            title=title,
+            data=text_pdf([["1.7 FIELD QUALITY CONTROL", "", f"A. {body}"]]),
+            bucket=BUCKET,
+        ).document
+
+    def test_a_spec_and_a_submittal_on_the_same_check_are_ranked(
+        self, db: Session, project: Project, rule_set: RuleSet
+    ) -> None:
+        from app.requirements_compiler.grouping import open_conflicts, resolve_precedence
+
+        spec = self._ingest_as(
+            db,
+            project,
+            DocumentType.SPEC_SECTION,
+            "26 05 00",
+            "Each switchboard shall bear an equipment nameplate.",
+        )
+        submittal = self._ingest_as(
+            db,
+            project,
+            DocumentType.APPROVED_SUBMITTAL,
+            "Switchboard submittal",
+            "Nameplates shall be engraved laminated phenolic.",
+        )
+
+        for document in (spec, submittal):
+            compile_document(
+                db,
+                one_requirement_per_section(),
+                document_id=document.id,
+                rule_set_id=rule_set.id,
+            )
+
+        report = resolve_precedence(db, rule_set.id)
+
+        assert report.contested == 1, "the same check_subject from two documents"
+        assert report.resolved == 1
+        assert open_conflicts(db, rule_set.id) == []
+
+        by_doc = {r.source_doc_id: r for r in db.query(Requirement).all()}
+        assert by_doc[spec.id].precedence_rank < by_doc[submittal.id].precedence_rank
+
+    def test_a_safety_disagreement_between_them_is_surfaced(
+        self, db: Session, project: Project, rule_set: RuleSet
+    ) -> None:
+        from app.requirements_compiler.grouping import open_conflicts, resolve_precedence
+
+        spec = self._ingest_as(
+            db,
+            project,
+            DocumentType.SPEC_SECTION,
+            "26 05 00",
+            "Each switchboard shall bear an arc flash warning label.",
+        )
+        submittal = self._ingest_as(
+            db,
+            project,
+            DocumentType.APPROVED_SUBMITTAL,
+            "Switchboard submittal",
+            "Arc flash labels are supplied by the manufacturer.",
+        )
+
+        for document in (spec, submittal):
+            compile_document(
+                db,
+                one_requirement_per_section(criticality=Criticality.SAFETY),
+                document_id=document.id,
+                rule_set_id=rule_set.id,
+            )
+
+        resolve_precedence(db, rule_set.id)
+
+        conflicts = open_conflicts(db, rule_set.id)
+        assert len(conflicts) == 1
+        assert "safety" in conflicts[0].reason.lower()
+
+    def test_different_checks_from_the_two_documents_do_not_collide(
+        self, db: Session, project: Project, rule_set: RuleSet
+    ) -> None:
+        from app.requirements_compiler.grouping import resolve_precedence
+
+        spec = self._ingest_as(
+            db, project, DocumentType.SPEC_SECTION, "26 05 00", "Nameplates required."
+        )
+        submittal = self._ingest_as(
+            db,
+            project,
+            DocumentType.APPROVED_SUBMITTAL,
+            "Submittal",
+            "Arc flash labels supplied.",
+        )
+
+        compile_document(
+            db,
+            one_requirement_per_section(subject="equipment nameplate"),
+            document_id=spec.id,
+            rule_set_id=rule_set.id,
+        )
+        compile_document(
+            db,
+            one_requirement_per_section(subject="arc flash warning label"),
+            document_id=submittal.id,
+            rule_set_id=rule_set.id,
+        )
+
+        report = resolve_precedence(db, rule_set.id)
+
+        assert report.groups == 2
+        assert report.contested == 0

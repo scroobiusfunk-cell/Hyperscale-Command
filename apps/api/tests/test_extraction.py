@@ -41,6 +41,7 @@ def a_requirement(
             location_type="electrical_room",
         ),
         statement="The equipment nameplate shows the panel tag.",
+        check_subject="equipment nameplate",
         verification_method=VerificationMethod.VISUAL,
         pass_criteria=PresenceCriteria(
             kind="presence", expected="present", subject="equipment nameplate"
@@ -214,6 +215,7 @@ class TestTheSchemaIsStrict:
             ExtractedRequirement(
                 applies_to=AppliesTo(equipment_class=["switchboard"]),
                 statement="x",
+                check_subject="nameplate",
                 verification_method=VerificationMethod.VISUAL,
                 pass_criteria=PresenceCriteria(
                     kind="presence", expected="present", subject="nameplate"
@@ -233,6 +235,7 @@ class TestTheSchemaIsStrict:
             ExtractedRequirement(
                 applies_to=AppliesTo(equipment_class=["switchboard"]),
                 statement="",
+                check_subject="nameplate",
                 verification_method=VerificationMethod.VISUAL,
                 pass_criteria=PresenceCriteria(
                     kind="presence", expected="present", subject="nameplate"
@@ -255,6 +258,7 @@ class TestTheSchemaIsStrict:
                         {
                             "applies_to": {"equipment_class": ["switchboard"]},
                             "statement": "x",
+                            "check_subject": "nameplate",
                             "verification_method": "visual",
                             "pass_criteria": {"kind": "vibes", "subject": "nameplate"},
                             "criticality": "quality",

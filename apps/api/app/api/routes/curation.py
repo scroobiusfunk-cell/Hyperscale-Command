@@ -16,8 +16,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.deps import CurrentUser, DbSession
-from app.models import Requirement, RuleSet
+from app.models import Requirement, RequirementConflict, RuleSet
 from app.models.enums import Criticality, RequirementStatus, VerificationMethod
+from app.requirements_compiler import grouping
 from app.requirements_compiler import rule_set as service
 
 router = APIRouter(tags=["curation"])
@@ -118,7 +119,40 @@ class DiffResponse(BaseModel):
     unchanged: int
 
 
-def _conflict(exc: service.CurationError) -> HTTPException:
+class ConflictResponse(BaseModel):
+    id: uuid.UUID
+    check_key: str
+    reason: str
+    candidates: list[dict[str, Any]]
+    status: str
+    winner_requirement_id: uuid.UUID | None
+
+    @classmethod
+    def of(cls, conflict: RequirementConflict) -> ConflictResponse:
+        return cls(
+            id=conflict.id,
+            check_key=conflict.check_key,
+            reason=conflict.reason,
+            candidates=list(conflict.candidates),
+            status=conflict.status.value,
+            winner_requirement_id=conflict.winner_requirement_id,
+        )
+
+
+class ResolveConflictRequest(BaseModel):
+    winner_requirement_id: uuid.UUID
+    note: str | None = None
+
+
+class PrecedenceReportResponse(BaseModel):
+    groups: int
+    contested: int
+    resolved: int
+    conflicts_opened: int
+    conflicts_dismissed: int
+
+
+def _conflict(exc: service.CurationError | grouping.GroupingError) -> HTTPException:
     detail: Any = (
         {"reasons": exc.reasons} if isinstance(exc, service.PublishRefusedError) else str(exc)
     )
@@ -262,3 +296,60 @@ def diff_rule_sets(
         ],
         unchanged=result.unchanged,
     )
+
+
+@router.post("/rule-sets/{rule_set_id}/resolve-precedence", response_model=PrecedenceReportResponse)
+def resolve_precedence(
+    rule_set_id: uuid.UUID, session: DbSession, user: CurrentUser
+) -> PrecedenceReportResponse:
+    """Regroup the rule set's requirements and rank each contested group.
+
+    Re-run after compiling another document into the same rule set: the conflict
+    between a spec and its submittal only exists once both are in.
+    """
+    _load_rule_set(session, rule_set_id)
+    try:
+        report = grouping.resolve_precedence(session, rule_set_id)
+    except grouping.GroupingError as exc:
+        raise _conflict(exc) from exc
+    return PrecedenceReportResponse(
+        groups=report.groups,
+        contested=report.contested,
+        resolved=report.resolved,
+        conflicts_opened=report.conflicts_opened,
+        conflicts_dismissed=report.conflicts_dismissed,
+    )
+
+
+@router.get("/rule-sets/{rule_set_id}/conflicts", response_model=list[ConflictResponse])
+def list_conflicts(
+    rule_set_id: uuid.UUID, session: DbSession, user: CurrentUser
+) -> list[ConflictResponse]:
+    _load_rule_set(session, rule_set_id)
+    return [ConflictResponse.of(c) for c in grouping.open_conflicts(session, rule_set_id)]
+
+
+@router.post(
+    "/rule-sets/{rule_set_id}/conflicts/{conflict_id}/resolve",
+    response_model=ConflictResponse,
+)
+def resolve_conflict(
+    rule_set_id: uuid.UUID,
+    conflict_id: uuid.UUID,
+    body: ResolveConflictRequest,
+    session: DbSession,
+    user: CurrentUser,
+) -> ConflictResponse:
+    """A person picks which requirement governs; the losers are retired."""
+    _load_rule_set(session, rule_set_id)
+    try:
+        conflict = grouping.resolve_conflict(
+            session,
+            conflict_id,
+            winner_requirement_id=body.winner_requirement_id,
+            resolved_by=user.id,
+            note=body.note,
+        )
+    except grouping.GroupingError as exc:
+        raise _conflict(exc) from exc
+    return ConflictResponse.of(conflict)

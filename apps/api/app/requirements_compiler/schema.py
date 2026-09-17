@@ -71,6 +71,16 @@ class ExtractedRequirement(BaseModel):
 
     applies_to: AppliesTo
     statement: str = Field(min_length=1, description="Plain language, as the tech will read it")
+    check_subject: str = Field(
+        min_length=1,
+        max_length=120,
+        description=(
+            "A short noun phrase naming the thing being checked, e.g. 'arc flash warning "
+            "label' or 'equipment nameplate'. Two documents describing the same check should "
+            "produce the same phrase, so use the plainest name for the thing and leave out "
+            "values, tolerances and qualifiers."
+        ),
+    )
     verification_method: VerificationMethod
     pass_criteria: PassCriteria
     criticality: Criticality

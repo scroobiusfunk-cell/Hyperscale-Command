@@ -95,6 +95,9 @@ you have a release you trust.
   `auto_cleared`, and `ruling` and `labeled_example` reject UPDATE and DELETE.
   These are triggers in the migration, so they hold for the API, a Celery task,
   and a person at a psql prompt alike.
+- **Requirements that conflict are surfaced, never silently resolved.** Two
+  documents governing the same check go through precedence resolution; anything
+  the rules will not settle blocks publication until a person picks a winner.
 - **Ingestion never guesses at a scan.** A document without a text layer is
   stored and flagged for a person, never silently OCR'd and never dropped. The
   compiler refuses to run on it with a reason.

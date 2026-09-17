@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from app.logging import get_logger
 from app.models import AppUser, Requirement, RuleSet, RuleSetStatus
 from app.models.enums import Criticality, RequirementStatus, UserRole
+from app.requirements_compiler.grouping import open_conflicts
 
 log = get_logger(__name__)
 
@@ -244,6 +245,16 @@ def publish(session: Session, rule_set_id: uuid.UUID, *, published_by: uuid.UUID
 
     if not approved:
         reasons.append("Nothing in this rule set is approved, so there is nothing to publish.")
+
+    # A rule set with a known contradiction in it should not be telling anyone
+    # what to check. The conflict says two documents disagree; publishing anyway
+    # means the field silently gets one of them, or both.
+    unresolved = open_conflicts(session, rule_set_id)
+    if unresolved:
+        reasons.append(
+            f"{len(unresolved)} precedence conflict(s) are unresolved. Two documents govern "
+            "the same check and a person has to choose which one stands."
+        )
 
     if reasons:
         log.warning(

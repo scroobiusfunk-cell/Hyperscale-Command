@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.config import Environment, Settings
 from app.deps import get_session
 from app.main import create_app
-from app.models import AppUser, Project, RuleSet, SourceDocument
+from app.models import AppUser, Project, Requirement, RuleSet, SourceDocument
 from app.models.enums import Criticality, RequirementStatus, UserRole
 from tests import factories as f
 
@@ -277,3 +277,104 @@ class TestDiffEndpoint:
         assert body["head_version"] == "1.1.0"
         assert len(body["added"]) == 1
         assert len(body["removed"]) == 1
+
+
+class TestConflictEndpoints:
+    def _contested_rule_set(
+        self, db: Session, project: Project, draft: RuleSet
+    ) -> tuple[Requirement, Requirement]:
+        from app.models.enums import DocumentType
+        from app.requirements_compiler.grouping import compute_check_key
+
+        key = compute_check_key(
+            equipment_class=["switchboard"],
+            system=None,
+            location_type=None,
+            check_subject="equipment nameplate",
+        )
+        made = []
+        for _ in range(2):
+            document = f.make_document(db, project)
+            document.doc_type = DocumentType.SPEC_SECTION
+            requirement = f.make_requirement(db, project, document, rule_set=draft)
+            requirement.check_key = key
+            made.append(requirement)
+        db.flush()
+        return made[0], made[1]
+
+    def test_resolving_precedence_reports_what_it_found(
+        self,
+        api: TestClient,
+        db: Session,
+        project: Project,
+        draft: RuleSet,
+        curator: AppUser,
+    ) -> None:
+        self._contested_rule_set(db, project, draft)
+
+        body = api.post(
+            f"/rule-sets/{draft.id}/resolve-precedence", headers=as_user(curator)
+        ).json()
+
+        assert body["contested"] == 1
+        assert body["conflicts_opened"] == 1
+
+    def test_conflicts_are_listed_with_what_the_rules_saw(
+        self,
+        api: TestClient,
+        db: Session,
+        project: Project,
+        draft: RuleSet,
+        curator: AppUser,
+    ) -> None:
+        self._contested_rule_set(db, project, draft)
+        api.post(f"/rule-sets/{draft.id}/resolve-precedence", headers=as_user(curator))
+
+        body = api.get(f"/rule-sets/{draft.id}/conflicts", headers=as_user(curator)).json()
+
+        assert len(body) == 1
+        assert body[0]["reason"]
+        assert len(body[0]["candidates"]) == 2
+
+    def test_a_curator_picks_the_winner(
+        self,
+        api: TestClient,
+        db: Session,
+        project: Project,
+        draft: RuleSet,
+        curator: AppUser,
+    ) -> None:
+        winner, loser = self._contested_rule_set(db, project, draft)
+        api.post(f"/rule-sets/{draft.id}/resolve-precedence", headers=as_user(curator))
+        conflict_id = api.get(f"/rule-sets/{draft.id}/conflicts", headers=as_user(curator)).json()[
+            0
+        ]["id"]
+
+        response = api.post(
+            f"/rule-sets/{draft.id}/conflicts/{conflict_id}/resolve",
+            json={"winner_requirement_id": str(winner.id), "note": "The spec governs."},
+            headers=as_user(curator),
+        )
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "resolved"
+        db.refresh(loser)
+        assert loser.status is RequirementStatus.RETIRED
+
+    def test_publishing_is_blocked_while_a_conflict_is_open(
+        self,
+        api: TestClient,
+        db: Session,
+        project: Project,
+        draft: RuleSet,
+        curator: AppUser,
+    ) -> None:
+        self._contested_rule_set(db, project, draft)
+        api.post(f"/rule-sets/{draft.id}/resolve-precedence", headers=as_user(curator))
+
+        response = api.post(f"/rule-sets/{draft.id}/publish", headers=as_user(curator))
+
+        assert response.status_code == 409
+        assert any(
+            "precedence conflict" in reason for reason in response.json()["detail"]["reasons"]
+        )

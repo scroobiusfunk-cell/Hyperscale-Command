@@ -425,7 +425,7 @@ compiler refuses to run on it with a reason rather than producing nothing.
 
 ## Q17 — When do two requirements govern the same check?
 
-**Status:** open · raised 2026-09-17 · blocks: precedence resolution across documents
+**Status:** settled 2026-09-17 — option 1 built, option 2 available as an override
 
 The precedence resolver takes a *group* of competing requirements and ranks
 them. It does not decide what a group is, and that turns out to be the harder
@@ -447,9 +447,34 @@ same equipment". Candidates, roughly in order of how much they can go wrong:
    — the model proposes, a person decides — but it is a second model call per
    requirement pair and needs its own prompt version and eval.
 
-**Position taken:** none yet, and nothing is being grouped silently in the
-meantime. An ungrouped requirement set means duplicate checklist items rather
-than a wrong one, which is the right way round to fail.
+**Built: option 1, with option 2 as the escape hatch.** Extraction now asks the
+model for a `check_subject` — a short noun phrase naming the thing being checked,
+with no values or qualifiers, so two documents describing the same check produce
+the same phrase. That plus the equipment class, system and location type
+normalizes into a `check_key`, and requirements sharing a key go through
+precedence resolution together. A curator can edit `check_key` to group the pairs
+the rule missed, which is option 2 without any extra machinery.
 
-Worth deciding once the pilot has one spec section and its submittals compiled,
-where the real conflicts can actually be counted.
+The normalization is deliberately literal: case and punctuation are ignored
+(so "name plate" groups with "nameplate"), and nothing else is. No synonyms, no
+stemming. "arc flash label" and "arc flash warning label" will not group, and
+that is the intended direction to fail in — a missed group is two checklist
+items, which a tech notices and a reviewer clears, while a wrong group silently
+discards one document's requirement and nobody finds out until the rework.
+
+A missing system or location type is treated as a literal wildcard rather than a
+match-anything, so a requirement that applies everywhere does not quietly absorb
+one scoped to electrical rooms.
+
+**Option 3 was not built.** Model-proposed grouping needs its own prompt version,
+its own eval and a second call per pair, and none of that is worth doing before
+there is a real document set to measure the deterministic rule against. The
+number to watch on the pilot is how many conflicts a curator creates by hand
+with a `check_key` edit; if that is most of them, the rule is too literal.
+
+**Consequences elsewhere:** a rule set with an open conflict cannot be published.
+Two documents disagreeing about a check is exactly the thing that should not
+reach a tech, and resolving a conflict is a person picking the winner, which
+retires the losers rather than deleting them — which document lost and who
+decided is the answer when someone later asks why the submittal's version is not
+being checked.
