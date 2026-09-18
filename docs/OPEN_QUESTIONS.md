@@ -724,3 +724,54 @@ set *is* for a given asset, and that is a project setup question — somebody ha
 to declare "these are the documents that govern Division 26 on this job" before
 the platform can tell you one is absent. That declaration does not exist yet and
 is a question for the first real project, not an invention.
+
+---
+
+## Q27 — The teaching loop is open: nothing reaches the tech
+
+**Status:** open — raised 2026-09-18, needs a decision on phase
+
+CLAUDE.md describes the product as one that "guides the tech through capturing
+evidence, grades what it can, routes the rest to a remote reviewer, and trains
+the tech as they go", and the architecture doc calls it "an inspection assistant
+and a teaching loop". The loop is currently open at the far end.
+
+What a tech gets today: the requirement in plain words, the `why_it_matters`
+line, and the capture steps. That is teaching *before* the shot.
+
+What a tech gets after: nothing. A reviewer rules on the item, writes a note
+explaining what was wrong — the note is mandatory on a fail or a recapture — and
+that note is stored on the Ruling and shown to nobody. `review/service.py` never
+looks at who captured the evidence. The only message that reaches a device is the
+offline conflict notice, which says a reviewer changed the item's state while the
+tech was away, but not what the ruling was or why.
+
+So a tech can walk a building for a month, have every item carefully ruled on,
+and learn nothing from any of it. In that state the tech is a camera operator and
+the reviewer's notes are training data for a future model rather than for a
+person.
+
+**Where the phase boundary falls, and why it is not obvious:**
+
+The full teaching machinery — predict-then-reveal, competency scoring per
+(tech, item_type), scaffolding fade, spaced repetition of disagreements,
+self-clear unlock — is section 6 of the architecture doc and lands in **Phase 3**
+of the build plan. None of it should be built now.
+
+But the plain feedback path needs none of that machinery. No scores, no
+thresholds, no state machine: just showing a tech the ruling and the note on work
+they captured. The argument that it belongs in Phase 1 is that without it the
+"teaching loop" in the product definition does not exist at all, and the Phase 1
+exit metric of 1,000+ labeled examples is reached with the notes never having
+taught anybody anything.
+
+The argument against is that the Phase 1 deliverable list does not mention it,
+and section 6 owns everything tech-facing.
+
+**Conservative option taken for now:** nothing built. This is a phase question,
+and CLAUDE.md says to confirm before Phase 2+ work rather than to decide it here.
+
+**What would settle it:** a call on whether "the tech can see the ruling and the
+note on their own captures" is Phase 1 scope. It is roughly one endpoint and one
+screen, and it changes what the reviewer's note is *for* — coaching a person
+rather than labelling a row.
