@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Protocol
 
+from botocore.exceptions import ClientError
+
 from app.config import Settings
 from app.logging import external_call, get_logger
 
@@ -59,10 +61,16 @@ class S3Storage(ObjectStorage):
         return key
 
     def get(self, bucket: str, key: str) -> bytes:
-        with external_call("storage", "get", version="s3", bucket=bucket, key=key) as record:
-            response = self._client.get_object(Bucket=bucket, Key=key)
-            body: bytes = response["Body"].read()
-            record["byte_size"] = len(body)
+        # Both implementations raise StorageError for an object that is not
+        # there, so a caller can tell "missing" from "broken" without knowing
+        # which backend it is talking to.
+        try:
+            with external_call("storage", "get", version="s3", bucket=bucket, key=key) as record:
+                response = self._client.get_object(Bucket=bucket, Key=key)
+                body: bytes = response["Body"].read()
+                record["byte_size"] = len(body)
+        except ClientError as exc:
+            raise StorageError(f"No object at {bucket}/{key}") from exc
         return body
 
     def exists(self, bucket: str, key: str) -> bool:
