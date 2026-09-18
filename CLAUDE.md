@@ -1,10 +1,14 @@
-# Field Inspection Engine
+# Inspection Understudy AI
 
 Read `docs/ARCHITECTURE.md` before doing anything. It is the source of truth for scope, schemas, and boundaries. If code and the doc disagree, raise it; do not silently pick one.
 
 ## What this is
 
-A platform that lets a few qualified inspectors supervise many less-qualified field techs. It compiles specs and submittals into requirements, binds them to physical assets, guides the tech through capturing evidence, grades what it can, routes the rest to a remote reviewer, and trains the tech as they go. It is an inspection assistant and a teaching loop, not an inspector of record.
+A tool for training green inspectors and superintendents in how to perform an inspection: what to look for, what good looks like, and what wrong looks like. Training is the purpose; the reach it gives a few qualified inspectors is the side effect.
+
+It compiles specs and submittals into requirements, binds them to physical assets, and guides a learner through the walk. At each item the learner sees worked examples, commits to a call before capturing anything, and photographs the evidence. A qualified reviewer rules remotely, and the ruling returns to the learner beside the rule and their own photograph. Agreement between the learner's call and the reviewer's is measured per kind of check.
+
+It is an inspection assistant and a teaching loop, not an inspector of record. The code says *tech* where this says *learner*; they are the same person.
 
 ## Current phase
 

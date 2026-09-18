@@ -31,7 +31,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         log.info("api.shutdown")
 
     app = FastAPI(
-        title="Field Inspection Engine API",
+        title="Inspection Understudy AI API",
         version="0.1.0",
         lifespan=lifespan,
     )

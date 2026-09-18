@@ -1,22 +1,27 @@
 {
   "expo": {
-    "name": "Field Inspection",
-    "slug": "fie-field",
+    "name": "Understudy",
+    "slug": "understudy-field",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fieldinspectionengine.field",
+      "bundleIdentifier": "com.inspectionunderstudy.field",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to photograph equipment as evidence for inspection checklist items."
       }
     },
     "android": {
-      "package": "com.fieldinspectionengine.field",
-      "permissions": ["CAMERA"]
+      "package": "com.inspectionunderstudy.field",
+      "permissions": [
+        "CAMERA"
+      ]
     },
-    "plugins": ["expo-camera", "expo-sqlite"]
+    "plugins": [
+      "expo-camera",
+      "expo-sqlite"
+    ]
   }
 }

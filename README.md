@@ -1,12 +1,22 @@
-# Field Inspection Engine
+# Inspection Understudy AI
 
-A platform that lets a few qualified inspectors supervise many less-qualified
-field techs. It compiles specs and submittals into requirements, binds them to
-physical assets, guides a tech through capturing evidence, routes the result to
-a remote reviewer, and trains the tech as they go.
+Trains green inspectors and superintendents in how to perform an inspection:
+what to look for, what good looks like, and what wrong looks like. It does it
+with real work rather than courseware.
+
+It compiles specs and submittals into requirements, binds them to physical
+assets, and guides a learner through the walk. At each item the learner sees
+worked examples, commits to a call **before** photographing anything, and
+captures the evidence. A qualified inspector rules on it remotely in seconds,
+and the ruling comes back as a lesson — beside the rule it came from and the
+photograph the learner took.
+
+The same loop lets a few qualified inspectors cover far more work than they
+could walk themselves, but reach is the side effect. Competence is the product.
 
 It is an inspection assistant and a teaching loop, **not an inspector of
-record**. CxAlloy is the system of record.
+record**. A named person is accountable for every judgement, `safety` items
+never auto-clear, and CxAlloy is the system of record.
 
 - `docs/ARCHITECTURE.md` — source of truth for scope, schemas, and boundaries
 - `CLAUDE.md` — working rules and current phase

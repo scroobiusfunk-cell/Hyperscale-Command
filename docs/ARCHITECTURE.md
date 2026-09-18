@@ -1,4 +1,4 @@
-# Field Inspection Engine — Architecture
+# Inspection Understudy AI — Architecture
 
 2026-09-17 · David Butler
 

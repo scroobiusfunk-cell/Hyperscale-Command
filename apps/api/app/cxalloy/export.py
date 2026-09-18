@@ -261,7 +261,7 @@ def _manifest_rows(rows: list[_Row], *, failures_only: bool) -> list[list[str]]:
 
 
 README_TEXT = f"""\
-Field Inspection Engine — results to enter in CxAlloy
+Inspection Understudy AI — results to enter in CxAlloy
 ====================================================
 
 Start with {WORKLIST_NAME}. That is the worklist: one row per ruling, in CxAlloy

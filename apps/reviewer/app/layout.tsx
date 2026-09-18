@@ -4,7 +4,7 @@ import './globals.css';
 import { Nav } from '../components/Nav';
 
 export const metadata: Metadata = {
-  title: 'Reviewer console — Field Inspection Engine',
+  title: 'Reviewer console — Inspection Understudy AI',
   description: 'Evidence by item, one-action rulings, and what is waiting.',
 };
 

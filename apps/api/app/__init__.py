@@ -1,1 +1,1 @@
-"""Field Inspection Engine API."""
+"""Inspection Understudy AI API."""

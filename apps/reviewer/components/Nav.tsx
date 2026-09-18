@@ -16,12 +16,12 @@ export function Nav() {
     <nav className="sidebar" aria-label="Sections">
       <div className="brand">
         <span className="brand-mark" aria-hidden="true">
-          FI
+          IU
         </span>
         <span>
           <span className="brand-name">Reviewer console</span>
           <br />
-          <span className="brand-sub">Field Inspection Engine</span>
+          <span className="brand-sub">Understudy</span>
         </span>
       </div>
 

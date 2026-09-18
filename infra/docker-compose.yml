@@ -1,4 +1,4 @@
-# Local development stack for the Field Inspection Engine.
+# Local development stack for Inspection Understudy AI.
 #
 # Postgres carries the pgvector extension because the Requirements Compiler
 # will need spec retrieval; nothing in Phase 1 uses vectors yet, but the
