@@ -1,7 +1,8 @@
 import { Topbar } from '../../components/Topbar';
 import { Stat } from '../../components/Stat';
 import { ConfigHint } from '../../components/ConfigHint';
-import { getDeliveryStatus, PROJECT_ID, ApiError } from '../../lib/api';
+import { DeliveryActions } from '../../components/DeliveryActions';
+import { getDeliveryStatus, listExports, PROJECT_ID, ApiError } from '../../lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,8 +10,12 @@ export default async function DeliveryPage() {
   if (!PROJECT_ID) return <ConfigHint />;
 
   let status;
+  let packages;
   try {
-    status = await getDeliveryStatus(PROJECT_ID);
+    [status, packages] = await Promise.all([
+      getDeliveryStatus(PROJECT_ID),
+      listExports(PROJECT_ID),
+    ]);
   } catch (error) {
     return (
       <>
@@ -58,6 +63,8 @@ export default async function DeliveryPage() {
             toneLabel={status.undelivered_failures > 0 ? 'Chase these' : 'None'}
           />
         </div>
+
+        <DeliveryActions exports={packages} pendingExport={status.pending_export} />
       </div>
     </>
   );

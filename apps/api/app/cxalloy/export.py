@@ -206,9 +206,38 @@ def _gather(session: Session, project_id: uuid.UUID) -> list[_Row]:
     return sorted(rows, key=lambda r: r.export_key)
 
 
+#: Extension per media type. `mimetypes.guess_extension` is not used: it answers
+#: ".jpe" for image/jpeg on some systems, and a file nobody's photo viewer opens
+#: is the same as no photo to the person raising the issue.
+_SUFFIX_BY_MIME = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/heic": "heic",
+    "image/heif": "heif",
+    "image/webp": "webp",
+    "video/mp4": "mp4",
+    "video/quicktime": "mov",
+    "application/pdf": "pdf",
+}
+
+
+def _photo_suffix(evidence: Evidence) -> str:
+    """What to call the file so it opens when somebody double-clicks it.
+
+    The media type first, because the storage key is derived from the capture's
+    id and carries no extension at all — which made every photograph in every
+    package a `.bin`. The key is still consulted for anything not in the table.
+    """
+    from_mime = _SUFFIX_BY_MIME.get((evidence.mime_type or "").lower().split(";")[0].strip())
+    if from_mime:
+        return from_mime
+    if "." in evidence.storage_key:
+        return evidence.storage_key.rsplit(".", 1)[-1]
+    return "bin"
+
+
 def _photo_path(row: _Row, evidence: Evidence) -> str:
-    suffix = evidence.storage_key.rsplit(".", 1)[-1] if "." in evidence.storage_key else "bin"
-    name = f"{evidence.step_index:02d}_{evidence.client_id}.{suffix}"
+    name = f"{evidence.step_index:02d}_{evidence.client_id}.{_photo_suffix(evidence)}"
     return f"photos/{row.asset.tag}/{row.item.id}/{name}"
 
 
@@ -295,11 +324,19 @@ def build_export(
     *,
     project_id: uuid.UUID,
     bucket: str,
+    evidence_bucket: str,
 ) -> ResultsExport:
     """Render every undelivered ruling into one package.
 
     An item already exported is not included again, so running this twice in a
     row produces an empty second package rather than a duplicate of the first.
+
+    Two buckets, named separately on purpose. The package is written to
+    `bucket`; the photographs are read from `evidence_bucket`, which is a
+    different bucket in every deployment. They were once the same argument, and
+    because a miss is swallowed so that an absent photograph cannot lose a
+    ruling, the result was a package whose `photos/` folder was empty every
+    single time and a manifest that named files which were not there.
     """
     rows = _gather(session, project_id)
 
@@ -339,7 +376,8 @@ def build_export(
                 for evidence in row.evidence:
                     try:
                         archive.writestr(
-                            _photo_path(row, evidence), storage.get(bucket, evidence.storage_key)
+                            _photo_path(row, evidence),
+                            storage.get(evidence_bucket, evidence.storage_key),
                         )
                     except StorageError:
                         # A missing photo must not lose the ruling. The row

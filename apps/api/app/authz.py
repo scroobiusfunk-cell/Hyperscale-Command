@@ -38,3 +38,20 @@ def may_view_evidence(user: AppUser, evidence: Evidence) -> bool:
     if _REVIEWING_ROLES & set(user.roles):
         return True
     return evidence.captured_by == user.id
+
+
+def may_handle_exports(user: AppUser) -> bool:
+    """Whether this person may build, download or confirm a results package.
+
+    A package is the whole project's rulings in one file, with the failures
+    called out and the photographs alongside — every judgement made on the job,
+    downloadable by anybody who can reach the endpoint. The routes had no role
+    check at all, which mattered less while nothing served the bytes and matters
+    now that the console does.
+
+    The same set as reviewing, and for the same reason: confirming a package was
+    entered into CxAlloy is an assertion about the system of record, and it
+    clears the undelivered count for everybody. It is not a thing to leave open
+    to any account holding a login.
+    """
+    return user.is_active and bool(_REVIEWING_ROLES & set(user.roles))

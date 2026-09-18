@@ -125,6 +125,25 @@ export const getItem = (itemId: string) =>
 export const getDashboard = (projectId: string) =>
   apiFetch<Dashboard>(`/review/projects/${projectId}/dashboard`);
 
+export type ExportStatus = 'pending' | 'rendered' | 'delivery_confirmed' | 'failed';
+
+export interface ExportRecord {
+  id: string;
+  status: ExportStatus;
+  item_count: number;
+  failure_count: number;
+  storage_key: string | null;
+  content_hash: string | null;
+  confirmed_by: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+  /** False for a package built when nothing was waiting. There is no file. */
+  has_file: boolean;
+}
+
+export const listExports = (projectId: string) =>
+  apiFetch<ExportRecord[]>(`/projects/${projectId}/exports`);
+
 export const getDeliveryStatus = (projectId: string) =>
   apiFetch<{
     pending_export: number;

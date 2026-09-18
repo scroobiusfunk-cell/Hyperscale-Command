@@ -39,6 +39,10 @@ from app.storage import InMemoryStorage
 from tests import factories as f
 
 BUCKET = "understudy-exports"
+#: Deliberately not the same bucket. They were once one argument, and a fake
+#: that used a single bucket for both made a wrong-bucket read look correct:
+#: every photograph was silently missing from every package for weeks.
+EVIDENCE_BUCKET = "understudy-evidence"
 
 
 @pytest.fixture
@@ -135,7 +139,9 @@ class TestThePackage:
     ) -> None:
         a_ruled_item(db, project, reviewer)
 
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         assert export.status is ExportStatus.RENDERED
         assert export.item_count == 1
@@ -149,7 +155,9 @@ class TestThePackage:
         self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
     ) -> None:
         a_ruled_item(db, project, reviewer)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         readme = read_zip(storage, export.storage_key or "")[README_NAME].decode()
         assert "read only" in readme
@@ -169,7 +177,9 @@ class TestThePackage:
             note="No label fitted.",
         )
 
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         files = read_zip(storage, export.storage_key or "")
 
         assert export.failure_count == 1
@@ -183,7 +193,9 @@ class TestThePackage:
     ) -> None:
         """Whoever opens the issue should not have to go and look it up."""
         a_ruled_item(db, project, reviewer, state=ChecklistItemState.REVIEWER_FAILED)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         failures = read_zip(storage, export.storage_key or "")[FAILURES_NAME].decode()
         assert "mislabelled panel" in failures
@@ -197,7 +209,9 @@ class TestDeterminism:
         a_ruled_item(db, project, reviewer, tag="SWBD-101")
         a_ruled_item(db, project, reviewer, tag="SWBD-102")
 
-        first = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        first = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         first_manifest = read_zip(storage, first.storage_key or "")[MANIFEST_NAME]
 
         # Put the items back as if the first export had never happened.
@@ -207,7 +221,9 @@ class TestDeterminism:
             item.cxalloy_exported_at = None
         db.flush()
 
-        second = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        second = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         second_manifest = read_zip(storage, second.storage_key or "")[MANIFEST_NAME]
 
         assert first_manifest == second_manifest
@@ -219,7 +235,9 @@ class TestDeterminism:
         item = a_ruled_item(db, project, reviewer)
         ruling = db.query(Ruling).filter_by(checklist_item_id=item.id).one()
 
-        build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         assert item.export_key == f"{item.id}:{ruling.id}"
 
@@ -229,7 +247,9 @@ class TestDeterminism:
         """A correction is a new ruling; collapsing it onto the old one loses it."""
         item = a_ruled_item(db, project, reviewer)
         original = db.query(Ruling).filter_by(checklist_item_id=item.id).one()
-        build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         first_key = item.export_key
 
         correction = Ruling(
@@ -244,7 +264,9 @@ class TestDeterminism:
         item.cxalloy_delivery_state = CxAlloyDeliveryState.PENDING_EXPORT
         db.flush()
 
-        build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         assert item.export_key != first_key
 
@@ -255,8 +277,12 @@ class TestNotExportingTheSameThingTwice:
     ) -> None:
         a_ruled_item(db, project, reviewer)
 
-        first = build_export(db, storage, project_id=project.id, bucket=BUCKET)
-        second = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        first = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
+        second = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         assert first.item_count == 1
         assert second.item_count == 0
@@ -276,7 +302,12 @@ class TestNotExportingTheSameThingTwice:
             state=ChecklistItemState.OPEN,
         )
 
-        assert build_export(db, storage, project_id=project.id, bucket=BUCKET).item_count == 0
+        assert (
+            build_export(
+                db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+            ).item_count
+            == 0
+        )
 
 
 class TestDeliveryIsAPersonsAct:
@@ -284,7 +315,9 @@ class TestDeliveryIsAPersonsAct:
         self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
     ) -> None:
         item = a_ruled_item(db, project, reviewer)
-        build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         assert item.cxalloy_delivery_state is CxAlloyDeliveryState.EXPORTED
         assert delivery_status(db, project.id).exported_not_confirmed == 1
@@ -293,7 +326,9 @@ class TestDeliveryIsAPersonsAct:
         self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
     ) -> None:
         item = a_ruled_item(db, project, reviewer)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         confirm_delivery(db, export.id, confirmed_by=reviewer.id)
 
@@ -305,7 +340,9 @@ class TestDeliveryIsAPersonsAct:
         self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
     ) -> None:
         a_ruled_item(db, project, reviewer)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         confirm_delivery(db, export.id, confirmed_by=reviewer.id)
 
         with pytest.raises(ExportError, match="not rendered"):
@@ -331,7 +368,9 @@ class TestTheUndeliveredMetric:
         self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
     ) -> None:
         a_ruled_item(db, project, reviewer)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         confirm_delivery(db, export.id, confirmed_by=reviewer.id)
 
         status = delivery_status(db, project.id)
@@ -351,7 +390,9 @@ class TestMissingEvidence:
         tech = f.make_user(db, UserRole.TECH)
         f.make_evidence(db, item, recipe, tech)  # storage has no bytes for it
 
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         assert export.item_count == 1
         files = read_zip(storage, export.storage_key or "")
@@ -376,7 +417,9 @@ class TestTheManualEntryWorklist:
         from app.cxalloy.export import WORKLIST_NAME
 
         a_ruled_item(db, project, reviewer)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         assert WORKLIST_NAME in read_zip(storage, export.storage_key or "")
         readme = read_zip(storage, export.storage_key or "")[README_NAME].decode()
@@ -389,7 +432,9 @@ class TestTheManualEntryWorklist:
         for tag in ("SWBD-300", "SWBD-100", "SWBD-200"):
             a_ruled_item(db, project, reviewer, tag=tag)
 
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         sheet = self._worklist(storage, export.storage_key or "")["Results"]  # type: ignore[index]
 
         ids = [row[1] for row in sheet.iter_rows(min_row=2, values_only=True)]
@@ -400,7 +445,9 @@ class TestTheManualEntryWorklist:
     ) -> None:
         """Nobody gets through four hundred of these without being interrupted."""
         a_ruled_item(db, project, reviewer)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         sheet = self._worklist(storage, export.storage_key or "")["Results"]  # type: ignore[index]
 
         assert sheet.cell(row=1, column=1).value == "Done"
@@ -415,7 +462,9 @@ class TestTheManualEntryWorklist:
             db, project, reviewer, tag="SWBD-102", state=ChecklistItemState.REVIEWER_FAILED
         )
 
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         workbook = self._worklist(storage, export.storage_key or "")
 
         failures = workbook["Failures"]  # type: ignore[index]
@@ -431,7 +480,9 @@ class TestTheManualEntryWorklist:
         self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
     ) -> None:
         a_ruled_item(db, project, reviewer, state=ChecklistItemState.REVIEWER_FAILED)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
 
         failures = self._worklist(storage, export.storage_key or "")["Failures"]  # type: ignore[index]
         assert any("mislabelled panel" in str(c.value or "") for c in failures[2])
@@ -446,7 +497,9 @@ class TestTheManualEntryWorklist:
         asset.cxalloy_id = None
         db.flush()
 
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         sheet = self._worklist(storage, export.storage_key or "")["Results"]  # type: ignore[index]
 
         assert sheet.cell(row=2, column=2).value == "(not in CxAlloy)"
@@ -455,10 +508,80 @@ class TestTheManualEntryWorklist:
         self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
     ) -> None:
         a_ruled_item(db, project, reviewer)
-        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
         guide = self._worklist(storage, export.storage_key or "")["How to use"]  # type: ignore[index]
 
         text = " ".join(str(row[0].value or "") for row in guide.iter_rows())
         assert "read only" in text
         assert "by hand" in text
         assert "confirm delivery" in text
+
+
+class TestThePhotographs:
+    """`photos/` is what somebody raising an issue in CxAlloy actually attaches."""
+
+    def _with_a_photo(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> tuple[ChecklistItem, bytes]:
+        from app.capture.recipes import ensure_builtin_recipes
+
+        item = a_ruled_item(
+            db, project, reviewer, state=ChecklistItemState.REVIEWER_FAILED, note="Not fitted."
+        )
+        recipe: CaptureRecipe = ensure_builtin_recipes(db)[0]
+        tech = f.make_user(db, UserRole.TECH)
+        evidence = f.make_evidence(db, item, recipe, tech)
+        photo = b"\xff\xd8\xff\xe0 the photograph itself"
+        storage.put(EVIDENCE_BUCKET, evidence.storage_key, photo, "image/jpeg")
+        return item, photo
+
+    def test_an_uploaded_photo_is_in_the_package(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        """Read from the evidence bucket, not the one the package is written to."""
+        _, photo = self._with_a_photo(db, storage, project, reviewer)
+
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
+
+        files = read_zip(storage, export.storage_key or "")
+        photos = {name: body for name, body in files.items() if name.startswith("photos/")}
+        assert len(photos) == 1, "the package must carry the evidence, not just name it"
+        assert next(iter(photos.values())) == photo
+
+    def test_a_photograph_is_named_so_it_opens(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        """The storage key has no extension, so every photo used to be a `.bin`.
+
+        Somebody raising an issue in CxAlloy attaches these. A file their photo
+        viewer refuses to open is, to them, a missing photograph.
+        """
+        self._with_a_photo(db, storage, project, reviewer)
+
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
+
+        files = read_zip(storage, export.storage_key or "")
+        photos = [name for name in files if name.startswith("photos/")]
+        assert photos and all(name.endswith(".jpg") for name in photos), photos
+
+    def test_the_manifest_names_the_file_that_is_there(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        """A manifest naming files the zip does not contain is worse than no manifest."""
+        self._with_a_photo(db, storage, project, reviewer)
+
+        export = build_export(
+            db, storage, project_id=project.id, bucket=BUCKET, evidence_bucket=EVIDENCE_BUCKET
+        )
+
+        files = read_zip(storage, export.storage_key or "")
+        named = [path for path in files[MANIFEST_NAME].decode().split(",") if "photos/" in path]
+        assert named, "the manifest should reference the photograph"
+        for path in named:
+            assert path.strip().strip('"') in files
