@@ -14,7 +14,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.models.enums import BlockedReason, MediaType
+from app.models.enums import BlockedReason, MediaType, PredictedVerdict
 from app.models.sync_event import SyncEventType
 
 
@@ -42,6 +42,21 @@ class _Base(BaseModel):
 class ItemOpened(_Base):
     event_type: Literal[SyncEventType.ITEM_OPENED]
     checklist_item_id: uuid.UUID
+
+
+class PredictionMade(_Base):
+    """The learner's own call, made before anything was revealed to them.
+
+    `reason` names which disqualifier they believe they saw. It is free text
+    here rather than an enum because the short list is the item's own
+    `disqualifiers`, which are recipe data and change with a recipe version.
+    """
+
+    event_type: Literal[SyncEventType.PREDICTION_MADE]
+    checklist_item_id: uuid.UUID
+    verdict: PredictedVerdict
+    reason: str | None = Field(default=None, max_length=200)
+    note: str | None = None
 
 
 class CaptureTaken(_Base):
@@ -89,7 +104,13 @@ class WalkCompleted(_Base):
 
 
 IncomingEvent = Annotated[
-    ItemOpened | CaptureTaken | GateFailed | ItemCaptured | ItemDeferred | WalkCompleted,
+    ItemOpened
+    | PredictionMade
+    | CaptureTaken
+    | GateFailed
+    | ItemCaptured
+    | ItemDeferred
+    | WalkCompleted,
     Field(discriminator="event_type"),
 ]
 

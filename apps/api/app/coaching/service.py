@@ -34,8 +34,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.logging import get_logger
-from app.models import Asset, ChecklistItem, Evidence, Requirement, Ruling
-from app.models.enums import ChecklistItemState, Criticality, RulingVerdict
+from app.models import Asset, ChecklistItem, Evidence, Prediction, Requirement, Ruling
+from app.models.enums import ChecklistItemState, Criticality, PredictedVerdict, RulingVerdict
 from app.models.identity import AppUser
 
 log = get_logger(__name__)
@@ -208,3 +208,117 @@ def my_work(
         awaiting=tally.awaiting_review,
     )
     return MyWork(tally=tally, feedback=tuple(entries[:limit]))
+
+
+# A recapture judges the photograph, not the installation, so it can neither
+# agree nor disagree with a call about whether the equipment is right.
+_COMPARABLE = {RulingVerdict.PASS: PredictedVerdict.PASS, RulingVerdict.FAIL: PredictedVerdict.FAIL}
+
+
+@dataclass(frozen=True)
+class Agreement:
+    """How often a learner's own call matched the senior's, per kind of check.
+
+    This is the number the whole teaching claim rests on, so what it excludes
+    matters as much as what it counts:
+
+    - `unsure` is not a wrong answer. It is excluded from the rate and reported
+      on its own, because a learner who says "I do not know" is telling the
+      truth and should not be scored as if they guessed.
+    - A `recapture_requested` ruling is excluded entirely: it is a judgement
+      about the photograph.
+    - Items with no call, or no ruling yet, are not counted.
+
+    `rate` is None rather than 0.0 when nothing is comparable yet. A rate of
+    zero means every call was wrong; no rate means there is nothing to say.
+    """
+
+    item_type: str
+    compared: int
+    agreed: int
+    unsure: int
+    #: Called it right when the senior failed it — catching real defects.
+    caught: int
+    #: Called it a pass when the senior failed it. The dangerous direction.
+    missed: int
+    #: Called it a fail when the senior passed it.
+    over_called: int
+
+    @property
+    def rate(self) -> float | None:
+        return None if self.compared == 0 else self.agreed / self.compared
+
+
+def agreement(
+    session: Session,
+    *,
+    tech_id: uuid.UUID,
+    project_id: uuid.UUID | None = None,
+) -> tuple[Agreement, tuple[Agreement, ...]]:
+    """Overall agreement and a breakdown by kind of check, most-seen first."""
+    query = (
+        select(Prediction, Ruling)
+        .join(Ruling, Ruling.checklist_item_id == Prediction.checklist_item_id)
+        .where(Prediction.predicted_by == tech_id)
+    )
+    if project_id is not None:
+        query = (
+            query.join(ChecklistItem, ChecklistItem.id == Prediction.checklist_item_id)
+            .join(Asset, Asset.id == ChecklistItem.asset_id)
+            .where(Asset.project_id == project_id)
+        )
+
+    # A correction is a new ruling; the last one for an item is what stands.
+    latest: dict[uuid.UUID, tuple[Prediction, Ruling]] = {}
+    for prediction, ruling in session.execute(query.order_by(Ruling.created_at)):
+        latest[prediction.checklist_item_id] = (prediction, ruling)
+
+    buckets: dict[str, dict[str, int]] = {}
+    for prediction, ruling in latest.values():
+        bucket = buckets.setdefault(
+            prediction.item_type,
+            {"compared": 0, "agreed": 0, "unsure": 0, "caught": 0, "missed": 0, "over": 0},
+        )
+        if prediction.verdict is PredictedVerdict.UNSURE:
+            bucket["unsure"] += 1
+            continue
+        expected = _COMPARABLE.get(ruling.verdict)
+        if expected is None:
+            continue
+        bucket["compared"] += 1
+        if prediction.verdict is expected:
+            bucket["agreed"] += 1
+            if expected is PredictedVerdict.FAIL:
+                bucket["caught"] += 1
+        elif expected is PredictedVerdict.FAIL:
+            bucket["missed"] += 1
+        else:
+            bucket["over"] += 1
+
+    per_type = tuple(
+        sorted(
+            (
+                Agreement(
+                    item_type=name,
+                    compared=b["compared"],
+                    agreed=b["agreed"],
+                    unsure=b["unsure"],
+                    caught=b["caught"],
+                    missed=b["missed"],
+                    over_called=b["over"],
+                )
+                for name, b in buckets.items()
+            ),
+            key=lambda a: (-(a.compared + a.unsure), a.item_type),
+        )
+    )
+    overall = Agreement(
+        item_type="all",
+        compared=sum(a.compared for a in per_type),
+        agreed=sum(a.agreed for a in per_type),
+        unsure=sum(a.unsure for a in per_type),
+        caught=sum(a.caught for a in per_type),
+        missed=sum(a.missed for a in per_type),
+        over_called=sum(a.over_called for a in per_type),
+    )
+    return overall, per_type

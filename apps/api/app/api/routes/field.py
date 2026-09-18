@@ -295,8 +295,21 @@ class TallyResponse(BaseModel):
     awaiting_review: int
 
 
+class AgreementResponse(BaseModel):
+    item_type: str
+    compared: int
+    agreed: int
+    unsure: int
+    caught: int
+    missed: int
+    over_called: int
+    rate: float | None
+
+
 class MyWorkResponse(BaseModel):
     tally: TallyResponse
+    agreement: AgreementResponse
+    by_item_type: list[AgreementResponse]
     feedback: list[FeedbackResponse]
 
 
@@ -313,6 +326,7 @@ def read_my_work(
     threshold, and nothing here changes what anyone is allowed to do.
     """
     result = coaching.my_work(session, tech_id=user.id, project_id=project_id, limit=limit)
+    overall, per_type = coaching.agreement(session, tech_id=user.id, project_id=project_id)
     return MyWorkResponse(
         tally=TallyResponse(
             ruled=result.tally.ruled,
@@ -321,6 +335,8 @@ def read_my_work(
             recapture_requested=result.tally.recapture_requested,
             awaiting_review=result.tally.awaiting_review,
         ),
+        agreement=_agreement(overall),
+        by_item_type=[_agreement(a) for a in per_type],
         feedback=[
             FeedbackResponse(
                 checklist_item_id=f.checklist_item_id,
@@ -339,4 +355,17 @@ def read_my_work(
             )
             for f in result.feedback
         ],
+    )
+
+
+def _agreement(a: coaching.Agreement) -> AgreementResponse:
+    return AgreementResponse(
+        item_type=a.item_type,
+        compared=a.compared,
+        agreed=a.agreed,
+        unsure=a.unsure,
+        caught=a.caught,
+        missed=a.missed,
+        over_called=a.over_called,
+        rate=a.rate,
     )

@@ -42,7 +42,7 @@ from app.models.enums import (
     RulingVerdict,
     UserRole,
 )
-from app.requirements_compiler.grouping import normalize_subject
+from app.requirements_compiler.grouping import item_type_of
 
 log = get_logger(__name__)
 
@@ -357,8 +357,7 @@ def rule(
                 checklist_item_id=item.id,
                 requirement_id=item.requirement_id,
                 evidence_ids=evidence_ids,
-                item_type=item_type
-                or normalize_subject(requirement.check_key or requirement.statement)[:100],
+                item_type=item_type or item_type_of(requirement),
                 grader_result=None,
                 human_verdict=verdict,
                 human_note=cleaned or None,

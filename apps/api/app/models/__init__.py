@@ -13,11 +13,13 @@ from app.models.evidence import Evidence
 from app.models.grader_result import GraderResult
 from app.models.identity import AppUser, Project
 from app.models.labeled_example import LabeledExample
+from app.models.prediction import Prediction
 from app.models.reconciliation import (
     ReconciliationQueueItem,
     ReconciliationQueueReason,
     ReconciliationQueueStatus,
 )
+from app.models.reference_image import ReferenceImage
 from app.models.requirement import Requirement
 from app.models.results_export import ExportStatus, ResultsExport
 from app.models.rule_set import RuleSet, RuleSetStatus
@@ -37,10 +39,12 @@ __all__ = [
     "ExportStatus",
     "GraderResult",
     "LabeledExample",
+    "Prediction",
     "Project",
     "ReconciliationQueueItem",
     "ReconciliationQueueReason",
     "ReconciliationQueueStatus",
+    "ReferenceImage",
     "Requirement",
     "RequirementConflict",
     "ResultsExport",

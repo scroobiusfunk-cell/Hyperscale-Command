@@ -116,6 +116,27 @@ class MediaType(StrEnum):
     MEASUREMENT = "measurement"
 
 
+class PredictedVerdict(StrEnum):
+    """The learner's own call, before the answer is shown.
+
+    `UNSURE` is deliberate and is not a wasted answer. Forcing a binary guess
+    teaches guessing; "I do not know" is the honest state a learner is often in,
+    and it is the one a senior most wants to see. It is excluded from the
+    agreement rate and counted on its own.
+    """
+
+    PASS = "pass"
+    FAIL = "fail"
+    UNSURE = "unsure"
+
+
+class ReferenceKind(StrEnum):
+    """Which side of the lesson an example illustrates."""
+
+    GOOD = "good"
+    WRONG = "wrong"
+
+
 class EvidenceStatus(StrEnum):
     PENDING_UPLOAD = "pending_upload"
     STORED = "stored"

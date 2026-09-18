@@ -25,9 +25,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.logging import get_logger
-from app.models import ChecklistItem, Evidence, SyncEvent
-from app.models.enums import ChecklistItemState, EvidenceStatus
+from app.models import ChecklistItem, Evidence, Prediction, Requirement, Ruling, SyncEvent
+from app.models.enums import ChecklistItemState, EvidenceStatus, PredictedVerdict
 from app.models.sync_event import SyncEventStatus, SyncEventType
+from app.requirements_compiler.grouping import item_type_of
 from app.sync.blobs import evidence_storage_key
 from app.sync.events import (
     CaptureTaken,
@@ -186,6 +187,66 @@ def _apply_capture(
     return True, None
 
 
+def _apply_prediction(
+    session: Session, row: SyncEvent, item: ChecklistItem
+) -> tuple[SyncEventStatus, str | None, bool, ChangedWhileYouWereAway | None]:
+    """Record the learner's own call, but only if the answer is not out yet.
+
+    This is the guard the whole agreement metric rests on. A device controls its
+    own clock and its own event order, so "the learner predicted before the
+    reveal" cannot be taken on the device's word. The server checks its own
+    record instead: if this item already carries a ruling, the call arrives too
+    late to mean anything and is refused rather than stored.
+    """
+    payload = row.payload or {}
+    verdict_value = payload.get("verdict")
+    try:
+        verdict = PredictedVerdict(str(verdict_value))
+    except ValueError:
+        return (
+            SyncEventStatus.REJECTED,
+            f"Not a verdict a learner can make: {verdict_value!r}.",
+            False,
+            None,
+        )
+
+    already_ruled = session.execute(
+        select(Ruling.id).where(Ruling.checklist_item_id == item.id).limit(1)
+    ).scalar_one_or_none()
+    if already_ruled is not None:
+        return (
+            SyncEventStatus.REJECTED,
+            "This item had already been ruled on, so a call recorded now would not "
+            "be a prediction.",
+            False,
+            None,
+        )
+
+    existing = session.execute(
+        select(Prediction).where(
+            Prediction.checklist_item_id == item.id,
+            Prediction.predicted_by == row.submitted_by,
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        # One call per person per item. A retake does not reopen a judgement
+        # about the installation, and the row could not be changed anyway.
+        return SyncEventStatus.SUPERSEDED, "You had already made a call on this one.", False, None
+
+    requirement = session.get(Requirement, (item.requirement_id, item.ruleset_version))
+    session.add(
+        Prediction(
+            checklist_item_id=item.id,
+            predicted_by=row.submitted_by,
+            verdict=verdict,
+            reason=(payload.get("reason") or None),
+            note=(payload.get("note") or None),
+            item_type=item_type_of(requirement),
+        )
+    )
+    return SyncEventStatus.APPLIED, None, False, None
+
+
 def _apply_one(
     session: Session, row: SyncEvent
 ) -> tuple[SyncEventStatus, str | None, bool, ChangedWhileYouWereAway | None]:
@@ -214,6 +275,9 @@ def _apply_one(
         created, failure = _apply_capture(session, row, item)
         if failure is not None:
             return SyncEventStatus.REJECTED, failure, False, None
+
+    if row.event_type is SyncEventType.PREDICTION_MADE:
+        return _apply_prediction(session, row, item)
 
     if row.event_type in (SyncEventType.ITEM_OPENED, SyncEventType.GATE_FAILED):
         # Recorded, not acted on. Time-on-item and gate-failure rate are the

@@ -307,3 +307,16 @@ def resolve_conflict(
         resolved_by=str(resolved_by),
     )
     return conflict
+
+
+def item_type_of(requirement: object | None) -> str:
+    """The grouping agreement, calibration and reference images all key on.
+
+    One definition in one place: it was inline in the review service, and a
+    second copy that drifted would silently split a learner's history across two
+    buckets and make their agreement rate meaningless.
+    """
+    if requirement is None:
+        return "unknown"
+    key = getattr(requirement, "check_key", None) or getattr(requirement, "statement", "")
+    return normalize_subject(str(key))[:100] or "unknown"

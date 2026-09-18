@@ -30,6 +30,10 @@ class SyncEventType(StrEnum):
     ITEM_OPENED = "item_opened"
     """The tech looked at the item. Kept for time-on-item, not for state."""
 
+    PREDICTION_MADE = "prediction_made"
+    """The learner's own call, before any answer is shown. Refused if the item
+    has already been ruled on — a prediction made after the reveal is not one."""
+
     CAPTURE_TAKEN = "capture_taken"
     GATE_FAILED = "gate_failed"
     """A capture the gate rejected and the tech retook. No evidence is stored,
