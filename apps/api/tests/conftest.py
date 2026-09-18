@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.config import Environment, Settings
 from app.main import create_app
 
-DEFAULT_TEST_DATABASE_URL = "postgresql+psycopg://fie@127.0.0.1:55432/fie_test"
+DEFAULT_TEST_DATABASE_URL = "postgresql+psycopg://understudy@127.0.0.1:55432/understudy_test"
 
 
 @pytest.fixture

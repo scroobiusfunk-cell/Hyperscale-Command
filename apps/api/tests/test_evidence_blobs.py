@@ -35,7 +35,7 @@ from app.sync.events import EventEnvelope
 from app.sync.replay import sync
 from tests import factories as f
 
-BUCKET = "fie-evidence"
+BUCKET = "understudy-evidence"
 PHOTO = b"\xff\xd8\xff\xe0 not really a jpeg, but bytes are bytes"
 PHOTO_SHA = hashlib.sha256(PHOTO).hexdigest()
 

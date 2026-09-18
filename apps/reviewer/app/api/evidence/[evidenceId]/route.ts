@@ -12,8 +12,8 @@ export async function GET(
 ) {
   const { evidenceId } = await params;
   const upstream = await fetch(`${API_URL}/evidence/${evidenceId}/image`, {
-    headers: process.env.FIE_DEV_USER_ID
-      ? { 'X-Dev-User-Id': process.env.FIE_DEV_USER_ID }
+    headers: process.env.UNDERSTUDY_DEV_USER_ID
+      ? { 'X-Dev-User-Id': process.env.UNDERSTUDY_DEV_USER_ID }
       : {},
     cache: 'no-store',
   });

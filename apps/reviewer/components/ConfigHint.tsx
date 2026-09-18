@@ -23,9 +23,9 @@ export function ConfigHint() {
                 fontSize: '0.82rem',
                 overflowX: 'auto',
               }}
-            >{`FIE_API_URL=http://127.0.0.1:8000
-FIE_PROJECT_ID=<a project uuid>
-FIE_DEV_USER_ID=<a reviewer's user uuid>`}</pre>
+            >{`UNDERSTUDY_API_URL=http://127.0.0.1:8000
+UNDERSTUDY_PROJECT_ID=<a project uuid>
+UNDERSTUDY_DEV_USER_ID=<a reviewer's user uuid>`}</pre>
             <p className="muted" style={{ fontSize: '0.85rem' }}>
               The dev user id stands in for company SSO, and the API refuses to start
               with it enabled outside development.

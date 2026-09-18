@@ -1,5 +1,5 @@
 [project]
-name = "fie-api"
+name = "understudy-api"
 version = "0.1.0"
 description = "Field Inspection Engine API"
 requires-python = ">=3.12"

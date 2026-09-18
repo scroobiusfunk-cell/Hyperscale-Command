@@ -44,8 +44,8 @@ from app.storage import InMemoryStorage
 from app.sync.blobs import evidence_storage_key
 from tests import factories as f
 
-REFERENCE_BUCKET = "fie-reference"
-EVIDENCE_BUCKET = "fie-evidence"
+REFERENCE_BUCKET = "understudy-reference"
+EVIDENCE_BUCKET = "understudy-evidence"
 PHOTO = b"\xff\xd8\xff\xe0 a picture of a correct install"
 CAPTION = "Note the plate is seated flush. A proud plate is the common miss."
 

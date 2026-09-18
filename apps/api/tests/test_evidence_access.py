@@ -32,7 +32,7 @@ from app.storage import InMemoryStorage
 from app.sync.blobs import evidence_storage_key
 from tests import factories as f
 
-BUCKET = "fie-evidence"
+BUCKET = "understudy-evidence"
 PHOTO = b"\xff\xd8\xff\xe0 the photograph itself"
 PHOTO_SHA = hashlib.sha256(PHOTO).hexdigest()
 

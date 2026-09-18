@@ -31,17 +31,17 @@ class Settings(BaseSettings):
     environment: Environment = Environment.DEVELOPMENT
     log_level: str = "INFO"
 
-    database_url: str = "postgresql+psycopg://fie:fie_local_dev@localhost:5432/fie"
+    database_url: str = "postgresql+psycopg://understudy:understudy_local_dev@localhost:5432/understudy"
     redis_url: str = "redis://localhost:6379/0"
 
     storage_endpoint_url: str | None = None
     storage_access_key: str = ""
     storage_secret_key: str = ""
     storage_region: str = "us-east-1"
-    evidence_bucket: str = "fie-evidence"
-    documents_bucket: str = "fie-documents"
-    exports_bucket: str = "fie-exports"
-    reference_bucket: str = "fie-reference"
+    evidence_bucket: str = "understudy-evidence"
+    documents_bucket: str = "understudy-documents"
+    exports_bucket: str = "understudy-exports"
+    reference_bucket: str = "understudy-reference"
 
     oidc_issuer: str = ""
     oidc_client_id: str = ""

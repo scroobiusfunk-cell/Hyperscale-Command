@@ -7,9 +7,9 @@
  * "who ruled on this" is a suggestion.
  */
 
-export const API_URL = process.env.FIE_API_URL ?? 'http://127.0.0.1:8000';
-export const PROJECT_ID = process.env.FIE_PROJECT_ID ?? '';
-const DEV_USER_ID = process.env.FIE_DEV_USER_ID ?? '';
+export const API_URL = process.env.UNDERSTUDY_API_URL ?? 'http://127.0.0.1:8000';
+export const PROJECT_ID = process.env.UNDERSTUDY_PROJECT_ID ?? '';
+const DEV_USER_ID = process.env.UNDERSTUDY_DEV_USER_ID ?? '';
 
 export type Criticality = 'safety' | 'contractual' | 'quality';
 export type Verdict = 'pass' | 'fail' | 'recapture_requested';

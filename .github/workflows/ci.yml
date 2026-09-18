@@ -26,20 +26,20 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: fie
-          POSTGRES_PASSWORD: fie_ci
-          POSTGRES_DB: fie_test
+          POSTGRES_PASSWORD: understudy_ci
+          POSTGRES_DB: understudy_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U fie -d fie_test"
+          --health-cmd "pg_isready -U fie -d understudy_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
       REQUIRE_TEST_DATABASE: "1"
-      TEST_DATABASE_URL: postgresql+psycopg://fie:fie_ci@localhost:5432/fie_test
-      DATABASE_URL: postgresql+psycopg://fie:fie_ci@localhost:5432/fie_test
+      TEST_DATABASE_URL: postgresql+psycopg://understudy:understudy_ci@localhost:5432/understudy_test
+      DATABASE_URL: postgresql+psycopg://understudy:understudy_ci@localhost:5432/understudy_test
 
     steps:
       - uses: actions/checkout@v4

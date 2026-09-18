@@ -26,7 +26,7 @@ from app.storage import InMemoryStorage
 from tests import factories as f
 from tests.pdfs import SPEC_SECTION_LINES, imageless_scan_pdf, text_pdf
 
-BUCKET = "fie-documents"
+BUCKET = "understudy-documents"
 
 
 @pytest.fixture

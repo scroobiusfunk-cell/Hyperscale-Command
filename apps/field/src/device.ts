@@ -22,7 +22,7 @@ class SqliteKeyValueStore implements KeyValueStore {
   }
 
   static async open(): Promise<SqliteKeyValueStore> {
-    const db = await SQLite.openDatabaseAsync('fie-field.db');
+    const db = await SQLite.openDatabaseAsync('understudy-field.db');
     await db.execAsync(
       'CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL)',
     );

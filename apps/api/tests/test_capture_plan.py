@@ -406,7 +406,7 @@ class TestCompilationPointsAtARecipe:
             doc_type=DocumentType.SPEC_SECTION,
             title="26 05 00",
             data=text_pdf([SPEC_SECTION_LINES]),
-            bucket="fie-documents",
+            bucket="understudy-documents",
         ).document
         rule_set = f.make_rule_set(db, project, "9.0.0")
 

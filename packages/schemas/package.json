@@ -1,5 +1,5 @@
 {
-  "name": "@fie/schemas",
+  "name": "@understudy/schemas",
   "version": "0.1.0",
   "private": true,
   "description": "JSON Schema contracts shared by the API, field app, and reviewer console",

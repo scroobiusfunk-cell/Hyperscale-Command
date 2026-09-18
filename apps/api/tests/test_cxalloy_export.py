@@ -38,7 +38,7 @@ from app.models.enums import ChecklistItemState, CxAlloyDeliveryState, RulingVer
 from app.storage import InMemoryStorage
 from tests import factories as f
 
-BUCKET = "fie-exports"
+BUCKET = "understudy-exports"
 
 
 @pytest.fixture

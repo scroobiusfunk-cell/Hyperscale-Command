@@ -1,4 +1,4 @@
-# @fie/schemas
+# @understudy/schemas
 
 JSON Schema definitions for the records that cross application boundaries.
 These files are the contract between the API, the field app, and the reviewer

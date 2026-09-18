@@ -76,8 +76,8 @@ cd apps/field    && npm install && npm start
 | Redis | localhost:6379 | Celery broker and result backend |
 | MinIO | http://localhost:9000 | Console on :9001, if the pulled release ships one |
 
-MinIO starts with three buckets: `fie-evidence`, `fie-documents`, and
-`fie-exports`. They are separate because their lifecycle rules differ —
+MinIO starts with three buckets: `understudy-evidence`, `understudy-documents`, and
+`understudy-exports`. They are separate because their lifecycle rules differ —
 evidence moves to cold storage after project close, page images stay warm for
 curation, and exports are transient.
 
