@@ -22,6 +22,8 @@ export interface WalkItem {
   statement: string;
   why_it_matters: string;
   criticality: Criticality;
+  /** The grouping worked examples and agreement are keyed on. */
+  item_type: string;
   /** Named on every capture event, so the walk has to carry it. */
   capture_recipe_id: string;
   recipe_slug: string;
@@ -47,12 +49,26 @@ export interface Deferred {
   note: string;
 }
 
+export type ReferenceKind = 'good' | 'wrong';
+
+/** A worked example: what a correct install looks like, or a near-miss. */
+export interface ReferenceImage {
+  reference_image_id: string;
+  kind: ReferenceKind;
+  caption: string;
+  mime_type: string;
+}
+
 export interface Walk {
   stops: WalkStop[];
   deferred: Deferred[];
   unroutable: Deferred[];
   item_count: number;
+  /** Keyed by item_type. Downloaded with the walk so they work offline. */
+  references: Record<string, ReferenceImage[]>;
 }
+
+export type PredictedVerdict = 'pass' | 'fail' | 'unsure';
 
 export interface DeclaredState {
   open_rooms?: string[] | null;
@@ -73,6 +89,7 @@ export interface GateResult {
 
 export type EventType =
   | 'item_opened'
+  | 'prediction_made'
   | 'capture_taken'
   | 'gate_failed'
   | 'item_captured'
@@ -90,6 +107,15 @@ interface EventBase {
 export interface ItemOpened extends EventBase {
   event_type: 'item_opened';
   checklist_item_id: string;
+}
+
+export interface PredictionMade extends EventBase {
+  event_type: 'prediction_made';
+  checklist_item_id: string;
+  verdict: PredictedVerdict;
+  /** Which disqualifier they believe they saw, from the item's own list. */
+  reason?: string | null;
+  note?: string | null;
 }
 
 export interface CaptureTaken extends EventBase {
@@ -142,6 +168,7 @@ export interface WalkCompleted extends EventBase {
 
 export type OutboxEvent =
   | ItemOpened
+  | PredictionMade
   | CaptureTaken
   | GateFailed
   | ItemCaptured
@@ -184,6 +211,20 @@ export interface Feedback {
 }
 
 /** A count of outcomes. Not a score — nothing is gated on it. */
+export interface Agreement {
+  item_type: string;
+  compared: number;
+  agreed: number;
+  unsure: number;
+  /** Called a real defect correctly. */
+  caught: number;
+  /** Called a defect fine. The dangerous direction. */
+  missed: number;
+  over_called: number;
+  /** Null when nothing is comparable yet — not the same fact as zero. */
+  rate: number | null;
+}
+
 export interface Tally {
   ruled: number;
   passed: number;
@@ -194,5 +235,7 @@ export interface Tally {
 
 export interface MyWork {
   tally: Tally;
+  agreement: Agreement;
+  by_item_type: Agreement[];
   feedback: Feedback[];
 }

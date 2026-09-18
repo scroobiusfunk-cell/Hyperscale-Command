@@ -27,6 +27,8 @@ import type { SyncReport } from './core/sync.ts';
 import type {
   DeclaredState,
   GateFailed,
+  PredictedVerdict,
+  PredictionMade,
   ItemCaptured,
   ItemDeferred,
   ItemOpened,
@@ -41,6 +43,7 @@ import type { CaptureOutcome } from './screens/Capture.tsx';
 import { Setup } from './screens/Setup.tsx';
 import type { Config } from './screens/Setup.tsx';
 import { MyWork } from './screens/MyWork.tsx';
+import { Predict } from './screens/Predict.tsx';
 import { WalkList } from './screens/WalkList.tsx';
 import { colour, space, type } from './theme.ts';
 
@@ -52,6 +55,7 @@ type Screen =
   | { name: 'setup' }
   | { name: 'walk' }
   | { name: 'my-work' }
+  | { name: 'predict'; item: WalkItem; assetTag: string }
   | { name: 'capture'; item: WalkItem; assetTag: string };
 
 export default function App() {
@@ -149,7 +153,30 @@ export default function App() {
       checklist_item_id: item.checklist_item_id,
     });
     await refreshCounts();
-    setScreen({ name: 'capture', item, assetTag });
+    // The call comes before the camera. That ordering is the training loop.
+    setScreen({ name: 'predict', item, assetTag });
+  }
+
+  async function commitCall(
+    item: WalkItem,
+    assetTag: string,
+    verdict: PredictedVerdict,
+    reason: string | null,
+  ): Promise<void> {
+    if (outbox === null || stored === null) return;
+    setBusy(true);
+    try {
+      await outbox.append<PredictionMade>(stored.walkId, {
+        event_type: 'prediction_made',
+        checklist_item_id: item.checklist_item_id,
+        verdict,
+        reason,
+      });
+      await refreshCounts();
+      setScreen({ name: 'capture', item, assetTag });
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function recordCapture(item: WalkItem, outcome: CaptureOutcome): Promise<void> {
@@ -298,6 +325,23 @@ export default function App() {
           onOpenMyWork={() => setScreen({ name: 'my-work' })}
           pendingEvents={counts.events}
           pendingBlobs={counts.blobs}
+        />
+      )}
+
+      {screen.name === 'predict' && (
+        <Predict
+          item={screen.item}
+          assetTag={screen.assetTag}
+          references={stored?.walk.references[screen.item.item_type] ?? []}
+          imageFor={(referenceImageId) => {
+            if (api === null) return { uri: '', headers: {} };
+            return api.referenceImage(referenceImageId);
+          }}
+          busy={busy}
+          onCommit={(verdict, reason) =>
+            commitCall(screen.item, screen.assetTag, verdict, reason)
+          }
+          onBack={() => setScreen({ name: 'walk' })}
         />
       )}
 

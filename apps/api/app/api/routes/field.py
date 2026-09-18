@@ -16,8 +16,9 @@ from pydantic import BaseModel, Field
 
 from app.capture.walk import DeclaredState, Walk, compile_walk, start_walk
 from app.coaching import service as coaching
+from app.coaching.reference import references_for
 from app.deps import AppSettings, CurrentUser, DbSession, Storage
-from app.models.enums import Criticality, RulingVerdict
+from app.models.enums import Criticality, ReferenceKind, RulingVerdict
 from app.sync.blobs import BlobRejectedError, confirm_uploads, store_blob
 from app.sync.events import EventEnvelope
 from app.sync.replay import sync as apply_sync
@@ -57,6 +58,7 @@ class WalkItemResponse(BaseModel):
     statement: str
     why_it_matters: str
     criticality: Criticality
+    item_type: str
     capture_recipe_id: uuid.UUID
     recipe_slug: str
     recipe_version: str
@@ -81,11 +83,22 @@ class DeferredResponse(BaseModel):
     note: str
 
 
+class ReferenceImageResponse(BaseModel):
+    reference_image_id: uuid.UUID
+    kind: ReferenceKind
+    caption: str
+    mime_type: str
+
+
 class WalkResponse(BaseModel):
     stops: list[WalkStopResponse]
     deferred: list[DeferredResponse]
     unroutable: list[DeferredResponse]
     item_count: int
+    #: Worked examples keyed by item_type. Downloaded with the walk, because a
+    #: learner needs "what good looks like" at the equipment, where there is no
+    #: signal, not back at the van.
+    references: dict[str, list[ReferenceImageResponse]] = Field(default_factory=dict)
 
     @classmethod
     def of(cls, walk: Walk) -> WalkResponse:
@@ -102,6 +115,7 @@ class WalkResponse(BaseModel):
                             statement=item.statement,
                             why_it_matters=item.why_it_matters,
                             criticality=item.criticality,
+                            item_type=item.item_type,
                             capture_recipe_id=item.recipe_id,
                             recipe_slug=item.recipe_slug,
                             recipe_version=item.recipe_version,
@@ -159,6 +173,28 @@ class SyncResponse(BaseModel):
     changed_while_you_were_away: list[ChangedResponse]
 
 
+def _with_references(session: DbSession, project_id: uuid.UUID, walk: Walk) -> WalkResponse:
+    response = WalkResponse.of(walk)
+    item_types = frozenset(
+        item.item_type for stop in walk.stops for item in stop.items if item.item_type
+    )
+    response.references = {
+        name: [
+            ReferenceImageResponse(
+                reference_image_id=v.reference_image_id,
+                kind=v.kind,
+                caption=v.caption,
+                mime_type=v.mime_type,
+            )
+            for v in views
+        ]
+        for name, views in references_for(
+            session, project_id=project_id, item_types=item_types
+        ).items()
+    }
+    return response
+
+
 def _compile(session: DbSession, project_id: uuid.UUID, body: DeclaredStateRequest) -> Walk:
     return compile_walk(
         session,
@@ -177,7 +213,7 @@ def preview_walk(
     user: CurrentUser,
 ) -> WalkResponse:
     """What the walk would be. Records nothing."""
-    return WalkResponse.of(_compile(session, project_id, body))
+    return _with_references(session, project_id, _compile(session, project_id, body))
 
 
 @router.post(
@@ -194,7 +230,7 @@ def begin_walk(
     """Commit to the walk: record the deferrals and assign the items."""
     walk = _compile(session, project_id, body)
     start_walk(session, walk, assigned_tech=user.id)
-    return WalkResponse.of(walk)
+    return _with_references(session, project_id, walk)
 
 
 class BlobResponse(BaseModel):

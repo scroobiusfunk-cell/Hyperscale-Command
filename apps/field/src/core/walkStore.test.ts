@@ -26,6 +26,7 @@ function item(id: string, criticality: Criticality = 'performance'): WalkItem {
     statement: `Check ${id}`,
     why_it_matters: 'Because.',
     criticality,
+    item_type: 'checkx',
     capture_recipe_id: '00000000-0000-4000-8000-000000000001',
     recipe_slug: 'visual_presence',
     recipe_version: '1.0.0',
@@ -46,6 +47,7 @@ function walkOf(stops: WalkStop[]): Walk {
     deferred: [],
     unroutable: [],
     item_count: stops.reduce((n, s) => n + s.items.length, 0),
+    references: {},
   };
 }
 

@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     evidence_bucket: str = "fie-evidence"
     documents_bucket: str = "fie-documents"
     exports_bucket: str = "fie-exports"
+    reference_bucket: str = "fie-reference"
 
     oidc_issuer: str = ""
     oidc_client_id: str = ""

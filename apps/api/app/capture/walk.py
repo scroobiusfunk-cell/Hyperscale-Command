@@ -33,7 +33,7 @@ from app.models.enums import (
     ChecklistItemState,
     Criticality,
 )
-from app.requirements_compiler.grouping import normalize_subject
+from app.requirements_compiler.grouping import item_type_of, normalize_subject
 
 log = get_logger(__name__)
 
@@ -97,6 +97,8 @@ class WalkItem:
     steps: tuple[WalkStep, ...]
     #: The device names this when it reports a capture, so the walk must carry it.
     recipe_id: uuid.UUID
+    #: The grouping worked examples and agreement are keyed on.
+    item_type: str
     recipe_slug: str
     recipe_version: str
     reference_media_slot: str | None
@@ -299,6 +301,7 @@ def compile_walk(
                     for step in recipe.steps
                 ),
                 recipe_id=recipe_id,
+                item_type=item_type_of(requirement),
                 recipe_slug=recipe.slug,
                 recipe_version=recipe.version,
                 reference_media_slot=recipe.reference_media_slot,

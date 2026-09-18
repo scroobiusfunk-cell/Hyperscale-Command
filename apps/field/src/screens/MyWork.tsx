@@ -27,7 +27,7 @@ import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react
 
 import { Banner, Button, Card, Chip } from '../components.tsx';
 import type { Tone } from '../components.tsx';
-import type { Feedback, MyWork as MyWorkData } from '../core/types.ts';
+import type { Agreement, Feedback, MyWork as MyWorkData } from '../core/types.ts';
 import { colour, space, type } from '../theme.ts';
 
 const VERDICT: Record<Feedback['verdict'], { tone: Tone; icon: string; word: string }> = {
@@ -92,6 +92,8 @@ export function MyWork({
             </Text>
           </Card>
 
+          <AgreementCard overall={data.agreement} byType={data.by_item_type} />
+
           {redo.length > 0 && (
             <Banner tone="warning">
               {redo.length} {redo.length === 1 ? 'item needs' : 'items need'} another visit. They
@@ -120,6 +122,82 @@ export function MyWork({
         <Button kind="secondary" title="Back" onPress={onBack} />
       </View>
     </ScrollView>
+  );
+}
+
+function AgreementCard({ overall, byType }: { overall: Agreement; byType: Agreement[] }) {
+  if (overall.compared === 0 && overall.unsure === 0) {
+    return (
+      <Card style={{ marginBottom: space.lg }}>
+        <Text style={styles.emptyTitle}>How your calls are doing</Text>
+        <Text style={styles.emptyBody}>
+          Once a reviewer has ruled on items you made a call on, you will see how often you
+          agreed — and where you are still off.
+        </Text>
+      </Card>
+    );
+  }
+
+  const percent = overall.rate === null ? null : Math.round(overall.rate * 100);
+  return (
+    <Card style={{ marginBottom: space.lg }}>
+      <Text style={styles.cardTitle}>How your calls are doing</Text>
+      <Text style={styles.headline}>
+        {percent === null ? 'No calls to compare yet' : `${percent}% matched the reviewer`}
+      </Text>
+      <Text style={styles.headlineSub}>
+        {overall.agreed} of {overall.compared} calls
+        {overall.unsure > 0 ? ` · ${overall.unsure} you said you were not sure about` : ''}
+      </Text>
+
+      <View style={styles.breakdown}>
+        {overall.caught > 0 && (
+          <Chip tone="good" icon="✓">
+            {`Spotted ${overall.caught} real ${overall.caught === 1 ? 'defect' : 'defects'}`}
+          </Chip>
+        )}
+        {overall.missed > 0 && (
+          <Chip tone="critical" icon="▲">
+            {`Called ${overall.missed} ${overall.missed === 1 ? 'defect' : 'defects'} fine`}
+          </Chip>
+        )}
+        {overall.over_called > 0 && (
+          <Chip tone="warning" icon="●">
+            {`Flagged ${overall.over_called} that ${overall.over_called === 1 ? 'was' : 'were'} fine`}
+          </Chip>
+        )}
+      </View>
+
+      {overall.missed > 0 && (
+        <Text style={styles.missedNote}>
+          Calling a defect fine is the one worth working on. Those are the items to read back
+          through below.
+        </Text>
+      )}
+
+      {byType.filter((a) => a.compared > 0).length > 1 && (
+        <View style={styles.byType}>
+          {byType
+            .filter((a) => a.compared > 0)
+            .map((a) => (
+              <View key={a.item_type} style={styles.byTypeRow}>
+                <Text style={styles.byTypeName} numberOfLines={1}>
+                  {a.item_type}
+                </Text>
+                <Text style={styles.byTypeValue}>
+                  {a.agreed}/{a.compared}
+                </Text>
+              </View>
+            ))}
+        </View>
+      )}
+
+      <Text style={styles.tallyNote}>
+        Your call is recorded before you photograph anything and cannot be changed afterwards,
+        which is what makes this comparison mean something. Being unsure is not counted against
+        you.
+      </Text>
+    </Card>
   );
 }
 
@@ -245,5 +323,20 @@ const styles = StyleSheet.create({
   why: { ...type.small, color: colour.inkSecondary },
   entryFoot: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
   emptyTitle: { ...type.body, fontWeight: '700', color: colour.ink, marginBottom: space.xs },
+  cardTitle: { ...type.body, fontWeight: '700', color: colour.ink, marginBottom: space.sm },
+  headline: { fontSize: 24, fontWeight: '700', color: colour.ink },
+  headlineSub: { ...type.small, color: colour.inkMuted, marginBottom: space.md },
+  breakdown: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  missedNote: { ...type.small, color: colour.criticalInk, marginTop: space.md },
+  byType: {
+    marginTop: space.md,
+    paddingTop: space.md,
+    borderTopWidth: 1,
+    borderTopColor: colour.hairline,
+    gap: space.xs,
+  },
+  byTypeRow: { flexDirection: 'row', justifyContent: 'space-between', gap: space.md },
+  byTypeName: { ...type.small, color: colour.inkSecondary, flex: 1 },
+  byTypeValue: { ...type.small, color: colour.ink, fontWeight: '600' },
   emptyBody: { ...type.body, color: colour.inkSecondary },
 });

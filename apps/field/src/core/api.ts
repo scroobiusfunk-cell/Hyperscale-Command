@@ -30,6 +30,7 @@ export interface FieldApi {
   myWork(projectId?: string): Promise<MyWork>;
   /** Where an <Image> should point, and the headers it needs. */
   evidenceImage(evidenceId: string): { uri: string; headers: Record<string, string> };
+  referenceImage(referenceImageId: string): { uri: string; headers: Record<string, string> };
 }
 
 export class ApiError extends Error {
@@ -119,6 +120,13 @@ export class HttpFieldApi implements FieldApi {
   evidenceImage(evidenceId: string): { uri: string; headers: Record<string, string> } {
     return {
       uri: `${this.config.baseUrl}/evidence/${evidenceId}/image`,
+      headers: this.headers(),
+    };
+  }
+
+  referenceImage(referenceImageId: string): { uri: string; headers: Record<string, string> } {
+    return {
+      uri: `${this.config.baseUrl}/reference/images/${referenceImageId}`,
       headers: this.headers(),
     };
   }

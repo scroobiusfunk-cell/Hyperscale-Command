@@ -853,3 +853,48 @@ that would change.
 
 **The signal that the time has come:** the second project, or the first reviewer
 who should not see the first project.
+
+---
+
+## Q29 — The learner model's first two pieces are Phase 1 now
+
+**Status:** settled 2026-09-18 — pulled forward deliberately, on instruction
+
+Q27 settled that the plain feedback path was Phase 1 and that the learner model
+stayed in Phase 3. That was the right call for a capture tool. It is the wrong
+call for a training tool, and the purpose was restated: this exists to train
+green inspectors and superintendents on how to perform an inspection, what to
+look for, what good looks like and what wrong looks like.
+
+Two things follow, and both are now built.
+
+**Predict-then-reveal.** The learner commits to pass, fail or unsure before
+anything is shown to them. Without it there is no measure of judgement at all:
+a checklist you photograph measures photography. The architecture doc specified
+this under section 6 and placed it in Phase 3; it is now in Phase 1, because
+the Phase 1 pilot cannot answer "are they learning?" without it.
+
+**Reference imagery.** `reference_media_slot` had existed on every capture
+recipe since the scaffold and nothing had ever filled it. A correct example and
+a near-miss, each captioned, now ride with the walk so they are on the device
+before the learner loses signal.
+
+**What is still Phase 3, and should stay there:** competency scoring as a
+gate, scaffolding fade, spaced repetition of disagreements, and self-clear
+unlock. Agreement is now measured and shown; nothing is gated on it. Measuring
+is safe, and acting on the measurement before there is enough data to trust the
+thresholds is not.
+
+**The metric problem this exposes, still open.** The build plan's Phase 1 exit
+metric is reviewer minutes per inspection plus 1,000 labelled examples. Both are
+efficiency measures. For a training tool the metric is whether a learner's
+agreement with the senior rises over time, per kind of check. That number now
+exists. The exit criteria in `docs/ARCHITECTURE.md` have not been rewritten to
+use it, because changing a stated exit metric is the project owner's call, not
+a side effect of a code change.
+
+**One judgement recorded here because it will look arbitrary later:** a learner
+gets one call per checklist item, and a recapture does not reopen it. Being told
+to retake a blurry photograph says nothing about whether the installation was
+right, and a learner who has already judged this asset has already had the
+lesson.
