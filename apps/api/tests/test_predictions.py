@@ -328,6 +328,35 @@ class TestAgreement:
         assert overall.compared == 0
         assert overall.rate is None
 
+    def test_a_recapture_does_not_turn_unsure_into_a_data_point(
+        self, db: Session, project: Project, learner: AppUser, senior: AppUser
+    ) -> None:
+        """The same reasoning, one branch further in.
+
+        "I do not know" counted as a reported unsure when the reviewer had only
+        asked for the photograph again — so a learner who said the honest thing
+        about an item nobody ever ruled on accumulated a record of having been
+        unsure about it. Nothing was ever revealed to them, so there is nothing
+        to report.
+        """
+        self._call_and_rule(
+            db, project, learner, senior, "unsure", RulingVerdict.RECAPTURE_REQUESTED
+        )
+
+        overall, _ = agreement(db, tech_id=learner.id)
+
+        assert overall.unsure == 0
+        assert overall.compared == 0
+        assert overall.rate is None
+
+    def test_a_check_with_only_a_recapture_is_not_a_row(
+        self, db: Session, project: Project, learner: AppUser, senior: AppUser
+    ) -> None:
+        """An all-zero row in the breakdown reads as a result. It is an absence."""
+        self._call_and_rule(db, project, learner, senior, "pass", RulingVerdict.RECAPTURE_REQUESTED)
+
+        assert agreement(db, tech_id=learner.id)[1] == ()
+
     def test_no_rate_when_nothing_is_comparable(self, db: Session, learner: AppUser) -> None:
         """No rate is not the same fact as a rate of zero."""
         overall, per_type = agreement(db, tech_id=learner.id)

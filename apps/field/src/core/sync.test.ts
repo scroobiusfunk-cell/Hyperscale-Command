@@ -41,6 +41,8 @@ interface FakeOptions {
   failSyncWith?: unknown;
   failUploadWith?: unknown;
   changed?: { checklist_item_id: string; message: string }[];
+  /** Refuse any batch containing an event this returns an error for. */
+  refuse?: (event: OutboxEvent) => unknown;
 }
 
 class FakeApi implements FieldApi {
@@ -63,6 +65,13 @@ class FakeApi implements FieldApi {
 
   async sync(events: OutboxEvent[]): Promise<SyncResult> {
     if (this.options.failSyncWith !== undefined) throw this.options.failSyncWith;
+    if (this.options.refuse) {
+      // A real server refuses the request, not the one event in it that is bad.
+      for (const event of events) {
+        const refusal = this.options.refuse(event);
+        if (refusal !== undefined) throw refusal;
+      }
+    }
     this.syncCalls.push(events);
     return {
       accepted: events.length,
@@ -267,6 +276,56 @@ describe('a sync that fails', () => {
 
     assert.deepEqual(report.droppedBlobs, ['cap-1', 'cap-2']);
     assert.equal(report.blobsRemaining, 0);
+  });
+
+  test('one event the server will never accept does not block the rest', async () => {
+    // A 422 fails the whole request, so a single malformed event used to be
+    // retried in its batch on every sync, forever, holding back every event and
+    // every photograph behind it. The morning's work never arrives and nothing
+    // says why.
+    const device = makeDevice();
+    const outbox = new Outbox(device);
+    const api = new FakeApi({
+      refuse: (event) =>
+        event.checklist_item_id === 'item-2'
+          ? new ApiError(422, 'checklist_item_id is not a uuid')
+          : undefined,
+    });
+    await outbox.append(WALK, { event_type: 'item_opened', checklist_item_id: 'item-1' });
+    await outbox.append(WALK, { event_type: 'item_opened', checklist_item_id: 'item-2' });
+    await outbox.append(WALK, { event_type: 'item_opened', checklist_item_id: 'item-3' });
+
+    const report = await runSync(api, outbox, device);
+
+    assert.equal(report.eventsAcknowledged, 2, 'the good events must get through');
+    assert.equal(report.droppedEvents.length, 1);
+    assert.match(report.droppedEvents[0]!.reason, /422/);
+    assert.deepEqual(await outbox.counts(), { events: 0, blobs: 0 }, 'nothing is left stuck');
+    assert.equal(report.stoppedBecause, null);
+  });
+
+  test('a refused event does not take a retryable one down with it', async () => {
+    // Draining one at a time must still stop at the first thing worth retrying,
+    // and leave that event and everything after it in the outbox.
+    const device = makeDevice();
+    const outbox = new Outbox(device);
+    const api = new FakeApi({
+      // The first is malformed and fails the batch; the second is fine but the
+      // connection is not, which is the case the drain must not mistake for a
+      // refusal.
+      refuse: (event) =>
+        event.checklist_item_id === 'item-1'
+          ? new ApiError(422, 'malformed')
+          : new ApiError(503, 'unavailable'),
+    });
+    await outbox.append(WALK, { event_type: 'item_opened', checklist_item_id: 'item-1' });
+    await outbox.append(WALK, { event_type: 'item_opened', checklist_item_id: 'item-2' });
+
+    const report = await runSync(api, outbox, device);
+
+    assert.equal(report.droppedEvents.length, 1, 'only the refused one is dropped');
+    assert.ok(report.stoppedBecause, 'and the sync stops rather than dropping the rest');
+    assert.equal((await outbox.counts()).events, 1, 'the retryable event stays put');
   });
 
   test('a server error blocks the queue rather than dropping it', async () => {

@@ -275,16 +275,18 @@ def agreement(
 
     buckets: dict[str, dict[str, int]] = {}
     for prediction, ruling in latest.values():
-        bucket = buckets.setdefault(
-            prediction.item_type,
-            {"compared": 0, "agreed": 0, "unsure": 0, "caught": 0, "missed": 0, "over": 0},
-        )
         expected = _COMPARABLE.get(ruling.verdict)
         if expected is None:
             # A recapture judges the photograph. It cannot agree or disagree
             # with a call about the equipment, and it cannot make an "I do not
-            # know" into a data point either.
+            # know" into a data point either. The bucket is not created here
+            # either: a kind of check whose only ruling was a recapture has
+            # nothing to report, and an all-zero row reads as a result.
             continue
+        bucket = buckets.setdefault(
+            prediction.item_type,
+            {"compared": 0, "agreed": 0, "unsure": 0, "caught": 0, "missed": 0, "over": 0},
+        )
         if prediction.verdict is PredictedVerdict.UNSURE:
             bucket["unsure"] += 1
             continue

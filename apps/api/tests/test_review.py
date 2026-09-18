@@ -337,6 +337,51 @@ class TestTheDashboard:
 
         assert service.dashboard(db, project_id=project.id).undelivered == 1
 
+    def test_reviewer_stats_count_only_this_project(
+        self, db: Session, project: Project, reviewer: AppUser
+    ) -> None:
+        """The backlog beside them is this job's. The reviewer figures must be too.
+
+        The query behind these rows was once unscoped, so a reviewer who had
+        ruled on four other jobs appeared here with four other jobs' work —
+        next to a queue depth counted from this one. Two populations in one
+        table, and the labelling rate the page is built around computed over
+        the wrong one.
+        """
+        elsewhere = f.make_project(db, name="Some other job")
+        for index in range(3):
+            other_item = an_item_awaiting_review(db, elsewhere, tag=f"OTHER-{index}")
+            service.rule(
+                db,
+                other_item.id,
+                reviewer_id=reviewer.id,
+                verdict=RulingVerdict.PASS,
+                note=None,
+            )
+        here = an_item_awaiting_review(db, project, tag="SWBD-101")
+        service.rule(
+            db,
+            here.id,
+            reviewer_id=reviewer.id,
+            verdict=RulingVerdict.PASS,
+            note="Plate seated flush across the whole row.",
+        )
+
+        stats = service.dashboard(db, project_id=project.id).reviewers
+
+        assert len(stats) == 1
+        assert stats[0].rulings == 1
+        assert stats[0].labeling_rate == 1.0
+
+    def test_a_reviewer_who_has_not_worked_here_is_not_listed(
+        self, db: Session, project: Project, reviewer: AppUser
+    ) -> None:
+        elsewhere = f.make_project(db, name="Some other job")
+        item = an_item_awaiting_review(db, elsewhere, tag="OTHER-1")
+        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+
+        assert service.dashboard(db, project_id=project.id).reviewers == []
+
 
 class TestItemDetail:
     def test_the_detail_carries_everything_needed_to_rule(

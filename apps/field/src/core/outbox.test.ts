@@ -100,6 +100,116 @@ describe('appending events', () => {
     const sequences = (await outbox.pendingEvents(WALK)).map((p) => p.event.sequence);
     assert.deepEqual(sequences, [...Array(120).keys()]);
   });
+
+  test('two appends at once do not take the same sequence', async () => {
+    // Reserving a sequence is a read, then a write, with an await between.
+    // Overlapping appends — a double tap on the shutter — once both read the
+    // same number and the second wrote over the first at the same key. The
+    // tech's work was gone and nothing said so.
+    const outbox = new Outbox(makeDevice());
+
+    await Promise.all([
+      outbox.append(WALK, opened('item-1')),
+      outbox.append(WALK, opened('item-2')),
+      outbox.append(WALK, opened('item-3')),
+    ]);
+
+    const pending = await outbox.pendingEvents(WALK);
+    assert.equal(pending.length, 3);
+    assert.deepEqual(
+      pending.map((p) => p.event.sequence).sort(),
+      [0, 1, 2],
+      'each concurrent append must reserve a sequence of its own',
+    );
+    assert.deepEqual(
+      new Set(pending.map((p) => p.event.checklist_item_id)).size,
+      3,
+      'no event may be overwritten by another',
+    );
+  });
+
+  test('a failed append does not wedge the ones behind it', async () => {
+    const device = makeDevice();
+    const outbox = new Outbox(device);
+    const set = device.kv.set.bind(device.kv);
+    let failNext = true;
+    device.kv.set = async (key: string, value: string) => {
+      if (failNext && key.startsWith('outbox:event:')) {
+        failNext = false;
+        throw new Error('storage full');
+      }
+      return set(key, value);
+    };
+
+    await assert.rejects(() => outbox.append(WALK, opened('item-1')));
+    const after = await outbox.append(WALK, opened('item-2'));
+
+    assert.ok(after.client_event_id, 'the queue must keep working after one append throws');
+  });
+});
+
+describe('the order events go out in', () => {
+  /** A device whose clock the caller drives, for the ones that are about time. */
+  function deviceWithClock(times: string[]): Device & { blobs: MemoryBlobStore } {
+    let counter = 0;
+    let at = 0;
+    return {
+      kv: new MemoryKeyValueStore(),
+      blobs: new MemoryBlobStore(),
+      clock: { now: () => new Date(times[Math.min(at++, times.length - 1)]!) },
+      ids: { uuid: () => `id-${++counter}` },
+    };
+  }
+
+  test('a walk goes out in the order it happened, not the order the clock claims', async () => {
+    // A phone that has been off for a week comes back with a plausible-looking
+    // wrong time, and may correct itself mid-walk. Ordering by that hands the
+    // server a tech's actions out of order: a capture before the item was
+    // opened, a deferral after the walk was completed.
+    const outbox = new Outbox(
+      deviceWithClock([
+        '2026-09-18T09:00:00.000Z',
+        '2019-01-01T00:00:00.000Z', // the clock jumps backwards mid-walk
+        '2026-09-18T09:00:02.000Z',
+      ]),
+    );
+    await outbox.append(WALK, opened('item-1'));
+    await outbox.append(WALK, opened('item-2'));
+    await outbox.append(WALK, opened('item-3'));
+
+    const pending = await outbox.pendingEvents();
+
+    assert.deepEqual(
+      pending.map((p) => p.event.checklist_item_id),
+      ['item-1', 'item-2', 'item-3'],
+      'within a walk the device sequence decides, never the clock',
+    );
+  });
+
+  test('two walks are ordered against each other, and not interleaved', async () => {
+    // Across walks the clock is the only signal there is, so the earliest event
+    // in a walk places it — but its own events must still stay together and in
+    // sequence, or the server sees half of one walk inside another.
+    const outbox = new Outbox(
+      deviceWithClock([
+        '2026-09-18T09:00:00.000Z', // walk-a, first
+        '2026-09-18T08:00:00.000Z', // walk-b started earlier
+        '2026-09-18T09:00:05.000Z', // walk-a again
+        '2026-09-18T08:00:05.000Z',
+      ]),
+    );
+    await outbox.append('walk-a', opened('a-1'));
+    await outbox.append('walk-b', opened('b-1'));
+    await outbox.append('walk-a', opened('a-2'));
+    await outbox.append('walk-b', opened('b-2'));
+
+    const pending = await outbox.pendingEvents();
+
+    assert.deepEqual(
+      pending.map((p) => p.event.checklist_item_id),
+      ['b-1', 'b-2', 'a-1', 'a-2'],
+    );
+  });
 });
 
 describe('captures', () => {

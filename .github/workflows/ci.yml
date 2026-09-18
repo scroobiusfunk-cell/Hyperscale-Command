@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # Working branches too, not only main. The guards in these jobs — the
+    # schema-contract tests, the outbox tests, mypy — are only worth having if
+    # they run on the commit that breaks them, and a branch that never opens a
+    # pull request was never checked at all.
+    branches: [main, "claude/**"]
   pull_request:
 
 concurrency:

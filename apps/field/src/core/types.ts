@@ -7,20 +7,35 @@
  * apps, and these are the wire shapes of one of them.
  */
 
-/** Closed by design, and identical to `packages/schemas` and the API's `Criticality`. */
-export type Criticality = 'safety' | 'contractual' | 'quality';
+/*
+ * The three unions below also exist in `packages/schemas`, which CLAUDE.md
+ * calls the contract between all three apps. They are written as arrays rather
+ * than bare unions so that `contract.test.ts` can read them at runtime and
+ * compare them with the schema files. A union is invisible to a test; an array
+ * is not, and this app has already once shipped a copy of `Criticality` that
+ * had quietly drifted from the schema into values the server would reject.
+ *
+ * Adding a value here without adding it to the schema fails that test.
+ */
 
-/** The reasons a deferral may carry, verbatim from the API's `BlockedReason`. */
-export type BlockedReason =
-  | 'no_access'
-  | 'energized'
-  | 'not_installed_yet'
-  | 'equipment_missing'
-  | 'tool_unavailable'
-  | 'other';
+/** `common/definitions.schema.json#/$defs/criticality`. */
+export const CRITICALITIES = ['safety', 'contractual', 'quality'] as const;
+export type Criticality = (typeof CRITICALITIES)[number];
 
-/** Verbatim from the API's `MediaType`. */
-export type MediaType = 'photo' | 'video' | 'document' | 'measurement';
+/** `checklist-item.schema.json#/properties/blocked_reason`. Why a walk skipped an item. */
+export const BLOCKED_REASONS = [
+  'no_access',
+  'energized',
+  'not_installed_yet',
+  'equipment_missing',
+  'tool_unavailable',
+  'other',
+] as const;
+export type BlockedReason = (typeof BLOCKED_REASONS)[number];
+
+/** `evidence.schema.json#/properties/media_type`. */
+export const MEDIA_TYPES = ['photo', 'video', 'document', 'measurement'] as const;
+export type MediaType = (typeof MEDIA_TYPES)[number];
 
 export type GateId = 'sharpness_floor' | 'frame_fill' | 'tech_attestation';
 

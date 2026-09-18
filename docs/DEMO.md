@@ -56,8 +56,10 @@ Open `http://127.0.0.1:3000` and check the Overview tile reads **4 waiting**.
 If it reads 0, the console is pointed at the wrong project id.
 
 Re-seeding produces new ids every time, so if you re-seed you must update
-`.env.local` and restart the console. Budget two minutes for that; do not do it
-in front of anyone.
+`.env.local` and restart the console — a restart, not a rebuild: the console
+reads the project id at request time, and only a code change needs
+`npm run build` again. Budget two minutes for that; do not do it in front of
+anyone.
 
 ---
 
@@ -207,5 +209,15 @@ cd apps/api
 dropdb -h localhost -U understudy understudy_demo
 createdb -h localhost -U understudy understudy_demo
 alembic upgrade head && python scripts/seed_demo.py
-# update apps/reviewer/.env.local, then rebuild and restart the console
+# put the new project id and Ray's id in apps/reviewer/.env.local, then restart
+# the console — no rebuild needed unless the code changed
+```
+
+Read the ids back out of the database rather than off an older run's notes. A
+stale project id points the console at something that is not there, and an
+empty dashboard in front of an audience looks like a dead product:
+
+```bash
+psql -h localhost -U understudy understudy_demo -c \
+  "select id, name from project order by created_at desc limit 1"
 ```
