@@ -14,7 +14,14 @@ import { Outbox } from './outbox.ts';
 import { MemoryBlobStore, MemoryKeyValueStore } from './ports.ts';
 import type { Device } from './ports.ts';
 import { runSync } from './sync.ts';
-import type { CaptureTaken, DeclaredState, OutboxEvent, SyncResult, Walk } from './types.ts';
+import type {
+  CaptureTaken,
+  DeclaredState,
+  MyWork,
+  OutboxEvent,
+  SyncResult,
+  Walk,
+} from './types.ts';
 
 const WALK = 'walk-1';
 
@@ -65,6 +72,13 @@ class FakeApi implements FieldApi {
       rejected: 0,
       evidence_created: 0,
       changed_while_you_were_away: this.options.changed ?? [],
+    };
+  }
+
+  async myWork(): Promise<MyWork> {
+    return {
+      tally: { ruled: 0, passed: 0, failed: 0, recapture_requested: 0, awaiting_review: 0 },
+      feedback: [],
     };
   }
 
@@ -193,6 +207,7 @@ describe('a sync that fails', () => {
     const flaky: FieldApi = {
       previewWalk: api.previewWalk.bind(api),
       startWalk: api.startWalk.bind(api),
+      myWork: api.myWork.bind(api),
       sync: async (events) => {
         calls += 1;
         if (calls > 1) throw new Error('signal gone');

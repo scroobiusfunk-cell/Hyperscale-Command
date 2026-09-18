@@ -24,12 +24,14 @@ export function Setup({
   config,
   onConfigChange,
   onStart,
+  onOpenMyWork,
   busy,
   error,
 }: {
   config: Config;
   onConfigChange: (next: Config) => void;
   onStart: (declared: DeclaredState) => void;
+  onOpenMyWork: () => void;
   busy: boolean;
   error: string | null;
 }) {
@@ -94,6 +96,10 @@ export function Setup({
           })
         }
       />
+
+      <View style={{ marginTop: space.md }}>
+        <Button kind="secondary" title="What the reviewer said" onPress={onOpenMyWork} />
+      </View>
 
       <Text style={styles.connectionHeading}>Connection</Text>
       <Card>

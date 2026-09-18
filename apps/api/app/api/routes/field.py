@@ -8,14 +8,16 @@ that had to be idempotent.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
 
 from app.capture.walk import DeclaredState, Walk, compile_walk, start_walk
+from app.coaching import service as coaching
 from app.deps import AppSettings, CurrentUser, DbSession, Storage
-from app.models.enums import Criticality
+from app.models.enums import Criticality, RulingVerdict
 from app.sync.blobs import BlobRejectedError, confirm_uploads, store_blob
 from app.sync.events import EventEnvelope
 from app.sync.replay import sync as apply_sync
@@ -265,5 +267,76 @@ def sync_events(
         changed_while_you_were_away=[
             ChangedResponse(checklist_item_id=c.checklist_item_id, message=c.message)
             for c in result.tell_the_tech
+        ],
+    )
+
+
+class FeedbackResponse(BaseModel):
+    checklist_item_id: uuid.UUID
+    asset_tag: str
+    room: str | None
+    statement: str
+    why_it_matters: str
+    criticality: Criticality
+    verdict: RulingVerdict
+    note: str | None
+    reviewer_name: str
+    ruled_at: datetime
+    needs_another_visit: bool
+    is_correction: bool
+    evidence_ids: list[uuid.UUID]
+
+
+class TallyResponse(BaseModel):
+    ruled: int
+    passed: int
+    failed: int
+    recapture_requested: int
+    awaiting_review: int
+
+
+class MyWorkResponse(BaseModel):
+    tally: TallyResponse
+    feedback: list[FeedbackResponse]
+
+
+@router.get("/my-work", response_model=MyWorkResponse)
+def read_my_work(
+    session: DbSession,
+    user: CurrentUser,
+    project_id: uuid.UUID | None = None,
+    limit: int = 100,
+) -> MyWorkResponse:
+    """What reviewers said about work this tech captured.
+
+    The teaching loop's return path. Not the learner model: no score, no
+    threshold, and nothing here changes what anyone is allowed to do.
+    """
+    result = coaching.my_work(session, tech_id=user.id, project_id=project_id, limit=limit)
+    return MyWorkResponse(
+        tally=TallyResponse(
+            ruled=result.tally.ruled,
+            passed=result.tally.passed,
+            failed=result.tally.failed,
+            recapture_requested=result.tally.recapture_requested,
+            awaiting_review=result.tally.awaiting_review,
+        ),
+        feedback=[
+            FeedbackResponse(
+                checklist_item_id=f.checklist_item_id,
+                asset_tag=f.asset_tag,
+                room=f.room,
+                statement=f.statement,
+                why_it_matters=f.why_it_matters,
+                criticality=f.criticality,
+                verdict=f.verdict,
+                note=f.note,
+                reviewer_name=f.reviewer_name,
+                ruled_at=f.ruled_at,
+                needs_another_visit=f.needs_another_visit,
+                is_correction=f.is_correction,
+                evidence_ids=list(f.evidence_ids),
+            )
+            for f in result.feedback
         ],
     )

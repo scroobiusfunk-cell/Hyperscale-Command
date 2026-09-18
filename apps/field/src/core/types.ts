@@ -165,3 +165,34 @@ export interface SyncResult {
   evidence_created: number;
   changed_while_you_were_away: { checklist_item_id: string; message: string }[];
 }
+
+/** One ruling on something this tech captured. The teaching loop's return leg. */
+export interface Feedback {
+  checklist_item_id: string;
+  asset_tag: string;
+  room: string | null;
+  statement: string;
+  why_it_matters: string;
+  criticality: Criticality;
+  verdict: 'pass' | 'fail' | 'recapture_requested';
+  note: string | null;
+  reviewer_name: string;
+  ruled_at: string;
+  needs_another_visit: boolean;
+  is_correction: boolean;
+  evidence_ids: string[];
+}
+
+/** A count of outcomes. Not a score — nothing is gated on it. */
+export interface Tally {
+  ruled: number;
+  passed: number;
+  failed: number;
+  recapture_requested: number;
+  awaiting_review: number;
+}
+
+export interface MyWork {
+  tally: Tally;
+  feedback: Feedback[];
+}

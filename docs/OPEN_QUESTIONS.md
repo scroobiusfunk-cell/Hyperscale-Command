@@ -729,7 +729,8 @@ is a question for the first real project, not an invention.
 
 ## Q27 — The teaching loop is open: nothing reaches the tech
 
-**Status:** open — raised 2026-09-18, needs a decision on phase
+**Status:** settled 2026-09-18 — the plain feedback path is Phase 1 and is built;
+the learner model stays in Phase 3
 
 CLAUDE.md describes the product as one that "guides the tech through capturing
 evidence, grades what it can, routes the rest to a remote reviewer, and trains
@@ -768,10 +769,53 @@ taught anybody anything.
 The argument against is that the Phase 1 deliverable list does not mention it,
 and section 6 owns everything tech-facing.
 
-**Conservative option taken for now:** nothing built. This is a phase question,
-and CLAUDE.md says to confirm before Phase 2+ work rather than to decide it here.
+**Decision:** close the loop, and only the loop. `GET /field/my-work` and a
+"What the reviewer said" screen in the field app. `app/coaching/service.py`
+carries a docstring saying plainly that it is not the learner model.
 
-**What would settle it:** a call on whether "the tech can see the ruling and the
-note on their own captures" is Phase 1 scope. It is roughly one endpoint and one
-screen, and it changes what the reviewer's note is *for* — coaching a person
-rather than labelling a row.
+What was deliberately *not* built, and stays Phase 3: competency scores,
+agreement rates, scaffolding fade, spaced repetition, self-clear unlock. The
+tally on the screen is a count of outcomes with no rate and no threshold, and
+the screen says so in as many words — "a count of what happened, not a score.
+Nothing here changes what you are allowed to sign off." A competency score
+compares the tech's own call against the ruling, and in Phase 1 the tech never
+makes a call, so any number of that kind would be theatre.
+
+**What this changed about the product:** the reviewer's note now has a reader.
+It was being collected as a label for a future model; it is now also the thing
+that teaches the person who took the photograph. That is worth knowing when
+tuning how the console asks for it.
+
+**Still open, and worth watching at the pilot:** a tech cannot see the
+photograph they took. The device deletes its local copy once the bytes are
+safely up, and `/review/evidence/{id}/image` is a reviewer route. "Too blurry to
+read" lands better next to the blurry photograph. Not built because it needs a
+decision about whether a tech may fetch evidence, and the current route has no
+role check at all — see Q28.
+
+
+---
+
+## Q28 — `/review/evidence/{id}/image` has no role check
+
+**Status:** open — raised 2026-09-18, noticed while closing the teaching loop
+
+The route that streams an evidence photograph takes `CurrentUser` and checks
+nothing beyond it being a real active user. Any authenticated account can read
+any evidence in any project by id.
+
+For the pilot — one project, a handful of named people, ids that are not
+guessable — this is close to harmless, and it is the reason the field app could
+in principle show a tech their own photograph without new plumbing.
+
+It is still wrong, and it is the sort of thing that is much cheaper to fix now
+than after a second project exists. The fix has two parts that should be decided
+together:
+
+1. Scope the route to evidence in a project the caller belongs to.
+2. Decide whether a tech may fetch evidence they captured. The teaching argument
+   says yes: "too blurry to read" is far more useful beside the blurry
+   photograph. The privacy argument is weak here, because they took it.
+
+**Conservative option taken:** nothing widened. The field app does not fetch
+photographs, so this change adds no new exposure while the question is open.

@@ -21,6 +21,7 @@ export function WalkList({
   onOpenItem,
   onNext,
   onFinish,
+  onOpenMyWork,
   pendingEvents,
   pendingBlobs,
 }: {
@@ -29,6 +30,7 @@ export function WalkList({
   onOpenItem: (item: WalkItem, assetTag: string) => void;
   onNext: () => void;
   onFinish: () => void;
+  onOpenMyWork: () => void;
   pendingEvents: number;
   pendingBlobs: number;
 }) {
@@ -131,11 +133,14 @@ export function WalkList({
         </View>
       )}
 
-      <Button
-        kind={allDone ? 'primary' : 'secondary'}
-        title={allDone ? 'Finish the walk' : 'Finish early'}
-        onPress={onFinish}
-      />
+      <View style={{ gap: space.md }}>
+        <Button kind="secondary" title="What the reviewer said" onPress={onOpenMyWork} />
+        <Button
+          kind={allDone ? 'primary' : 'secondary'}
+          title={allDone ? 'Finish the walk' : 'Finish early'}
+          onPress={onFinish}
+        />
+      </View>
     </ScrollView>
   );
 }

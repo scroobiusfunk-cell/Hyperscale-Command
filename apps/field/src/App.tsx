@@ -40,6 +40,7 @@ import { Capture } from './screens/Capture.tsx';
 import type { CaptureOutcome } from './screens/Capture.tsx';
 import { Setup } from './screens/Setup.tsx';
 import type { Config } from './screens/Setup.tsx';
+import { MyWork } from './screens/MyWork.tsx';
 import { WalkList } from './screens/WalkList.tsx';
 import { colour, space, type } from './theme.ts';
 
@@ -50,6 +51,7 @@ type Screen =
   | { name: 'loading' }
   | { name: 'setup' }
   | { name: 'walk' }
+  | { name: 'my-work' }
   | { name: 'capture'; item: WalkItem; assetTag: string };
 
 export default function App() {
@@ -266,8 +268,19 @@ export default function App() {
           config={config}
           onConfigChange={(next) => void saveConfig(next)}
           onStart={(declared) => void startWalk(declared)}
+          onOpenMyWork={() => setScreen({ name: 'my-work' })}
           busy={busy}
           error={error}
+        />
+      )}
+
+      {screen.name === 'my-work' && (
+        <MyWork
+          load={async () => {
+            if (api === null) throw new Error('Set the connection details first.');
+            return api.myWork(config.projectId.trim() === '' ? undefined : config.projectId.trim());
+          }}
+          onBack={() => setScreen(stored === null ? { name: 'setup' } : { name: 'walk' })}
         />
       )}
 
@@ -278,6 +291,7 @@ export default function App() {
           onOpenItem={(item, tag) => void openItem(item, tag)}
           onNext={goNext}
           onFinish={() => void finishWalk()}
+          onOpenMyWork={() => setScreen({ name: 'my-work' })}
           pendingEvents={counts.events}
           pendingBlobs={counts.blobs}
         />

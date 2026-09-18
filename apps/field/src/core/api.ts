@@ -7,7 +7,7 @@
  * be as easy to test as the successes.
  */
 
-import type { DeclaredState, OutboxEvent, SyncResult, Walk } from './types.ts';
+import type { DeclaredState, MyWork, OutboxEvent, SyncResult, Walk } from './types.ts';
 
 export interface BlobUploadResult {
   storage_key: string;
@@ -27,6 +27,7 @@ export interface FieldApi {
     mimeType: string,
   ): Promise<BlobUploadResult>;
   sync(events: OutboxEvent[]): Promise<SyncResult>;
+  myWork(projectId?: string): Promise<MyWork>;
 }
 
 export class ApiError extends Error {
@@ -111,5 +112,14 @@ export class HttpFieldApi implements FieldApi {
 
   sync(events: OutboxEvent[]): Promise<SyncResult> {
     return this.json<SyncResult>('/field/sync', { events });
+  }
+
+  async myWork(projectId?: string): Promise<MyWork> {
+    const query = projectId === undefined ? '' : `?project_id=${projectId}`;
+    const response = await this.fetch(`${this.config.baseUrl}/field/my-work${query}`, {
+      headers: this.headers(),
+    });
+    if (!response.ok) throw new ApiError(response.status, await response.text());
+    return (await response.json()) as MyWork;
   }
 }
