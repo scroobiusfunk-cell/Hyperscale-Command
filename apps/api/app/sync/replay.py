@@ -28,6 +28,7 @@ from app.logging import get_logger
 from app.models import ChecklistItem, Evidence, SyncEvent
 from app.models.enums import ChecklistItemState, EvidenceStatus
 from app.models.sync_event import SyncEventStatus, SyncEventType
+from app.sync.blobs import evidence_storage_key
 from app.sync.events import (
     CaptureTaken,
     EventEnvelope,
@@ -167,7 +168,9 @@ def _apply_capture(
             capture_recipe_version=capture.capture_recipe_version,
             step_index=capture.step_index,
             media_type=capture.media_type,
-            storage_key=capture.storage_key,
+            # Derived here, not taken from the device, and the row stays
+            # pending until the bytes actually turn up. See app/sync/blobs.py.
+            storage_key=evidence_storage_key(capture.client_id),
             content_hash=capture.content_hash,
             byte_size=capture.byte_size,
             mime_type=capture.mime_type,
@@ -177,7 +180,7 @@ def _apply_capture(
             device_metadata=capture.device_metadata.model_dump(mode="json"),
             gate_results=[g.model_dump(mode="json") for g in capture.gate_results],
             retake_of=retake_of,
-            status=EvidenceStatus.STORED,
+            status=EvidenceStatus.PENDING_UPLOAD,
         )
     )
     return True, None

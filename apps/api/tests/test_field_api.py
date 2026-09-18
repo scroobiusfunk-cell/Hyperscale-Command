@@ -74,7 +74,7 @@ class TestDownloadingAWalk:
     def test_a_preview_returns_stops_with_capture_steps(
         self, api: TestClient, project: Project, tech: AppUser, walkable: RuleSet
     ) -> None:
-        body = api.post(f"/projects/{project.id}/walk", json={}, headers=as_user(tech)).json()
+        body = api.post(f"/field/projects/{project.id}/walk", json={}, headers=as_user(tech)).json()
 
         assert body["item_count"] == 1
         item = body["stops"][0]["items"][0]
@@ -86,7 +86,7 @@ class TestDownloadingAWalk:
         self, api: TestClient, db: Session, project: Project, tech: AppUser, walkable: RuleSet
     ) -> None:
         api.post(
-            f"/projects/{project.id}/walk",
+            f"/field/projects/{project.id}/walk",
             json={"open_rooms": []},
             headers=as_user(tech),
         )
@@ -96,7 +96,9 @@ class TestDownloadingAWalk:
     def test_starting_the_walk_assigns_it_and_records_deferrals(
         self, api: TestClient, db: Session, project: Project, tech: AppUser, walkable: RuleSet
     ) -> None:
-        response = api.post(f"/projects/{project.id}/walk/start", json={}, headers=as_user(tech))
+        response = api.post(
+            f"/field/projects/{project.id}/walk/start", json={}, headers=as_user(tech)
+        )
 
         assert response.status_code == 201
         assert db.query(ChecklistItem).one().assigned_tech == tech.id
@@ -105,7 +107,7 @@ class TestDownloadingAWalk:
         self, api: TestClient, project: Project, tech: AppUser, walkable: RuleSet
     ) -> None:
         body = api.post(
-            f"/projects/{project.id}/walk",
+            f"/field/projects/{project.id}/walk",
             json={"open_rooms": ["Some other room"]},
             headers=as_user(tech),
         ).json()
@@ -145,7 +147,7 @@ class TestSyncingTheEventLog:
     ) -> None:
         item_id = db.query(ChecklistItem).one().id
         response = api.post(
-            "/sync",
+            "/field/sync",
             json={"events": [self._capture(item_id, recipe)]},
             headers=as_user(tech),
         )
@@ -166,8 +168,8 @@ class TestSyncingTheEventLog:
         item_id = db.query(ChecklistItem).one().id
         batch = {"events": [self._capture(item_id, recipe)]}
 
-        first = api.post("/sync", json=batch, headers=as_user(tech)).json()
-        second = api.post("/sync", json=batch, headers=as_user(tech)).json()
+        first = api.post("/field/sync", json=batch, headers=as_user(tech)).json()
+        second = api.post("/field/sync", json=batch, headers=as_user(tech)).json()
 
         assert first["evidence_created"] == 1
         assert second["evidence_created"] == 0
@@ -186,9 +188,12 @@ class TestSyncingTheEventLog:
         bad = self._capture(item_id, recipe)
         bad["content_hash"] = "not a sha"
 
-        assert api.post("/sync", json={"events": [bad]}, headers=as_user(tech)).status_code == 422
+        assert (
+            api.post("/field/sync", json={"events": [bad]}, headers=as_user(tech)).status_code
+            == 422
+        )
 
     def test_an_empty_sync_is_fine(self, api: TestClient, tech: AppUser) -> None:
-        response = api.post("/sync", json={"events": []}, headers=as_user(tech))
+        response = api.post("/field/sync", json={"events": []}, headers=as_user(tech))
         assert response.status_code == 200
         assert response.json()["accepted"] == 0

@@ -8,17 +8,19 @@ that had to be idempotent.
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
 
 from app.capture.walk import DeclaredState, Walk, compile_walk, start_walk
-from app.deps import CurrentUser, DbSession
+from app.deps import AppSettings, CurrentUser, DbSession, Storage
 from app.models.enums import Criticality
+from app.sync.blobs import BlobRejectedError, confirm_uploads, store_blob
 from app.sync.events import EventEnvelope
 from app.sync.replay import sync as apply_sync
 
-router = APIRouter(tags=["field"])
+router = APIRouter(prefix="/field", tags=["field"])
 
 
 class DeclaredStateRequest(BaseModel):
@@ -191,10 +193,66 @@ def begin_walk(
     return WalkResponse.of(walk)
 
 
+class BlobResponse(BaseModel):
+    storage_key: str
+    byte_size: int
+    content_hash: str
+    first_time: bool
+    evidence_confirmed: bool
+
+
+@router.post("/evidence/{client_id}/blob", response_model=BlobResponse)
+async def upload_evidence_blob(
+    client_id: uuid.UUID,
+    session: DbSession,
+    user: CurrentUser,
+    settings: AppSettings,
+    storage: Storage,
+    content_hash: Annotated[str, Form(pattern=r"^[0-9a-fA-F]{64}$")],
+    file: Annotated[UploadFile, File()],
+) -> BlobResponse:
+    """Upload one capture's bytes.
+
+    Separate from the event log because photographs are large and site signal is
+    not. Either call can arrive first and both are safe to repeat.
+    """
+    data = await file.read()
+    try:
+        stored = store_blob(
+            session,
+            storage,
+            settings.evidence_bucket,
+            client_id=client_id,
+            data=data,
+            content_hash=content_hash,
+            mime_type=file.content_type or "application/octet-stream",
+        )
+    except BlobRejectedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+
+    return BlobResponse(
+        storage_key=stored.storage_key,
+        byte_size=stored.byte_size,
+        content_hash=stored.content_hash,
+        first_time=stored.first_time,
+        evidence_confirmed=stored.evidence_confirmed,
+    )
+
+
 @router.post("/sync", response_model=SyncResponse)
-def sync_events(envelope: EventEnvelope, session: DbSession, user: CurrentUser) -> SyncResponse:
+def sync_events(
+    envelope: EventEnvelope,
+    session: DbSession,
+    user: CurrentUser,
+    settings: AppSettings,
+    storage: Storage,
+) -> SyncResponse:
     """Apply a device's event log. Safe to call again with the same events."""
     result = apply_sync(session, submitted_by=user.id, envelope=envelope)
+    # Bytes that arrived before their event stop being stuck here.
+    confirm_uploads(session, storage, settings.evidence_bucket)
     return SyncResponse(
         accepted=result.accepted,
         duplicates=result.duplicates,

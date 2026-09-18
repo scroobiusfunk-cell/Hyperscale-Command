@@ -660,3 +660,67 @@ is one function and the row gathering is already separate from the rendering.
 
 **The signal that the time has come:** the first export that takes more than a
 minute, or the first one that fails on memory.
+
+---
+
+## Q25 — Drawings are an identity source, not a requirement source
+
+**Status:** open — raised 2026-09-18, conservative option taken
+
+The architecture doc splits the inputs cleanly. Specs, submittals, manufacturer
+IOMs and standards feed the Requirements Compiler; the equipment list, drawings
+and CxAlloy feed the Asset Graph. The build follows that split: `DocumentType`
+has no `drawing` member, and drawings appear only as `AliasSource.DRAWING_SCHEDULE`,
+the second most trusted source of identity after CxAlloy.
+
+That is right for most of a drawing set. A plan view tells you a panel is in
+Electrical Room 1-04; it does not tell you what a correct installation looks
+like. The spec does.
+
+**Where it is wrong:** drawing *schedules* and details do carry requirement
+content. A panel schedule fixes breaker sizes and circuit counts. A mounting
+detail fixes a height. A riser diagram fixes what feeds what. Today none of
+that can become a Requirement, because there is no document type that would
+let it be ingested as one.
+
+**Conservative option taken:** none of it is inferred. A requirement that exists
+only on a drawing is currently a requirement the platform does not know about,
+which is a gap, not a wrong answer. It cannot produce a bad check from a
+drawing it never read.
+
+**What would settle it:** a real project's drawing set. The question is not
+whether schedules carry requirements — they do — but what share of the checks
+in scope depend on one. If it is a handful, curate them in by hand against the
+spec section. If it is most of the electrical scope, the compiler needs a
+`drawing_schedule` document type and table extraction, which is a different and
+harder extraction problem than clause text.
+
+---
+
+## Q26 — Nothing records what the compiler has *not* read
+
+**Status:** open — raised 2026-09-18, no mitigation built yet
+
+Every Requirement traces to a document, clause and page, so a tech can always
+see where a rule came from. There is no matching record of what was missing.
+
+If a project loads the spec section but not the approved submittal, the compiler
+produces a checklist. It looks exactly like a complete one. Nothing on the item,
+in the queue or on the reviewer's screen says "this was compiled without the
+submittal that governs this asset". The tech walks it, the reviewer clears it,
+and the gap is invisible to both.
+
+This is the failure mode that matters more than any single missing document,
+because it is silent. A missing document you know about is a task. A missing
+document you do not know about is a cleared item that was never really checked.
+
+**Conservative option, not yet built:** a per-asset, per-check record of which
+governing documents were present at compile time, surfaced wherever the checklist
+is. An item compiled from an incomplete set should say so and should not be
+presentable as fully checked.
+
+**Why it is not built yet:** the honest version needs to know what the complete
+set *is* for a given asset, and that is a project setup question — somebody has
+to declare "these are the documents that govern Division 26 on this job" before
+the platform can tell you one is absent. That declaration does not exist yet and
+is a question for the first real project, not an invention.

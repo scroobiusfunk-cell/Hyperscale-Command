@@ -8,11 +8,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
-from app.deps import AppSettings, CurrentUser, DbSession
+from app.deps import AppSettings, CurrentUser, DbSession, Storage
 from app.models import Evidence
 from app.models.enums import Criticality, RulingVerdict
 from app.review import service
-from app.storage import S3Storage, StorageError
+from app.storage import StorageError
 
 router = APIRouter(prefix="/review", tags=["review"])
 
@@ -191,7 +191,11 @@ def rule_item(
 
 @router.get("/evidence/{evidence_id}/image")
 def read_evidence_image(
-    evidence_id: uuid.UUID, session: DbSession, user: CurrentUser, settings: AppSettings
+    evidence_id: uuid.UUID,
+    session: DbSession,
+    user: CurrentUser,
+    settings: AppSettings,
+    storage: Storage,
 ) -> Response:
     """Stream one piece of evidence.
 
@@ -203,7 +207,7 @@ def read_evidence_image(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No such evidence.")
 
     try:
-        body = S3Storage.from_settings(settings).get(settings.evidence_bucket, evidence.storage_key)
+        body = storage.get(settings.evidence_bucket, evidence.storage_key)
     except StorageError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

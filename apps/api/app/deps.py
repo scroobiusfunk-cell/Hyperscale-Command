@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.models import AppUser
+from app.storage import ObjectStorage, S3Storage
 
 
 def get_settings(request: Request) -> Settings:
@@ -63,6 +64,12 @@ def get_current_user(
     return user
 
 
+def get_storage(settings: Annotated[Settings, Depends(get_settings)]) -> ObjectStorage:
+    """Object storage as a dependency, so a test can hand a route a fake one."""
+    return S3Storage.from_settings(settings)
+
+
 AppSettings = Annotated[Settings, Depends(get_settings)]
 CurrentUser = Annotated[AppUser, Depends(get_current_user)]
 DbSession = Annotated[Session, Depends(get_session)]
+Storage = Annotated[ObjectStorage, Depends(get_storage)]
