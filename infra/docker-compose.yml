@@ -7,21 +7,21 @@
 #
 # Usage: docker compose -f infra/docker-compose.yml up -d
 
-name: field-inspection-engine
+name: inspection-understudy
 
 services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-fie}
+      POSTGRES_USER: ${POSTGRES_USER:-understudy}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-understudy_local_dev}
-      POSTGRES_DB: ${POSTGRES_DB:-fie}
+      POSTGRES_DB: ${POSTGRES_DB:-understudy}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fie} -d ${POSTGRES_DB:-fie}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-understudy} -d ${POSTGRES_DB:-understudy}"]
       interval: 5s
       timeout: 5s
       retries: 10

@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     environment: Environment = Environment.DEVELOPMENT
     log_level: str = "INFO"
 
-    database_url: str = "postgresql+psycopg://understudy:understudy_local_dev@localhost:5432/understudy"
+    database_url: str = (
+        "postgresql+psycopg://understudy:understudy_local_dev@localhost:5432/understudy"
+    )
     redis_url: str = "redis://localhost:6379/0"
 
     storage_endpoint_url: str | None = None

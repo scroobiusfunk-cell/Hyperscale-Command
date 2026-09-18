@@ -30,3 +30,6 @@ build/
 
 # Local data
 infra/data/
+
+# Intermediate SVGs for the demo illustrations; the committed PNGs are what is used.
+apps/api/scripts/reference_art/svg/

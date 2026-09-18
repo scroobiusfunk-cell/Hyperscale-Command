@@ -14,7 +14,7 @@ from app.config import load_settings
 
 def create_celery() -> Celery:
     settings = load_settings()
-    celery = Celery("fie", broker=settings.redis_url, backend=settings.redis_url)
+    celery = Celery("understudy", broker=settings.redis_url, backend=settings.redis_url)
     celery.conf.update(
         task_acks_late=True,
         task_reject_on_worker_lost=True,

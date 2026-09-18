@@ -74,9 +74,20 @@ class S3Storage(ObjectStorage):
         return body
 
     def exists(self, bucket: str, key: str) -> bool:
+        """Whether the object is there. A miss is an answer, not a failure.
+
+        Letting the 404 out of `external_call` logged an error on the ordinary
+        path — the first upload of every photograph is a miss — and a log that
+        cries wolf on the happy path is a log nobody reads when storage really
+        does break. The call is still recorded, with what it found.
+        """
+        with external_call("storage", "head", version="s3", bucket=bucket, key=key) as record:
+            record["present"] = self._head_succeeds(bucket, key)
+            return bool(record["present"])
+
+    def _head_succeeds(self, bucket: str, key: str) -> bool:
         try:
-            with external_call("storage", "head", version="s3", bucket=bucket, key=key):
-                self._client.head_object(Bucket=bucket, Key=key)
+            self._client.head_object(Bucket=bucket, Key=key)
         except Exception:
             return False
         return True
