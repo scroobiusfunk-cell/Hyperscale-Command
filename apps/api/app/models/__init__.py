@@ -19,6 +19,7 @@ from app.models.reconciliation import (
     ReconciliationQueueStatus,
 )
 from app.models.requirement import Requirement
+from app.models.results_export import ExportStatus, ResultsExport
 from app.models.rule_set import RuleSet, RuleSetStatus
 from app.models.ruling import Ruling
 from app.models.sync_event import SyncEvent, SyncEventStatus, SyncEventType
@@ -33,6 +34,7 @@ __all__ = [
     "ConflictStatus",
     "DocumentPage",
     "Evidence",
+    "ExportStatus",
     "GraderResult",
     "LabeledExample",
     "Project",
@@ -41,6 +43,7 @@ __all__ = [
     "ReconciliationQueueStatus",
     "Requirement",
     "RequirementConflict",
+    "ResultsExport",
     "RuleSet",
     "RuleSetStatus",
     "Ruling",

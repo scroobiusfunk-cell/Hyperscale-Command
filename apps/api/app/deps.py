@@ -63,5 +63,6 @@ def get_current_user(
     return user
 
 
+AppSettings = Annotated[Settings, Depends(get_settings)]
 CurrentUser = Annotated[AppUser, Depends(get_current_user)]
 DbSession = Annotated[Session, Depends(get_session)]

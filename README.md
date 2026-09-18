@@ -84,9 +84,11 @@ you have a release you trust.
 - **Auto-clear thresholds come from a calibration source, never a constant.** In
   Phase 1 that source has no answer for anything, so every item routes to a
   reviewer.
-- **CxAlloy's API is read only.** Results leave as an export package that a
-  person imports. See `docs/adr/0001-cxalloy-read-only-results-export.md`,
-  which also covers the failure mode this introduces.
+- **CxAlloy's API is read only.** The client has no write method — not stubbed,
+  absent — and results leave as an export package a person imports. Writing the
+  file is not delivery: only a person confirming clears the undelivered count,
+  and undelivered failures are counted separately from undelivered passes. See
+  `docs/adr/0001-cxalloy-read-only-results-export.md`.
 - **All LLM calls go through `app/llm/`.** One module imports the Anthropic SDK
   and nothing else may. A `PromptSpec` pins the prompt, model and version
   together so the eval harness can compare runs by swapping the spec.
