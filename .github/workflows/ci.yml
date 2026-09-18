@@ -112,7 +112,7 @@ jobs:
       - run: npm run generate:ts
 
   field:
-    name: Field app — typecheck
+    name: Field app — typecheck and offline core tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -128,3 +128,4 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
+      - run: npm test

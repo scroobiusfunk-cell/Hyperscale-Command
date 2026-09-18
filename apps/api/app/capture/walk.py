@@ -19,7 +19,12 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.capture.recipes import RECIPES_BY_SLUG, RecipeDefinition, recipe_for_criteria
+from app.capture.recipes import (
+    RECIPES_BY_SLUG,
+    RecipeDefinition,
+    recipe_for_criteria,
+    stored_recipe_id,
+)
 from app.logging import get_logger
 from app.models import Asset, CaptureRecipe, ChecklistItem, Requirement
 from app.models.enums import (
@@ -90,6 +95,8 @@ class WalkItem:
     why_it_matters: str
     criticality: Criticality
     steps: tuple[WalkStep, ...]
+    #: The device names this when it reports a capture, so the walk must carry it.
+    recipe_id: uuid.UUID
     recipe_slug: str
     recipe_version: str
     reference_media_slot: str | None
@@ -261,7 +268,8 @@ def compile_walk(
             continue
 
         recipe = _recipe_for(session, requirement)
-        if recipe is None:
+        recipe_id = None if recipe is None else stored_recipe_id(session, recipe)
+        if recipe is None or recipe_id is None:
             unroutable.append(
                 DeferredItem(
                     checklist_item_id=item.id,
@@ -290,6 +298,7 @@ def compile_walk(
                     )
                     for step in recipe.steps
                 ),
+                recipe_id=recipe_id,
                 recipe_slug=recipe.slug,
                 recipe_version=recipe.version,
                 reference_media_slot=recipe.reference_media_slot,

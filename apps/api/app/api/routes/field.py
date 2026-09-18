@@ -55,6 +55,7 @@ class WalkItemResponse(BaseModel):
     statement: str
     why_it_matters: str
     criticality: Criticality
+    capture_recipe_id: uuid.UUID
     recipe_slug: str
     recipe_version: str
     reference_media_slot: str | None
@@ -99,6 +100,7 @@ class WalkResponse(BaseModel):
                             statement=item.statement,
                             why_it_matters=item.why_it_matters,
                             criticality=item.criticality,
+                            capture_recipe_id=item.recipe_id,
                             recipe_slug=item.recipe_slug,
                             recipe_version=item.recipe_version,
                             reference_media_slot=item.reference_media_slot,

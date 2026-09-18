@@ -82,6 +82,32 @@ class TestDownloadingAWalk:
         assert item["why_it_matters"]
         assert item["scaffold_level"] == "full"
 
+    def test_a_walk_carries_everything_a_capture_event_needs(
+        self, api: TestClient, project: Project, tech: AppUser, walkable: RuleSet
+    ) -> None:
+        """The device cannot report a capture without naming the recipe by id.
+
+        The walk used to hand out a slug and a version only, so nothing the
+        device sent back could have validated. Found by writing the client.
+        """
+        body = api.post(f"/field/projects/{project.id}/walk", json={}, headers=as_user(tech)).json()
+        item = body["stops"][0]["items"][0]
+
+        assert uuid.UUID(item["capture_recipe_id"])
+        assert item["recipe_version"]
+        assert item["checklist_item_id"]
+
+    def test_the_recipe_id_a_walk_hands_out_is_a_real_recipe(
+        self, api: TestClient, db: Session, project: Project, tech: AppUser, walkable: RuleSet
+    ) -> None:
+        body = api.post(f"/field/projects/{project.id}/walk", json={}, headers=as_user(tech)).json()
+        item = body["stops"][0]["items"][0]
+
+        recipe = db.get(CaptureRecipe, uuid.UUID(item["capture_recipe_id"]))
+        assert recipe is not None
+        assert recipe.slug == item["recipe_slug"]
+        assert recipe.version == item["recipe_version"]
+
     def test_a_preview_records_nothing(
         self, api: TestClient, db: Session, project: Project, tech: AppUser, walkable: RuleSet
     ) -> None:

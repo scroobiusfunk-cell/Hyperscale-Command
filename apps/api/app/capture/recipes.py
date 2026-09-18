@@ -22,6 +22,7 @@ Recipes are versioned and shared across projects, so they carry no project id.
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -153,6 +154,35 @@ def ensure_builtin_recipes(session: Session) -> list[CaptureRecipe]:
 
 
 RECIPES_BY_SLUG: dict[str, RecipeDefinition] = {r.slug: r for r in BUILTIN_RECIPES}
+
+
+def stored_recipe_id(session: Session, definition: RecipeDefinition) -> uuid.UUID | None:
+    """The database id of a recipe definition.
+
+    The device has to name a capture recipe by id when it reports a capture, so
+    the walk has to hand it one. Matching on slug *and* version matters: a
+    capture must be attributable to the exact instructions the tech was given.
+
+    A built-in with no row yet is seeded rather than reported missing, the same
+    way `evidence_spec_for` does it. The alternative is a walk that silently
+    drops every item because nobody remembered to seed reference data.
+    """
+    row = session.execute(
+        select(CaptureRecipe).where(
+            CaptureRecipe.slug == definition.slug,
+            CaptureRecipe.version == definition.version,
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        row = next(
+            (
+                r
+                for r in ensure_builtin_recipes(session)
+                if r.slug == definition.slug and r.version == definition.version
+            ),
+            None,
+        )
+    return None if row is None else row.id
 
 
 def recipe_for_criteria(
