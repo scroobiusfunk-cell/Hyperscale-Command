@@ -84,8 +84,9 @@ you have a release you trust.
 - **Auto-clear thresholds come from a calibration source, never a constant.** In
   Phase 1 that source has no answer for anything, so every item routes to a
   reviewer.
-- **CxAlloy's API is read only.** The client has no write method — not stubbed,
-  absent — and results leave as an export package a person imports. Writing the
+- **CxAlloy cannot be written to at all** — no API write, no import. The client
+  has no write method (not stubbed, absent), and results leave as a worklist a
+  person enters by hand. Writing the
   file is not delivery: only a person confirming clears the undelivered count,
   and undelivered failures are counted separately from undelivered passes. See
   `docs/adr/0001-cxalloy-read-only-results-export.md`.

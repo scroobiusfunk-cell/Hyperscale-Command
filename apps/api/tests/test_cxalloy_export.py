@@ -27,6 +27,7 @@ from app.cxalloy.export import (
 )
 from app.models import (
     AppUser,
+    Asset,
     CaptureRecipe,
     ChecklistItem,
     ExportStatus,
@@ -356,3 +357,108 @@ class TestMissingEvidence:
         files = read_zip(storage, export.storage_key or "")
         assert MANIFEST_NAME in files
         assert not [n for n in files if n.startswith("photos/")]
+
+
+class TestTheManualEntryWorklist:
+    """Nothing can write to CxAlloy, so a person types these in. The worklist is
+    the part they actually use."""
+
+    def _worklist(self, storage: InMemoryStorage, key: str) -> object:
+        from openpyxl import load_workbook
+
+        from app.cxalloy.export import WORKLIST_NAME
+
+        return load_workbook(io.BytesIO(read_zip(storage, key)[WORKLIST_NAME]))
+
+    def test_the_package_leads_with_a_spreadsheet_not_a_csv(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        from app.cxalloy.export import WORKLIST_NAME
+
+        a_ruled_item(db, project, reviewer)
+        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+
+        assert WORKLIST_NAME in read_zip(storage, export.storage_key or "")
+        readme = read_zip(storage, export.storage_key or "")[README_NAME].decode()
+        assert readme.index(WORKLIST_NAME) < readme.index(MANIFEST_NAME), "start here"
+
+    def test_rows_are_ordered_by_cxalloy_id(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        """That is the order the person opens equipment in, so each is opened once."""
+        for tag in ("SWBD-300", "SWBD-100", "SWBD-200"):
+            a_ruled_item(db, project, reviewer, tag=tag)
+
+        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        sheet = self._worklist(storage, export.storage_key or "")["Results"]  # type: ignore[index]
+
+        ids = [row[1] for row in sheet.iter_rows(min_row=2, values_only=True)]
+        assert ids == sorted(ids)
+
+    def test_every_row_has_somewhere_to_keep_your_place(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        """Nobody gets through four hundred of these without being interrupted."""
+        a_ruled_item(db, project, reviewer)
+        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        sheet = self._worklist(storage, export.storage_key or "")["Results"]  # type: ignore[index]
+
+        assert sheet.cell(row=1, column=1).value == "Done"
+        assert sheet.cell(row=2, column=1).value in (None, "")
+        assert sheet.freeze_panes == "A2", "the header stays visible while scrolling"
+
+    def test_failures_are_on_their_own_sheet_and_marked_in_the_main_one(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        a_ruled_item(db, project, reviewer, tag="SWBD-101")
+        a_ruled_item(
+            db, project, reviewer, tag="SWBD-102", state=ChecklistItemState.REVIEWER_FAILED
+        )
+
+        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        workbook = self._worklist(storage, export.storage_key or "")
+
+        failures = workbook["Failures"]  # type: ignore[index]
+        assert failures.max_row == 2, "header plus the one failure"
+        assert "SWBD-102" in [c.value for c in failures[2]]
+
+        results = workbook["Results"]  # type: ignore[index]
+        outcomes = {row[2]: row[4] for row in results.iter_rows(min_row=2, values_only=True)}
+        assert outcomes["SWBD-102"] == "FAIL"
+        assert outcomes["SWBD-101"] == "Pass"
+
+    def test_the_failure_sheet_says_what_fails_if_it_is_missed(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        a_ruled_item(db, project, reviewer, state=ChecklistItemState.REVIEWER_FAILED)
+        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+
+        failures = self._worklist(storage, export.storage_key or "")["Failures"]  # type: ignore[index]
+        assert any("mislabelled panel" in str(c.value or "") for c in failures[2])
+
+    def test_an_asset_with_no_cxalloy_id_says_so_rather_than_showing_blank(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        """A blank cell reads as an oversight; the person needs to know it is not in there."""
+        item = a_ruled_item(db, project, reviewer)
+        asset = db.get(Asset, item.asset_id)
+        assert asset is not None
+        asset.cxalloy_id = None
+        db.flush()
+
+        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        sheet = self._worklist(storage, export.storage_key or "")["Results"]  # type: ignore[index]
+
+        assert sheet.cell(row=2, column=2).value == "(not in CxAlloy)"
+
+    def test_the_guide_says_the_platform_cannot_do_this_for_them(
+        self, db: Session, storage: InMemoryStorage, project: Project, reviewer: AppUser
+    ) -> None:
+        a_ruled_item(db, project, reviewer)
+        export = build_export(db, storage, project_id=project.id, bucket=BUCKET)
+        guide = self._worklist(storage, export.storage_key or "")["How to use"]  # type: ignore[index]
+
+        text = " ".join(str(row[0].value or "") for row in guide.iter_rows())
+        assert "read only" in text
+        assert "by hand" in text
+        assert "confirm delivery" in text

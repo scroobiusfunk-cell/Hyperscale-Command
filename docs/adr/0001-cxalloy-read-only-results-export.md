@@ -1,6 +1,6 @@
 # 0001 — CxAlloy is read only: results leave as an export package
 
-**Status:** accepted
+**Status:** accepted, amended by [ADR-0002](0002-manual-entry-worklist.md)
 **Date:** 2026-09-17
 **Supersedes:** the CxAlloy write-back path in `docs/ARCHITECTURE.md`, "Sync and integrations"
 
@@ -20,7 +20,9 @@ architecture doc anticipated.
 ## Decision
 
 1. **Results leave the platform as an export package, not an API write.** A
-   completed ruling is rendered into a file that a person imports into CxAlloy.
+   completed ruling is rendered into a file a person works from. ADR-0002
+   corrects the assumption that they would *import* it: CxAlloy cannot be
+   written to by any automated means, so they enter the results by hand.
 2. **The read API is used, and used more than originally planned.** The
    equipment list becomes a scheduled API pull rather than a one-off file
    import. The reconciler gets fresher identity data than the original design

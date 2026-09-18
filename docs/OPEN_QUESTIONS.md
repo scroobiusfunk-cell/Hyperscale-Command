@@ -615,38 +615,33 @@ means to it.
 
 ---
 
-## Q23 — Nobody has run the export through CxAlloy's importer
+## Q23 — There is no importer. Results are entered by hand
 
-**Status:** open · raised 2026-09-18 · blocks: knowing whether the package is usable
+**Status:** settled 2026-09-18 — see [ADR-0002](adr/0002-manual-entry-worklist.md)
 
-The export queue is built and the package format is a guess, as Q8 said it would
-be. It renders a CSV of rulings, a second CSV of failures, a README and the
-evidence photos, zipped.
+This question asked what CxAlloy's importer accepts and how to test against it.
+The premise was wrong: **CxAlloy can be updated manually and cannot be automated
+at all.** There is no API write and no bulk import to aim a file at.
 
-What is still unverified, and cannot be verified from here:
+So there is nothing to test the format against, and the format changed. The
+package now leads with a spreadsheet built for a person doing repetitive data
+entry — ordered by CxAlloy id, a Done column to keep their place, failures on
+their own sheet carrying `why_it_matters`. ADR-0002 has the reasoning and what
+it costs.
 
-1. **Whether the importer takes this shape at all**, and which column it matches
-   checklist lines on. The manifest leads with `export_key` and `cxalloy_id` on
-   the assumption that one of them is the join.
-2. **Whether photos can be imported.** They are in the zip under `photos/` and
-   named in an `evidence_files` column, which is useful to a person either way
-   and may be useless to the importer.
-3. **Whether failures can open issues by import.** They are a separate CSV on the
-   assumption that they cannot, and a person creates the issues from it.
+Q8, which asked the same question earlier and more carefully, is answered the
+same way: there is no importer to discover the shape of.
 
-**How to settle it cheaply, unchanged from Q8:** hand-build one import against a
-CxAlloy test project before anyone relies on this. An afternoon of clicking
-saves rebuilding the format twice.
-
-**What is already right regardless of the answer:** the queue, the retries, the
-determinism, the export keys, the delivery states and the undelivered metric.
-Only the renderer changes, and it is behind one function.
+**What is still worth watching:** entry is now somebody's minutes, and it scales
+with how many items the platform clears. A tool that speeds up inspection and
+slows down data entry has moved the bottleneck, not removed it. The undelivered
+count is the number to watch, and it is already tracked.
 
 ---
 
 ## Q24 — The export is built in one piece, in memory
 
-**Status:** open · raised 2026-09-18 · blocks: nothing at pilot size
+**Status:** settled 2026-09-18 — accepted for the pilot, handed on afterwards
 
 `build_export` zips every undelivered ruling and its photos into a single
 in-memory buffer. On the pilot — one equipment class, one building, two techs —
@@ -655,10 +650,13 @@ that is a few hundred megabytes at worst and probably far less.
 It does not scale to a whole data hall: a thousand assets at forty requirements
 each, two photos per item, is tens of gigabytes and the process would die.
 
-**Position taken:** leave it. The fix is streaming the zip to storage and
-batching by area or by date, and both are straightforward once there is a real
-number to size them against. Building for a scale nobody has measured would be
-guessing twice.
+**Decision:** leave it. The job here is to prove the thing works at pilot size;
+hardening it for a data hall goes to the project's AI engineer afterwards, with
+a real number to size it against rather than a guess.
 
-**The signal to act on:** the first export that takes more than a minute, or the
-first one that fails on memory.
+**What they will need:** stream the zip to object storage instead of building it
+in a buffer, and batch by area or by date. Both are contained — `build_export`
+is one function and the row gathering is already separate from the rendering.
+
+**The signal that the time has come:** the first export that takes more than a
+minute, or the first one that fails on memory.

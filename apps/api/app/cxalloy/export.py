@@ -3,6 +3,12 @@
 ADR-0001: the CxAlloy API is read only, so a ruling reaches the system of record
 when a person imports a file. This builds that file.
 
+Nothing can write to CxAlloy — not the API, and not an importer. A person opens
+CxAlloy and types the results in, so the package is a worklist for a human doing
+repetitive data entry. The spreadsheet is the part they actually use; the CSVs
+are kept because they are deterministic and hashable, and because a machine path
+may exist one day.
+
 Three properties the ADR asks for, all tested:
 
 - **Deterministic.** The same set of rulings renders byte-for-byte the same
@@ -28,6 +34,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.cxalloy.worklist import build_workbook
 from app.logging import get_logger
 from app.models import (
     AppUser,
@@ -53,6 +60,7 @@ DELIVERABLE_STATES = frozenset(
     }
 )
 
+WORKLIST_NAME = "enter_these_in_cxalloy.xlsx"
 MANIFEST_NAME = "checklist_results.csv"
 FAILURES_NAME = "failures_open_an_issue.csv"
 README_NAME = "README.txt"
@@ -253,22 +261,31 @@ def _manifest_rows(rows: list[_Row], *, failures_only: bool) -> list[list[str]]:
 
 
 README_TEXT = f"""\
-Field Inspection Engine — results for import
-============================================
+Field Inspection Engine — results to enter in CxAlloy
+====================================================
 
-{MANIFEST_NAME} lists every ruling in this package. {FAILURES_NAME} lists only the
-failed items, which need an issue opening against them; they are in both files.
+Start with {WORKLIST_NAME}. That is the worklist: one row per ruling, in CxAlloy
+id order, with a Done column to keep your place.
 
-Each row has an export_key. It is stable: importing this package twice produces
-the same keys, so a duplicate is recognisable rather than landing as a second
-result.
+Nothing in this package reaches CxAlloy on its own. This platform's access to
+CxAlloy is read only and cannot be automated, so these results have to be
+entered by hand.
+
+The Failures sheet is the items that failed, pulled out on their own. Each one
+needs an issue raising against it. They are in the Results sheet too.
 
 photos/ holds the evidence, named by asset tag, checklist item and capture step.
-The evidence_files column on each row lists the files belonging to that ruling.
+The Evidence files column on each row says which belong to it.
 
-Nothing in this package reaches CxAlloy on its own. The platform's access to
-CxAlloy is read only. When the import is done, confirm delivery in the reviewer
-console so the undelivered count clears.
+{MANIFEST_NAME} and {FAILURES_NAME} are the same data as plain CSV, for anything
+that wants to read it mechanically.
+
+Each row has an export_key. It is stable, so if this package is produced twice
+you can tell a repeat from something new.
+
+When you have finished, confirm delivery in the reviewer console. Until somebody
+does, these rulings count as not yet in CxAlloy, and the undelivered count keeps
+climbing whether or not the work was actually done.
 """
 
 
@@ -314,6 +331,7 @@ def build_export(
     try:
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr(WORKLIST_NAME, build_workbook(rows, _photo_path))
             archive.writestr(MANIFEST_NAME, manifest)
             archive.writestr(FAILURES_NAME, failures)
             archive.writestr(README_NAME, README_TEXT)

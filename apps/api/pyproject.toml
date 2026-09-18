@@ -18,6 +18,7 @@ dependencies = [
     "structlog>=24.4",
     "anthropic>=0.69",
     "pypdfium2>=5.0",
+    "openpyxl>=3.1",
     "python-multipart>=0.0.20",
 ]
 
@@ -29,6 +30,7 @@ dev = [
     "ruff>=0.9",
     "mypy>=1.14",
     "types-boto3>=1.35",
+    "types-openpyxl>=3.1",
     "reportlab>=4.2",
 ]
 
