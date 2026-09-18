@@ -139,6 +139,19 @@ Worth saying out loud while the safety banner is on screen: a safety item can
 never clear on its own, in any version of this product. It is a database
 trigger, not a policy document.
 
+### Optional — delivery to CxAlloy (2 minutes)
+
+Only if somebody asks how results reach the system of record. On the Delivery
+page: **Build a package** (it counts the rulings waiting), **Download** the zip,
+open it. A worklist to type from, the failures separately, the photographs named
+by asset and check. Then **I have entered these** — which asks once more, because
+it clears the undelivered count for everybody and nothing here can verify it.
+
+The point to make while the zip is open: there is no write to CxAlloy anywhere in
+this product. Our access is read only, so the platform's job ends at handing a
+person a package they can work from, and at keeping an honest count of what has
+not been entered yet.
+
 ### Act three — the loop closes (4 minutes)
 
 Back in the terminal:
@@ -183,10 +196,12 @@ what it has not had is a real project's documents run through it.
 
 ## Rough edges — know them before somebody finds them
 
-- **The Delivery page describes a workflow it does not yet offer.** It explains
-  building an export package and confirming delivery; the buttons for both are
-  not built (the API endpoints are). Visit the page to make the CxAlloy point,
-  do not click into it.
+- **The Delivery page works now — you can click it.** Build a package, download
+  the zip, confirm it. Worth doing live if the room cares about CxAlloy: the zip
+  holds a worklist to type from, the failures on their own sheet, and the
+  photographs. One caveat for the demo, not a defect: confirming clears the
+  undelivered count, so the Overview tile drops to zero and stays there. Do it
+  last, or re-seed afterwards.
 - **Kinds of check display as squashed keys** — `arcflashlabel`, not "arc flash
   label". The key is normalised for matching and there is no display name beside
   it yet. Cosmetic, and visible on the agreement table.
