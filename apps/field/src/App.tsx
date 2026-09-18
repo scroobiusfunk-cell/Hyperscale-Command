@@ -280,6 +280,10 @@ export default function App() {
             if (api === null) throw new Error('Set the connection details first.');
             return api.myWork(config.projectId.trim() === '' ? undefined : config.projectId.trim());
           }}
+          imageFor={(evidenceId) => {
+            if (api === null) return { uri: '', headers: {} };
+            return api.evidenceImage(evidenceId);
+          }}
           onBack={() => setScreen(stored === null ? { name: 'setup' } : { name: 'walk' })}
         />
       )}

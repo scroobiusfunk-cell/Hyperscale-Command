@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import curation, exports, field, review
+from app.api.routes import curation, evidence, exports, field, review
 from app.config import Settings, load_settings
 from app.db import build_session_factory
 from app.logging import configure_logging, get_logger
@@ -49,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = resolved
     app.state.session_factory = build_session_factory(resolved)
     app.include_router(curation.router)
+    app.include_router(evidence.router)
     app.include_router(field.router)
     app.include_router(exports.router)
     app.include_router(review.router)

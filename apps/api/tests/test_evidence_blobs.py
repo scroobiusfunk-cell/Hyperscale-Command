@@ -375,7 +375,7 @@ class TestOverHttp:
 
         reviewer = f.make_user(db, UserRole.REVIEWER)
         response = api.get(
-            f"/review/evidence/{evidence.id}/image",
+            f"/evidence/{evidence.id}/image",
             headers={"X-Dev-User-Id": str(reviewer.id)},
         )
         assert response.status_code == 200
@@ -400,7 +400,7 @@ class TestOverHttp:
 
         reviewer = f.make_user(db, UserRole.REVIEWER)
         response = api.get(
-            f"/review/evidence/{evidence.id}/image",
+            f"/evidence/{evidence.id}/image",
             headers={"X-Dev-User-Id": str(reviewer.id)},
         )
         assert response.status_code == 404

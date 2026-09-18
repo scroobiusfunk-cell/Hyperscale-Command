@@ -28,6 +28,8 @@ export interface FieldApi {
   ): Promise<BlobUploadResult>;
   sync(events: OutboxEvent[]): Promise<SyncResult>;
   myWork(projectId?: string): Promise<MyWork>;
+  /** Where an <Image> should point, and the headers it needs. */
+  evidenceImage(evidenceId: string): { uri: string; headers: Record<string, string> };
 }
 
 export class ApiError extends Error {
@@ -112,6 +114,13 @@ export class HttpFieldApi implements FieldApi {
 
   sync(events: OutboxEvent[]): Promise<SyncResult> {
     return this.json<SyncResult>('/field/sync', { events });
+  }
+
+  evidenceImage(evidenceId: string): { uri: string; headers: Record<string, string> } {
+    return {
+      uri: `${this.config.baseUrl}/evidence/${evidenceId}/image`,
+      headers: this.headers(),
+    };
   }
 
   async myWork(projectId?: string): Promise<MyWork> {

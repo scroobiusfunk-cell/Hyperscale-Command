@@ -5,14 +5,12 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.deps import AppSettings, CurrentUser, DbSession, Storage
-from app.models import Evidence
+from app.deps import CurrentUser, DbSession
 from app.models.enums import Criticality, RulingVerdict
 from app.review import service
-from app.storage import StorageError
 
 router = APIRouter(prefix="/review", tags=["review"])
 
@@ -187,34 +185,6 @@ def rule_item(
         created_at=ruling.created_at.isoformat(),
         supersedes=ruling.supersedes,
     )
-
-
-@router.get("/evidence/{evidence_id}/image")
-def read_evidence_image(
-    evidence_id: uuid.UUID,
-    session: DbSession,
-    user: CurrentUser,
-    settings: AppSettings,
-    storage: Storage,
-) -> Response:
-    """Stream one piece of evidence.
-
-    Served through the API rather than by a link into object storage, so that
-    looking at a photograph needs the same identity as ruling on it.
-    """
-    evidence = session.get(Evidence, evidence_id)
-    if evidence is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No such evidence.")
-
-    try:
-        body = storage.get(settings.evidence_bucket, evidence.storage_key)
-    except StorageError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="That photo has not been uploaded yet.",
-        ) from exc
-
-    return Response(content=body, media_type=evidence.mime_type)
 
 
 @router.get("/projects/{project_id}/dashboard", response_model=DashboardResponse)

@@ -796,9 +796,11 @@ role check at all — see Q28.
 
 ---
 
-## Q28 — `/review/evidence/{id}/image` has no role check
+## Q28 — the evidence image route had no role check
 
-**Status:** open — raised 2026-09-18, noticed while closing the teaching loop
+**Status:** part settled 2026-09-18 — the rule exists and the tech sees their own
+photograph; narrowing a reviewer to their own projects still needs a membership
+model
 
 The route that streams an evidence photograph takes `CurrentUser` and checks
 nothing beyond it being a real active user. Any authenticated account can read
@@ -817,5 +819,37 @@ together:
    says yes: "too blurry to read" is far more useful beside the blurry
    photograph. The privacy argument is weak here, because they took it.
 
-**Conservative option taken:** nothing widened. The field app does not fetch
-photographs, so this change adds no new exposure while the question is open.
+**What was done.** The rule now lives in one place, `app/authz.py`:
+
+- A reviewer or an admin may view any evidence, because judging it is the job.
+- Anyone else may view only evidence they captured.
+- A deactivated user may view nothing. A curator is not a reviewer.
+
+The route moved from `/review/evidence/{id}/image` to `/evidence/{id}/image` and
+both apps call it. Two copies of a route means two copies of an authorization
+rule, and that is how one of them drifts.
+
+A refusal and a missing id return the same 404 and the same wording — "No such
+photo, or it is not yours to look at" — so the response cannot be used to work
+out which evidence exists. A photograph whose bytes have not arrived says so
+separately, because that is a different fact and the tech is allowed to know it.
+
+The second half of the question is answered yes: a tech may fetch evidence they
+captured, and the field app now shows the photographs above the reviewer's note.
+"Too blurry to read the label" beside the blurry photograph is a lesson; on its
+own it is only an instruction.
+
+**What is still open.** Part 1 of the original fix — scoping a reviewer to their
+own projects — is *not* done, because it is not expressible. There is no project
+membership anywhere in the schema: `AppUser` carries global roles and nothing
+ties a person to a project. So a reviewer's reach is every project in the
+deployment.
+
+That is tolerable for a single-project pilot and is not tolerable for the second
+project. Inventing a membership table inside an authorization helper would be the
+wrong place to make that modelling decision, so it is left stated rather than
+guessed at. `app/authz.py` says the same thing in its docstring, next to the code
+that would change.
+
+**The signal that the time has come:** the second project, or the first reviewer
+who should not see the first project.

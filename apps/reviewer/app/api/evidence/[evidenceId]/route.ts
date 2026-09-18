@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ evidenceId: string }> },
 ) {
   const { evidenceId } = await params;
-  const upstream = await fetch(`${API_URL}/review/evidence/${evidenceId}/image`, {
+  const upstream = await fetch(`${API_URL}/evidence/${evidenceId}/image`, {
     headers: process.env.FIE_DEV_USER_ID
       ? { 'X-Dev-User-Id': process.env.FIE_DEV_USER_ID }
       : {},

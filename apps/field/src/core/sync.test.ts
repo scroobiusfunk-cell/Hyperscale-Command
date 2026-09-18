@@ -75,6 +75,10 @@ class FakeApi implements FieldApi {
     };
   }
 
+  evidenceImage(evidenceId: string): { uri: string; headers: Record<string, string> } {
+    return { uri: `fake://${evidenceId}`, headers: {} };
+  }
+
   async myWork(): Promise<MyWork> {
     return {
       tally: { ruled: 0, passed: 0, failed: 0, recapture_requested: 0, awaiting_review: 0 },
@@ -208,6 +212,7 @@ describe('a sync that fails', () => {
       previewWalk: api.previewWalk.bind(api),
       startWalk: api.startWalk.bind(api),
       myWork: api.myWork.bind(api),
+      evidenceImage: api.evidenceImage.bind(api),
       sync: async (events) => {
         calls += 1;
         if (calls > 1) throw new Error('signal gone');

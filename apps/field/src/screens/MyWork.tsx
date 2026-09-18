@@ -14,10 +14,16 @@
  * Every entry shows the requirement and the why-it-matters line beside the
  * ruling. A note reading "two positions still open" teaches nothing on its own;
  * next to the rule it came from, it does.
+ *
+ * The photographs are here for the same reason. "Too blurry to read the label"
+ * is an instruction; the same words beside the blurry photograph are a lesson
+ * the tech can act on next time without having to remember which shot it was.
+ * The device deleted its local copy once the bytes were safely up, so these come
+ * back from the server, which now checks that the evidence is this tech's own.
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner, Button, Card, Chip } from '../components.tsx';
 import type { Tone } from '../components.tsx';
@@ -32,9 +38,11 @@ const VERDICT: Record<Feedback['verdict'], { tone: Tone; icon: string; word: str
 
 export function MyWork({
   load,
+  imageFor,
   onBack,
 }: {
   load: () => Promise<MyWorkData>;
+  imageFor: (evidenceId: string) => { uri: string; headers: Record<string, string> };
   onBack: () => void;
 }) {
   const [data, setData] = useState<MyWorkData | null>(null);
@@ -103,7 +111,7 @@ export function MyWork({
           )}
 
           {data.feedback.map((entry) => (
-            <Entry key={entry.checklist_item_id} entry={entry} />
+            <Entry key={entry.checklist_item_id} entry={entry} imageFor={imageFor} />
           ))}
         </>
       )}
@@ -115,7 +123,13 @@ export function MyWork({
   );
 }
 
-function Entry({ entry }: { entry: Feedback }) {
+function Entry({
+  entry,
+  imageFor,
+}: {
+  entry: Feedback;
+  imageFor: (evidenceId: string) => { uri: string; headers: Record<string, string> };
+}) {
   const verdict = VERDICT[entry.verdict];
   return (
     <Card style={{ marginBottom: space.md }}>
@@ -127,6 +141,20 @@ function Entry({ entry }: { entry: Feedback }) {
       </View>
 
       <Text style={styles.entryStatement}>{entry.statement}</Text>
+
+      {entry.evidence_ids.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.shots}>
+          {entry.evidence_ids.map((id) => (
+            <Image
+              key={id}
+              source={imageFor(id)}
+              style={styles.shot}
+              resizeMode="cover"
+              accessibilityLabel="The photo you took"
+            />
+          ))}
+        </ScrollView>
+      )}
 
       {entry.note !== null && entry.note !== '' && (
         <View style={styles.note}>
@@ -192,6 +220,14 @@ const styles = StyleSheet.create({
   },
   entryTag: { ...type.title, color: colour.ink },
   entryStatement: { ...type.body, fontWeight: '600', color: colour.ink, marginBottom: space.md },
+  shots: { marginBottom: space.md },
+  shot: {
+    width: 104,
+    height: 78,
+    borderRadius: 8,
+    marginRight: space.sm,
+    backgroundColor: colour.sunken,
+  },
   note: {
     backgroundColor: colour.sunken,
     borderRadius: 10,
