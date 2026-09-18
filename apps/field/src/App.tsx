@@ -13,7 +13,7 @@
 
 import * as FileSystem from 'expo-file-system';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner } from './components.tsx';
@@ -25,6 +25,7 @@ import type { Device } from './core/ports.ts';
 import { runSync } from './core/sync.ts';
 import type { SyncReport } from './core/sync.ts';
 import type {
+  BlockedReason,
   DeclaredState,
   GateFailed,
   PredictedVerdict,
@@ -70,13 +71,23 @@ export default function App() {
   const [lastSync, setLastSync] = useState<SyncReport | null>(null);
   const syncing = useRef(false);
 
-  const outbox = device === null ? null : new Outbox(device);
-  const walkStore = device === null ? null : new WalkStore(device);
+  // Memoised, and not for speed. A fresh Outbox every render would give the
+  // append queue a new instance to serialise against each time; a fresh `api`
+  // or `outbox` would change `sync`'s identity, and the 30-second interval
+  // below is keyed on it — it would be torn down and restarted on every tap,
+  // so the periodic sync would never once reach thirty seconds.
+  const outbox = useMemo(() => (device === null ? null : new Outbox(device)), [device]);
+  const walkStore = useMemo(() => (device === null ? null : new WalkStore(device)), [device]);
 
-  const api: FieldApi | null =
-    config.baseUrl.trim() === ''
-      ? null
-      : new HttpFieldApi({ baseUrl: config.baseUrl.trim(), devUserId: config.devUserId.trim() });
+  const baseUrl = config.baseUrl.trim();
+  const devUserId = config.devUserId.trim();
+  const api: FieldApi | null = useMemo(
+    () => (baseUrl === '' ? null : new HttpFieldApi({ baseUrl, devUserId })),
+    [baseUrl, devUserId],
+  );
+
+  // The last capture for each (item, step), so a retake says what it replaces.
+  const lastCapture = useRef<Map<string, string>>(new Map());
 
   // Open the device, then decide whether there is a walk to carry on with.
   useEffect(() => {
@@ -138,6 +149,7 @@ export default function App() {
       }
       setStored(await walkStore.save(config.projectId.trim(), walk));
       setProgress({});
+      lastCapture.current.clear();
       setScreen({ name: 'walk' });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
@@ -182,6 +194,11 @@ export default function App() {
   async function recordCapture(item: WalkItem, outcome: CaptureOutcome): Promise<void> {
     if (outbox === null || stored === null || device === null) return;
     const clientId = device.ids.uuid();
+    // A second shot at the same step replaces the first rather than sitting
+    // beside it: the server supersedes the earlier evidence, and the reviewer
+    // is shown which photograph is the retake.
+    const stepKey = `${item.checklist_item_id}:${outcome.stepIndex}`;
+    const previous = lastCapture.current.get(stepKey) ?? null;
     await outbox.appendCapture(stored.walkId, outcome.bytes, {
       event_type: 'capture_taken',
       checklist_item_id: item.checklist_item_id,
@@ -194,7 +211,9 @@ export default function App() {
       content_hash: await sha256(outcome.bytes),
       mime_type: 'image/jpeg',
       gate_results: outcome.gateResults,
+      retake_of_client_id: previous,
     });
+    lastCapture.current.set(stepKey, clientId);
     if (!outcome.gatePassed) {
       await outbox.append<GateFailed>(stored.walkId, {
         event_type: 'gate_failed',
@@ -225,7 +244,7 @@ export default function App() {
     }
   }
 
-  async function deferItem(item: WalkItem, reason: string, note: string): Promise<void> {
+  async function deferItem(item: WalkItem, reason: BlockedReason, note: string): Promise<void> {
     if (outbox === null || stored === null || walkStore === null) return;
     setBusy(true);
     try {

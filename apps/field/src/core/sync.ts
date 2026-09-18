@@ -18,7 +18,7 @@
 
 import type { FieldApi } from './api.ts';
 import { ApiError } from './api.ts';
-import type { Outbox } from './outbox.ts';
+import type { Outbox, QueuedEvent } from './outbox.ts';
 import type { Device } from './ports.ts';
 import type { SyncResult } from './types.ts';
 
@@ -37,6 +37,14 @@ export interface SyncReport {
   stoppedBecause: string | null;
   /** True when a capture's bytes were dropped as unsendable. */
   droppedBlobs: string[];
+  /**
+   * Events the server will never accept, with the reason it gave.
+   *
+   * They are removed rather than retried forever: one malformed event would
+   * otherwise block every event and every photograph behind it, on this sync
+   * and on all of them. Surfaced so the loss is visible rather than silent.
+   */
+  droppedEvents: { key: string; reason: string }[];
 }
 
 export async function runSync(
@@ -53,6 +61,7 @@ export async function runSync(
     changed: [],
     stoppedBecause: null,
     droppedBlobs: [],
+    droppedEvents: [],
   };
 
   const queued = await outbox.pendingEvents();
@@ -62,6 +71,18 @@ export async function runSync(
     try {
       result = await api.sync(batch.map((q) => q.event));
     } catch (error) {
+      if (error instanceof ApiError && !error.worthRetrying) {
+        // The server will never accept something in this batch. Retrying it
+        // would block every event and every photograph behind it forever, so
+        // the batch is re-sent one at a time and only the events the server
+        // actually refuses are dropped.
+        const stopped = await sendOneAtATime(api, outbox, batch, report);
+        if (stopped !== null) {
+          report.stoppedBecause = stopped;
+          break;
+        }
+        continue;
+      }
       report.stoppedBecause = describe(error);
       break;
     }
@@ -109,6 +130,38 @@ export async function runSync(
   report.eventsRemaining = counts.events;
   report.blobsRemaining = counts.blobs;
   return report;
+}
+
+/**
+ * Re-send a refused batch event by event.
+ *
+ * Returns null when every event was either accepted or definitively refused,
+ * or the reason to stop when something worth retrying came back: in that case
+ * the remaining events stay in the outbox untouched.
+ */
+async function sendOneAtATime(
+  api: FieldApi,
+  outbox: Outbox,
+  batch: QueuedEvent[],
+  report: SyncReport,
+): Promise<string | null> {
+  for (const queued of batch) {
+    try {
+      const result = await api.sync([queued.event]);
+      report.eventsSent += 1;
+      await outbox.acknowledgeEvents([queued.key]);
+      report.eventsAcknowledged += 1;
+      report.changed.push(...result.changed_while_you_were_away);
+    } catch (error) {
+      if (error instanceof ApiError && !error.worthRetrying) {
+        await outbox.acknowledgeEvents([queued.key]);
+        report.droppedEvents.push({ key: queued.key, reason: describe(error) });
+        continue;
+      }
+      return describe(error);
+    }
+  }
+  return null;
 }
 
 function describe(error: unknown): string {

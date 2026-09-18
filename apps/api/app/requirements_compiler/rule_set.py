@@ -12,7 +12,7 @@ and the diff can tell "unchanged" from "replaced".
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
@@ -91,7 +91,6 @@ class RuleSetDiff:
     removed: tuple[uuid.UUID, ...] = ()
     changed: tuple[RequirementChange, ...] = ()
     unchanged: int = 0
-    _: tuple[()] = field(default=(), repr=False)
 
     @property
     def is_empty(self) -> bool:

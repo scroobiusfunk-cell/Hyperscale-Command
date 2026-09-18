@@ -279,11 +279,14 @@ def agreement(
             prediction.item_type,
             {"compared": 0, "agreed": 0, "unsure": 0, "caught": 0, "missed": 0, "over": 0},
         )
-        if prediction.verdict is PredictedVerdict.UNSURE:
-            bucket["unsure"] += 1
-            continue
         expected = _COMPARABLE.get(ruling.verdict)
         if expected is None:
+            # A recapture judges the photograph. It cannot agree or disagree
+            # with a call about the equipment, and it cannot make an "I do not
+            # know" into a data point either.
+            continue
+        if prediction.verdict is PredictedVerdict.UNSURE:
+            bucket["unsure"] += 1
             continue
         bucket["compared"] += 1
         if prediction.verdict is expected:

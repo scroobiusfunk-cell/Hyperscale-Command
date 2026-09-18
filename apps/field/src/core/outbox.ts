@@ -41,8 +41,29 @@ export interface QueuedEvent {
 export class Outbox {
   private readonly device: Device;
 
+  /**
+   * Appends run one at a time.
+   *
+   * Reserving a sequence number is a read then a write with an await between
+   * them. Two overlapping appends — a double tap on the shutter is enough —
+   * would both read the same number, and the second would write its event over
+   * the first at the same key. Serialising the whole append makes the
+   * reservation atomic from the caller's point of view.
+   */
+  private tail: Promise<unknown> = Promise.resolve();
+
   constructor(device: Device) {
     this.device = device;
+  }
+
+  private serialize<T>(work: () => Promise<T>): Promise<T> {
+    const next = this.tail.then(work, work);
+    // Keep the chain alive whatever this one does; the caller sees the failure.
+    this.tail = next.then(
+      () => undefined,
+      () => undefined,
+    );
+    return next;
   }
 
   /** The next sequence number for this walk, reserved durably before use. */
@@ -65,16 +86,18 @@ export class Outbox {
     walkId: string,
     event: Omit<E, 'client_event_id' | 'client_walk_id' | 'sequence' | 'occurred_at'>,
   ): Promise<E> {
-    const sequence = await this.nextSequence(walkId);
-    const full = {
-      ...event,
-      client_event_id: this.device.ids.uuid(),
-      client_walk_id: walkId,
-      sequence,
-      occurred_at: this.device.clock.now().toISOString(),
-    } as E;
-    await this.device.kv.set(eventKey(walkId, sequence), JSON.stringify(full));
-    return full;
+    return this.serialize(async () => {
+      const sequence = await this.nextSequence(walkId);
+      const full = {
+        ...event,
+        client_event_id: this.device.ids.uuid(),
+        client_walk_id: walkId,
+        sequence,
+        occurred_at: this.device.clock.now().toISOString(),
+      } as E;
+      await this.device.kv.set(eventKey(walkId, sequence), JSON.stringify(full));
+      return full;
+    });
   }
 
   /**
@@ -114,8 +137,29 @@ export class Outbox {
       if (raw === null) continue;
       out.push({ key, event: JSON.parse(raw) as OutboxEvent });
     }
-    // Keys sort lexically within a walk; across walks, sort by when it happened.
-    return out.sort((a, b) => a.event.occurred_at.localeCompare(b.event.occurred_at));
+    // Within a walk, the device's sequence — never its clock. A phone that has
+    // been off for a week comes back with a plausible-looking wrong time, and
+    // ordering a walk by it would hand the server the tech's actions in the
+    // wrong order, or split them across batches. Walks are ordered against each
+    // other by the earliest thing in them, which is the only cross-walk signal
+    // there is.
+    const walkStart = new Map<string, string>();
+    for (const { event } of out) {
+      const seen = walkStart.get(event.client_walk_id);
+      if (seen === undefined || event.occurred_at < seen) {
+        walkStart.set(event.client_walk_id, event.occurred_at);
+      }
+    }
+    return out.sort((a, b) => {
+      const byWalk = (walkStart.get(a.event.client_walk_id) ?? '').localeCompare(
+        walkStart.get(b.event.client_walk_id) ?? '',
+      );
+      if (byWalk !== 0) return byWalk;
+      if (a.event.client_walk_id !== b.event.client_walk_id) {
+        return a.event.client_walk_id.localeCompare(b.event.client_walk_id);
+      }
+      return a.event.sequence - b.event.sequence;
+    });
   }
 
   async pendingBlobs(): Promise<PendingBlob[]> {

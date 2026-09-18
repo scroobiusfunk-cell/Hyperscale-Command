@@ -116,12 +116,6 @@ def _store_incoming(
     return stored, len(events) - len(stored)
 
 
-def _reject(row: SyncEvent, note: str) -> None:
-    row.status = SyncEventStatus.REJECTED
-    row.outcome_note = note
-    row.applied_at = datetime.now(UTC)
-
-
 def _apply_capture(
     session: Session, row: SyncEvent, item: ChecklistItem
 ) -> tuple[bool, str | None]:

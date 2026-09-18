@@ -7,7 +7,20 @@
  * apps, and these are the wire shapes of one of them.
  */
 
-export type Criticality = 'safety' | 'performance' | 'documentation';
+/** Closed by design, and identical to `packages/schemas` and the API's `Criticality`. */
+export type Criticality = 'safety' | 'contractual' | 'quality';
+
+/** The reasons a deferral may carry, verbatim from the API's `BlockedReason`. */
+export type BlockedReason =
+  | 'no_access'
+  | 'energized'
+  | 'not_installed_yet'
+  | 'equipment_missing'
+  | 'tool_unavailable'
+  | 'other';
+
+/** Verbatim from the API's `MediaType`. */
+export type MediaType = 'photo' | 'video' | 'document' | 'measurement';
 
 export type GateId = 'sharpness_floor' | 'frame_fill' | 'tech_attestation';
 
@@ -45,7 +58,7 @@ export interface WalkStop {
 export interface Deferred {
   checklist_item_id: string;
   asset_tag: string;
-  reason: string;
+  reason: BlockedReason;
   note: string;
 }
 
@@ -126,7 +139,7 @@ export interface CaptureTaken extends EventBase {
   capture_recipe_id: string;
   capture_recipe_version: string;
   step_index: number;
-  media_type: 'photo' | 'video' | 'audio';
+  media_type: MediaType;
   /**
    * What the device believes the key is. The server derives its own from
    * `client_id` and ignores this; it is sent only so a device log and a server
@@ -157,7 +170,7 @@ export interface ItemCaptured extends EventBase {
 export interface ItemDeferred extends EventBase {
   event_type: 'item_deferred';
   checklist_item_id: string;
-  reason: string;
+  reason: BlockedReason;
   note?: string | null;
 }
 

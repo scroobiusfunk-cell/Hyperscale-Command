@@ -20,7 +20,7 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Banner, Button, Card, Chip } from '../components.tsx';
 import { runGates } from '../core/gates.ts';
 import type { Measurement } from '../core/gates.ts';
-import type { GateResult, WalkItem } from '../core/types.ts';
+import type { BlockedReason, GateResult, WalkItem } from '../core/types.ts';
 import { colour, radius, space, type } from '../theme.ts';
 
 export interface CaptureOutcome {
@@ -44,7 +44,7 @@ export function Capture({
   item: WalkItem;
   assetTag: string;
   onCaptured: (outcome: CaptureOutcome) => Promise<void>;
-  onDefer: (reason: string, note: string) => Promise<void>;
+  onDefer: (reason: BlockedReason, note: string) => Promise<void>;
   onDone: () => Promise<void>;
   onBack: () => void;
   busy: boolean;
@@ -111,7 +111,7 @@ export function Capture({
             title="Record and move on"
             busy={busy}
             disabled={deferNote.trim().length < 5}
-            onPress={() => void onDefer('access_blocked', deferNote.trim())}
+            onPress={() => void onDefer('no_access', deferNote.trim())}
           />
           <Button kind="secondary" title="Back" onPress={() => setDeferring(false)} />
         </View>

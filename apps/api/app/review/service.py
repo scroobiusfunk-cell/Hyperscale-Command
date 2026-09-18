@@ -410,8 +410,17 @@ def dashboard(session: Session, *, project_id: uuid.UUID, window_days: int = 30)
     )
 
     since = datetime.now(UTC) - timedelta(days=window_days)
+    # Scoped to this project. A dashboard that counts one reviewer's work on
+    # another job alongside this one's backlog is comparing two populations.
     rulings = list(
-        session.execute(select(Ruling).where(Ruling.created_at >= since)).scalars().all()
+        session.execute(
+            select(Ruling)
+            .join(ChecklistItem, ChecklistItem.id == Ruling.checklist_item_id)
+            .join(Asset, Asset.id == ChecklistItem.asset_id)
+            .where(Asset.project_id == project_id, Ruling.created_at >= since)
+        )
+        .scalars()
+        .all()
     )
     users = {
         u.id: u

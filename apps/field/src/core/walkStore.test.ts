@@ -20,7 +20,7 @@ function makeDevice(): Device {
   };
 }
 
-function item(id: string, criticality: Criticality = 'performance'): WalkItem {
+function item(id: string, criticality: Criticality = 'quality'): WalkItem {
   return {
     checklist_item_id: id,
     statement: `Check ${id}`,
