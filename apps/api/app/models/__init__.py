@@ -21,6 +21,7 @@ from app.models.reconciliation import (
 from app.models.requirement import Requirement
 from app.models.rule_set import RuleSet, RuleSetStatus
 from app.models.ruling import Ruling
+from app.models.sync_event import SyncEvent, SyncEventStatus, SyncEventType
 
 __all__ = [
     "AppUser",
@@ -44,4 +45,7 @@ __all__ = [
     "RuleSetStatus",
     "Ruling",
     "SourceDocument",
+    "SyncEvent",
+    "SyncEventStatus",
+    "SyncEventType",
 ]

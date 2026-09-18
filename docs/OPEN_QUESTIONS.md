@@ -558,3 +558,57 @@ table does not include it, so this is an addition.
 `access_constraints` as something a curator explicitly confirms rather than
 something they have to notice. Given what a missed `requires_deenergized` costs,
 the answer is probably yes for any requirement the model marks safety.
+
+---
+
+## Q21 — How do the photo bytes get to the server?
+
+**Status:** open · raised 2026-09-18 · blocks: the field app's upload path
+
+Sync carries the event log, and a `capture_taken` event names a `storage_key`,
+a `content_hash` and a byte size. It does not carry the photo. Something has to
+put the bytes at that key, and nothing does yet.
+
+The options differ mostly in what happens on a bad connection, which is the only
+connection this app will ever have:
+
+1. **Presigned upload URLs.** The server hands the app a key and a presigned PUT
+   per capture; the app uploads directly to object storage and syncs the event
+   afterwards. Resumable, no photo bytes through the API, and it needs the
+   storage endpoint reachable from the phone.
+2. **Multipart upload through the API.** Simpler to reason about and to
+   authorise, and it puts a 3 MB photo through the API for every capture on a
+   site with one bar of signal.
+
+**Leaning towards 1**, with the event synced only after the bytes land, so an
+event never references a key with nothing behind it.
+
+**Either way there is an ordering problem worth deciding explicitly:** today
+nothing checks that the object exists when the event is applied. Evidence rows
+can therefore point at keys that were never uploaded — a walk that synced from
+the car park before the photos finished. The conservative fix is a verification
+pass that marks such evidence `pending_upload` rather than `stored`, which is
+what that enum value is for and why it exists unused.
+
+---
+
+## Q22 — A walk has no server-side identity
+
+**Status:** open · raised 2026-09-18 · blocks: nothing; limits what can be measured
+
+Sync events carry a `client_walk_id` the device generates, and there is no
+`walk` table. Events group by it and that is all it does.
+
+That is enough for Phase 1 — the event log replays correctly and the checklist
+items carry the state — but it means the platform cannot say how long a walk
+took, which items were downloaded versus attempted, or whether a tech finished
+one. "Inspections per tech per day" is on the day-one metrics list in the
+architecture doc and cannot be computed from this.
+
+**Position taken:** no walk table yet, because inventing its fields before the
+field app exists would be guessing at what the app actually knows. The
+`walk_completed` event carries `items_attempted`, which is the start of an
+answer.
+
+**Worth revisiting** as soon as the field app is real enough to say what a walk
+means to it.

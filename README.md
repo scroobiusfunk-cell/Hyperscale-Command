@@ -100,6 +100,10 @@ you have a release you trust.
   `auto_cleared`, and `ruling` and `labeled_example` reject UPDATE and DELETE.
   These are triggers in the migration, so they hold for the API, a Celery task,
   and a person at a psql prompt alike.
+- **Sync is idempotent and the reviewer wins.** A retried upload is the normal
+  case on a bad connection, so the same event applied twice changes nothing; and
+  an event made before the tech knew a reviewer had ruled attaches its evidence
+  without overriding the ruling, and tells the tech what changed.
 - **A walk never quietly skips anything.** Items behind a locked door, a live
   board or a missing ladder are deferred with the reason recorded on the item,
   and items with no capture recipe are reported rather than given steps that do
