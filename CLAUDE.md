@@ -50,6 +50,19 @@ Python + FastAPI backend. Postgres with pgvector. S3-compatible object storage (
 - Log every external call (LLM, CxAlloy, storage) with a structured record including version and latency.
 - Plain language in anything a tech reads. No jargon in `explanation` or `why_it_matters` strings.
 
+## The handover package
+
+An engineer outside this repository is given `scripts/build-handover-package.sh`
+output, not a GitHub link: the documents worth reading loose, plus a git bundle
+carrying the branch and its history.
+
+**Rebuild it whenever the work changes** — after a commit that touches code,
+migrations, `docs/`, or `CLAUDE.md` — and hand over the fresh archive. A
+package built from an older head is worse than none, because it looks current.
+The script refuses to build from a dirty tree and clone-checks its own bundle
+before packaging, so a broken one cannot ship; run it rather than assembling an
+archive by hand.
+
 ## Working style
 
 - Small, reviewable changes. One subsystem per PR where possible.
