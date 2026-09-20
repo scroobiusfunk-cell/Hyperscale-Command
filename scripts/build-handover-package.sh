@@ -90,7 +90,10 @@ cp docs/handover-package-README.md "$PKG/README.md"
   echo
   echo "## Bundle"
   echo
-  ( cd "$PKG" && git bundle verify inspection-understudy.bundle 2>&1 ) | sed 's/^/  /'
+  # Run from inside the repository: `git bundle verify` needs one, and refuses
+  # with "need a repository to verify a bundle" anywhere else. The absolute path
+  # is stripped from the output so the manifest carries no build-machine paths.
+  git bundle verify "$BUNDLE" 2>&1 | sed "s|$BUNDLE|inspection-understudy.bundle|" | sed 's/^/  /'
   echo
   echo "## Checksums (sha256)"
   echo
