@@ -240,7 +240,9 @@ call, LLM, storage and CxAlloy, is logged structurally with version and latency.
 ## 9. Decisions waiting on you
 
 1. **Where the Rule Registry lives, and whether it is built.** The design pack
-   is complete and reviewed (`docs/review-2026-09-20.md` in that repository).
+   is complete and reviewed; the review is in this repository as
+   `docs/rule-registry-review-2026-09-20.md`, because the Registry repository
+   does not exist anywhere shared yet.
    Until it exists, the second half of its task R-00 is blocked: rule authoring
    is meant to move there and Understudy is meant to read its `index.json`. The
    authoring code here works in the meantime, so nothing is stuck, but two
@@ -267,6 +269,7 @@ call, LLM, storage and CxAlloy, is logged structurally with version and latency.
 | `docs/OPEN_QUESTIONS.md` | 30 questions, each with status, position taken and what would settle it |
 | `docs/adr/` | Decision records. 0001 is CxAlloy read-only, and explains a lot |
 | `docs/DEMO.md` | How to demonstrate it, and the rough edges to know first |
+| `docs/rule-registry-review-2026-09-20.md` | Review of the Rule Registry design pack, with each finding's resolution. Its finding 10 settles the boundary between the two systems |
 | `apps/api/alembic/README.md` | The Postgres enum traps this schema has already hit |
 
 Read `docs/OPEN_QUESTIONS.md` before changing anything structural. It is not a
