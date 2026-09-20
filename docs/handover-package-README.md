@@ -16,6 +16,16 @@ tests and green CI, currently sitting on a branch of a personal repository
 whose `main` is an empty commit and whose other branches are an unrelated
 Android app. The code is ready to move. The repository is the first problem.
 
+## Fifteen seconds, if that is all you have
+
+A clickable walkthrough of both screens, side by side, with fabricated data:
+
+https://claude.ai/artifact/CLtrVa45av1qQkzhE1snJF
+
+Eight steps follow one safety check from the learner's call before the camera,
+through the reviewer's ruling, to the agreement figure moving. It is a private
+link and opens for nobody until it is shared from the page's Share menu.
+
 ## Importing the code
 
 `inspection-understudy.bundle` is a git bundle: the whole branch, all commits,

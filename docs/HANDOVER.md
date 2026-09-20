@@ -23,6 +23,14 @@ That last sentence is the product. Everything else is plumbing for it. It is an
 inspection assistant and a teaching loop, not an inspector of record: CxAlloy
 remains the system of record and this platform never claims to be.
 
+**The fastest way to understand it is the walkthrough**, a single page carrying
+both screens side by side: https://claude.ai/artifact/CLtrVa45av1qQkzhE1snJF
+Eight clicks follow one safety check from the learner's call, through the
+reviewer's ruling, to the agreement figure moving. Every name and number on it
+is fabricated and it says so; the screens, the wording and the clause
+references are the ones the built system uses. It is a private link, so it
+opens for nobody until it is shared from the page's Share menu.
+
 There is a second, related design in flight, the **Rule Registry**: a
 git-backed store of inspection rules, failure modes and real defect base rates,
 with importers for CxAlloy, Revit/IFC and laser scan data. It is designed but
@@ -268,7 +276,8 @@ call, LLM, storage and CxAlloy, is logged structurally with version and latency.
 | `CLAUDE.md` | The working rules, including the non-negotiables in section 5 |
 | `docs/OPEN_QUESTIONS.md` | 30 questions, each with status, position taken and what would settle it |
 | `docs/adr/` | Decision records. 0001 is CxAlloy read-only, and explains a lot |
-| `docs/DEMO.md` | How to demonstrate it, and the rough edges to know first |
+| `docs/DEMO.md` | How to demonstrate the real system on seeded data, and the rough edges to know first |
+| The walkthrough | Both screens on one page, click-through, fabricated data. Linked in section 1 |
 | `docs/rule-registry-review-2026-09-20.md` | Review of the Rule Registry design pack, with each finding's resolution. Its finding 10 settles the boundary between the two systems |
 | `apps/api/alembic/README.md` | The Postgres enum traps this schema has already hit |
 
