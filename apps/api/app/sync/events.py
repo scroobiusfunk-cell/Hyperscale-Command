@@ -14,7 +14,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.models.enums import BlockedReason, MediaType, PredictedVerdict
+from app.models.enums import BlockedReason, MediaType, Verdict, VerdictReason
 from app.models.sync_event import SyncEventType
 
 
@@ -47,15 +47,20 @@ class ItemOpened(_Base):
 class PredictionMade(_Base):
     """The learner's own call, made before anything was revealed to them.
 
-    `reason` names which disqualifier they believe they saw. It is free text
-    here rather than an enum because the short list is the item's own
+    `disqualifier` names which one they believe they saw. It is free text here
+    rather than an enum because the short list is the item's own
     `disqualifiers`, which are recipe data and change with a recipe version.
+
+    `verdict_reason` is a different thing entirely and is only ever `unsure`
+    from a device: it says which kind of `indeterminate` the verdict is. The two
+    were both called `reason` until R-00.
     """
 
     event_type: Literal[SyncEventType.PREDICTION_MADE]
     checklist_item_id: uuid.UUID
-    verdict: PredictedVerdict
-    reason: str | None = Field(default=None, max_length=200)
+    verdict: Verdict
+    verdict_reason: VerdictReason | None = None
+    disqualifier: str | None = Field(default=None, max_length=200)
     note: str | None = None
 
 

@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 
 from app.logging import get_logger
 from app.models import ChecklistItem, Evidence, Prediction, Requirement, Ruling, SyncEvent
-from app.models.enums import ChecklistItemState, EvidenceStatus, PredictedVerdict
+from app.models.enums import ChecklistItemState, EvidenceStatus, Verdict, VerdictReason
 from app.models.sync_event import SyncEventStatus, SyncEventType
 from app.requirements_compiler.grouping import item_type_of
 from app.sync.blobs import evidence_storage_key
@@ -194,12 +194,34 @@ def _apply_prediction(
     """
     payload = row.payload or {}
     verdict_value = payload.get("verdict")
+    reason_value = payload.get("verdict_reason")
     try:
-        verdict = PredictedVerdict(str(verdict_value))
+        verdict = Verdict(str(verdict_value))
+        verdict_reason = None if reason_value is None else VerdictReason(str(reason_value))
     except ValueError:
         return (
             SyncEventStatus.REJECTED,
-            f"Not a verdict a learner can make: {verdict_value!r}.",
+            f"Not a verdict a learner can make: {verdict_value!r}/{reason_value!r}.",
+            False,
+            None,
+        )
+
+    # A learner answers about the equipment or says they do not know. The other
+    # two indeterminate reasons belong to a grader and to a reviewer, and
+    # `not_visible` is an observability finding the device does not make.
+    if verdict is Verdict.NOT_VISIBLE or (
+        verdict is Verdict.INDETERMINATE and verdict_reason is not VerdictReason.UNSURE
+    ):
+        return (
+            SyncEventStatus.REJECTED,
+            f"Not a verdict a learner can make: {verdict_value!r}/{reason_value!r}.",
+            False,
+            None,
+        )
+    if verdict is not Verdict.INDETERMINATE and verdict_reason is not None:
+        return (
+            SyncEventStatus.REJECTED,
+            "A definite call cannot also carry a reason for being indeterminate.",
             False,
             None,
         )
@@ -233,7 +255,8 @@ def _apply_prediction(
             checklist_item_id=item.id,
             predicted_by=row.submitted_by,
             verdict=verdict,
-            reason=(payload.get("reason") or None),
+            verdict_reason=verdict_reason,
+            disqualifier=(payload.get("disqualifier") or payload.get("reason") or None),
             note=(payload.get("note") or None),
             item_type=item_type_of(requirement),
         )

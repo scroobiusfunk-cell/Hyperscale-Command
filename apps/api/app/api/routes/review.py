@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.deps import CurrentUser, DbSession
-from app.models.enums import Criticality, RulingVerdict
+from app.models.enums import Criticality, Verdict, VerdictReason
 from app.review import service
 
 router = APIRouter(prefix="/review", tags=["review"])
@@ -37,7 +37,8 @@ class EvidenceResponse(BaseModel):
 
 class RulingResponse(BaseModel):
     id: uuid.UUID
-    verdict: RulingVerdict
+    verdict: Verdict
+    verdict_reason: VerdictReason | None
     note: str | None
     reviewer_id: uuid.UUID
     created_at: str
@@ -63,7 +64,11 @@ class ItemDetailResponse(BaseModel):
 
 
 class RuleRequest(BaseModel):
-    verdict: RulingVerdict
+    verdict: Verdict
+    #: Omitted on an indeterminate ruling it defaults to `recapture_requested`,
+    #: which is the only reason a reviewer has. Sending one of the others is
+    #: refused rather than quietly accepted.
+    verdict_reason: VerdictReason | None = None
     note: str | None = Field(default=None, max_length=2000)
 
 
@@ -148,6 +153,7 @@ def read_item(
             RulingResponse(
                 id=r.id,
                 verdict=r.verdict,
+                verdict_reason=r.verdict_reason,
                 note=r.note,
                 reviewer_id=r.reviewer_id,
                 created_at=r.created_at.isoformat(),
@@ -172,6 +178,7 @@ def rule_item(
             checklist_item_id,
             reviewer_id=user.id,
             verdict=body.verdict,
+            verdict_reason=body.verdict_reason,
             note=body.note,
         )
     except service.ReviewError as exc:
@@ -180,6 +187,7 @@ def rule_item(
     return RulingResponse(
         id=ruling.id,
         verdict=ruling.verdict,
+        verdict_reason=ruling.verdict_reason,
         note=ruling.note,
         reviewer_id=ruling.reviewer_id,
         created_at=ruling.created_at.isoformat(),

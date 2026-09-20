@@ -26,19 +26,36 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
 from app.models._types import pg_enum
 from app.models.base import UUIDPrimaryKeyMixin
-from app.models.enums import PredictedVerdict
+from app.models.enums import Verdict, VerdictReason
 
 
 class Prediction(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "prediction"
     __table_args__ = (
+        # The pairing is the whole point of the change: an indeterminate verdict
+        # that does not say which kind it is tells nobody anything, and a pass
+        # carrying a reason for being unsure is two contradictory claims in one
+        # row. Refused at the storage layer, in all three tables.
+        CheckConstraint(
+            "(verdict = 'indeterminate') = (verdict_reason IS NOT NULL)",
+            name="ck_prediction_reason_iff_indeterminate",
+        ),
         UniqueConstraint("checklist_item_id", "predicted_by", name="uq_prediction_item_person"),
         Index("ix_prediction_person_created", "predicted_by", "created_at"),
         Index("ix_prediction_item", "checklist_item_id"),
@@ -50,15 +67,19 @@ class Prediction(UUIDPrimaryKeyMixin, Base):
     predicted_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("app_user.id", ondelete="RESTRICT"), nullable=False
     )
-    verdict: Mapped[PredictedVerdict] = mapped_column(
-        pg_enum(PredictedVerdict, "predicted_verdict"), nullable=False
+    verdict: Mapped[Verdict] = mapped_column(pg_enum(Verdict, "verdict"), nullable=False)
+    verdict_reason: Mapped[VerdictReason | None] = mapped_column(
+        pg_enum(VerdictReason, "verdict_reason"),
+        nullable=True,
+        comment="`unsure` where the learner said so. Excluded from the agreement rate.",
     )
-    reason: Mapped[str | None] = mapped_column(
+    disqualifier: Mapped[str | None] = mapped_column(
         String(200),
         nullable=True,
         comment=(
-            "Which disqualifier the learner believes they saw, from the item's own "
-            "short list. Null on a pass or when they were unsure."
+            "Which disqualifier the learner believes they saw, from the item's own short "
+            "list. Null on a pass or when they were unsure. Renamed from `reason` in R-00: "
+            "a table cannot carry two fields called reason meaning unrelated things."
         ),
     )
     note: Mapped[str | None] = mapped_column(

@@ -21,7 +21,7 @@ from app.config import Environment, Settings
 from app.deps import get_session
 from app.main import create_app
 from app.models import AppUser, CaptureRecipe, ChecklistItem, Project
-from app.models.enums import ChecklistItemState, Criticality, RulingVerdict, UserRole
+from app.models.enums import ChecklistItemState, Criticality, UserRole, Verdict
 from app.review import service as review
 from tests import factories as f
 
@@ -89,14 +89,14 @@ class TestTheNoteArrives:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.FAIL,
+            verdict=Verdict.FAIL,
             note="Two positions on the lower left bank are still open.",
         )
 
         result = my_work(db, tech_id=tech.id)
 
         assert result.tally.ruled == 1
-        assert result.feedback[0].verdict is RulingVerdict.FAIL
+        assert result.feedback[0].verdict is Verdict.FAIL
         assert "lower left bank" in (result.feedback[0].note or "")
 
     def test_the_note_arrives_with_the_rule_it_came_from(
@@ -105,9 +105,7 @@ class TestTheNoteArrives:
         """A correction without the requirement beside it teaches nothing."""
         item = make_item(db, project, statement="Circuit directory is typed and fitted.")
         capture_by(db, item, tech)
-        review.rule(
-            db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.FAIL, note="Handwritten."
-        )
+        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.FAIL, note="Handwritten.")
 
         entry = my_work(db, tech_id=tech.id).feedback[0]
 
@@ -120,7 +118,7 @@ class TestTheNoteArrives:
     ) -> None:
         item = make_item(db, project)
         capture_by(db, item, tech)
-        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         assert my_work(db, tech_id=tech.id).feedback[0].reviewer_name == reviewer.display_name
 
@@ -134,7 +132,7 @@ class TestTheNoteArrives:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.PASS,
+            verdict=Verdict.PASS,
             note="Good wide shot — the whole board is readable in one frame.",
         )
 
@@ -147,7 +145,7 @@ class TestWhoseWorkItIs:
     ) -> None:
         item = make_item(db, project)
         capture_by(db, item, tech)
-        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         other = f.make_user(db, UserRole.TECH)
         assert my_work(db, tech_id=other.id).tally.ruled == 0
@@ -162,13 +160,11 @@ class TestWhoseWorkItIs:
     ) -> None:
         mine = make_item(db, project)
         capture_by(db, mine, tech)
-        review.rule(db, mine.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        review.rule(db, mine.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         elsewhere = make_item(db, f.make_project(db))
         capture_by(db, elsewhere, tech)
-        review.rule(
-            db, elsewhere.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None
-        )
+        review.rule(db, elsewhere.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         assert my_work(db, tech_id=tech.id).tally.ruled == 2
         assert my_work(db, tech_id=tech.id, project_id=project.id).tally.ruled == 1
@@ -184,15 +180,15 @@ class TestWhatComesFirst:
         redo = make_item(db, project, tag="A-3")
         for item in (passed, failed, redo):
             capture_by(db, item, tech)
-        review.rule(db, passed.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        review.rule(db, passed.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
         review.rule(
-            db, failed.id, reviewer_id=reviewer.id, verdict=RulingVerdict.FAIL, note="Not fitted."
+            db, failed.id, reviewer_id=reviewer.id, verdict=Verdict.FAIL, note="Not fitted."
         )
         review.rule(
             db,
             redo.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.RECAPTURE_REQUESTED,
+            verdict=Verdict.INDETERMINATE,
             note="Too blurry to read the label.",
         )
 
@@ -209,7 +205,7 @@ class TestWhatComesFirst:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.RECAPTURE_REQUESTED,
+            verdict=Verdict.INDETERMINATE,
             note="Take it again square on.",
         )
 
@@ -220,7 +216,7 @@ class TestWhatComesFirst:
     ) -> None:
         item = make_item(db, project)
         capture_by(db, item, tech)
-        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         assert my_work(db, tech_id=tech.id).feedback[0].needs_another_visit is False
 
@@ -232,20 +228,18 @@ class TestCorrections:
         """Rulings are append-only, but the tech should learn the current answer."""
         item = make_item(db, project, criticality=Criticality.SAFETY)
         capture_by(db, item, tech)
-        review.rule(
-            db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.FAIL, note="Not fitted."
-        )
+        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.FAIL, note="Not fitted.")
         review.rule(
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.PASS,
+            verdict=Verdict.PASS,
             note="My mistake — it is fitted, the angle hid it.",
         )
 
         feedback = my_work(db, tech_id=tech.id).feedback
         assert len(feedback) == 1
-        assert feedback[0].verdict is RulingVerdict.PASS
+        assert feedback[0].verdict is Verdict.PASS
         assert feedback[0].is_correction is True
 
 
@@ -254,10 +248,10 @@ class TestTheTally:
         self, db: Session, project: Project, tech: AppUser, reviewer: AppUser
     ) -> None:
         for verdict, note in (
-            (RulingVerdict.PASS, None),
-            (RulingVerdict.PASS, None),
-            (RulingVerdict.FAIL, "Not fitted."),
-            (RulingVerdict.RECAPTURE_REQUESTED, "Too blurry."),
+            (Verdict.PASS, None),
+            (Verdict.PASS, None),
+            (Verdict.FAIL, "Not fitted."),
+            (Verdict.INDETERMINATE, "Too blurry."),
         ):
             item = make_item(db, project, tag=f"A-{uuid.uuid4().hex[:4]}")
             capture_by(db, item, tech)
@@ -289,7 +283,7 @@ class TestOverHttp:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.FAIL,
+            verdict=Verdict.FAIL,
             note="Two positions still open on the lower bank.",
         )
 
@@ -306,7 +300,7 @@ class TestOverHttp:
         """Whose work this is comes from the identity, so it cannot be asked for."""
         item = make_item(db, project)
         capture_by(db, item, tech)
-        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        review.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         other = f.make_user(db, UserRole.TECH)
         body = api.get("/field/my-work", headers={"X-Dev-User-Id": str(other.id)}).json()

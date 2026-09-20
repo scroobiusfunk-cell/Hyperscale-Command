@@ -12,7 +12,16 @@ export const PROJECT_ID = process.env.UNDERSTUDY_PROJECT_ID ?? '';
 const DEV_USER_ID = process.env.UNDERSTUDY_DEV_USER_ID ?? '';
 
 export type Criticality = 'safety' | 'contractual' | 'quality';
-export type Verdict = 'pass' | 'fail' | 'recapture_requested';
+/**
+ * `common/definitions.schema.json#/$defs/verdict`. Shared with the Rule Registry.
+ *
+ * A reviewer only ever records three of the four, and the one indeterminate
+ * reason they may give is `recapture_requested`: the other two are a grader's
+ * answer and the learner's. The API refuses the rest rather than trusting the
+ * console to ask nicely.
+ */
+export type Verdict = 'pass' | 'fail' | 'indeterminate' | 'not_visible';
+export type VerdictReason = 'insufficient_evidence' | 'recapture_requested' | 'unsure';
 
 export interface QueueEntry {
   checklist_item_id: string;
@@ -37,6 +46,7 @@ export interface EvidenceRef {
 export interface RulingRecord {
   id: string;
   verdict: Verdict;
+  verdict_reason: VerdictReason | null;
   note: string | null;
   reviewer_id: string;
   created_at: string;

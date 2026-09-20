@@ -18,19 +18,27 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db import Base
 from app.models._types import pg_enum
 from app.models.base import UUIDPrimaryKeyMixin
-from app.models.enums import GraderVerdict
+from app.models.enums import Verdict, VerdictReason
 
 
 class GraderResult(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "grader_result"
     __table_args__ = (
+        # The pairing is the whole point of the change: an indeterminate verdict
+        # that does not say which kind it is tells nobody anything, and a pass
+        # carrying a reason for being unsure is two contradictory claims in one
+        # row. Refused at the storage layer, in all three tables.
+        CheckConstraint(
+            "(verdict = 'indeterminate') = (verdict_reason IS NOT NULL)",
+            name="ck_grader_result_reason_iff_indeterminate",
+        ),
         CheckConstraint(
             "confidence >= 0 AND confidence <= 1", name="ck_grader_result_confidence_range"
         ),
         # A grader that cannot tell must not also claim to be sure. This is the
         # confident-wrong-pass failure mode, blocked at the storage layer.
         CheckConstraint(
-            "verdict <> 'insufficient_evidence' OR confidence <= 0.5",
+            "verdict <> 'indeterminate' OR confidence <= 0.5",
             name="ck_grader_result_insufficient_is_not_confident",
         ),
         CheckConstraint(
@@ -41,8 +49,14 @@ class GraderResult(UUIDPrimaryKeyMixin, Base):
     checklist_item_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("checklist_item.id", ondelete="RESTRICT"), nullable=False
     )
-    verdict: Mapped[GraderVerdict] = mapped_column(
-        pg_enum(GraderVerdict, "grader_verdict"), nullable=False
+    verdict: Mapped[Verdict] = mapped_column(pg_enum(Verdict, "verdict"), nullable=False)
+    verdict_reason: Mapped[VerdictReason | None] = mapped_column(
+        pg_enum(VerdictReason, "verdict_reason"),
+        nullable=True,
+        comment=(
+            "Which kind of indeterminate. Set exactly when verdict is indeterminate; a "
+            "check constraint refuses the other combinations."
+        ),
     )
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     evidence_used: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)

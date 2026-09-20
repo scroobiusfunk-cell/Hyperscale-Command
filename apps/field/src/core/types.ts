@@ -96,7 +96,20 @@ export interface Walk {
   references: Record<string, ReferenceImage[]>;
 }
 
-export type PredictedVerdict = 'pass' | 'fail' | 'unsure';
+/** `common/definitions.schema.json#/$defs/verdict`. Shared with the Rule Registry. */
+export const VERDICTS = ['pass', 'fail', 'indeterminate', 'not_visible'] as const;
+export type Verdict = (typeof VERDICTS)[number];
+
+/**
+ * `common/definitions.schema.json#/$defs/verdict_reason`. Which kind of
+ * `indeterminate` this is, set exactly when the verdict is `indeterminate`.
+ *
+ * A device only ever sends `unsure`: the other two are a grader's answer and a
+ * reviewer's, and this app is neither. The server refuses the others from a
+ * device rather than trusting the field to stay in its lane.
+ */
+export const VERDICT_REASONS = ['insufficient_evidence', 'recapture_requested', 'unsure'] as const;
+export type VerdictReason = (typeof VERDICT_REASONS)[number];
 
 export interface DeclaredState {
   open_rooms?: string[] | null;
@@ -140,9 +153,15 @@ export interface ItemOpened extends EventBase {
 export interface PredictionMade extends EventBase {
   event_type: 'prediction_made';
   checklist_item_id: string;
-  verdict: PredictedVerdict;
-  /** Which disqualifier they believe they saw, from the item's own list. */
-  reason?: string | null;
+  verdict: Verdict;
+  verdict_reason: VerdictReason | null;
+  /**
+   * Which disqualifier they believe they saw, from the item's own list. A
+   * different thing from `verdict_reason`, which is why it is no longer called
+   * `reason`: one names what is wrong with the equipment, the other says which
+   * kind of "I cannot tell" the verdict is.
+   */
+  disqualifier?: string | null;
   note?: string | null;
 }
 
@@ -229,7 +248,8 @@ export interface Feedback {
   statement: string;
   why_it_matters: string;
   criticality: Criticality;
-  verdict: 'pass' | 'fail' | 'recapture_requested';
+  verdict: Verdict;
+  verdict_reason: VerdictReason | null;
   note: string | null;
   reviewer_name: string;
   ruled_at: string;

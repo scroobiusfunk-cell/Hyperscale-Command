@@ -39,8 +39,9 @@ from app.models.enums import (
     ChecklistItemState,
     Criticality,
     CxAlloyDeliveryState,
-    RulingVerdict,
     UserRole,
+    Verdict,
+    VerdictReason,
 )
 from app.requirements_compiler.grouping import item_type_of
 
@@ -55,12 +56,19 @@ REVIEWABLE_STATES = frozenset({ChecklistItemState.EVIDENCE_CAPTURED, ChecklistIt
 MEANINGFUL_NOTE_CHARS = 8
 
 RULING_STATE = {
-    RulingVerdict.PASS: ChecklistItemState.REVIEWER_PASSED,
-    RulingVerdict.FAIL: ChecklistItemState.REVIEWER_FAILED,
-    # A recapture is a ruling on the evidence, not the installation, so the item
-    # goes back to the tech rather than being resolved.
-    RulingVerdict.RECAPTURE_REQUESTED: ChecklistItemState.OPEN,
+    Verdict.PASS: ChecklistItemState.REVIEWER_PASSED,
+    Verdict.FAIL: ChecklistItemState.REVIEWER_FAILED,
+    # Only a definite judgement resolves an item. Anything else is a statement
+    # about the photograph rather than the installation, so the item goes back
+    # to the tech: a recapture because the shot is unusable, `not_visible`
+    # because the thing could not be seen at all.
+    Verdict.INDETERMINATE: ChecklistItemState.OPEN,
+    Verdict.NOT_VISIBLE: ChecklistItemState.OPEN,
 }
+
+#: The reason a reviewer is allowed to give. A reviewer is not a grader and is
+#: not the learner, so the other two reasons are not theirs to record.
+REVIEWER_REASON = VerdictReason.RECAPTURE_REQUESTED
 
 
 class ReviewError(RuntimeError):
@@ -274,15 +282,23 @@ def rule(
     checklist_item_id: uuid.UUID,
     *,
     reviewer_id: uuid.UUID,
-    verdict: RulingVerdict,
+    verdict: Verdict,
     note: str | None,
+    verdict_reason: VerdictReason | None = None,
     item_type: str | None = None,
 ) -> Ruling:
     """Record a ruling and its note as one act.
 
-    Creates the Ruling, moves the item, and — for a pass or a fail — writes the
-    LabeledExample the flywheel runs on. A recapture produces no labelled
-    example: it is a judgment about the photograph, not about the installation.
+    Creates the Ruling, moves the item, and, for a pass or a fail, writes the
+    LabeledExample the flywheel runs on. An indeterminate ruling produces no
+    labelled example: it is a judgment about the photograph, not about the
+    installation.
+
+    `verdict_reason` is required when the verdict is `indeterminate` and refused
+    otherwise, the same pairing the database enforces. A reviewer's only reason
+    is `recapture_requested`; `insufficient_evidence` belongs to a grader and
+    `unsure` to the learner, and a reviewer recording either would put somebody
+    else's answer under their own name.
     """
     reviewer = _require_reviewer(session, reviewer_id)
     item = session.get(ChecklistItem, checklist_item_id)
@@ -293,8 +309,26 @@ def rule(
     if requirement is None:
         raise ReviewError("That checklist item is missing its requirement.")
 
+    if verdict is Verdict.INDETERMINATE:
+        if verdict_reason is None:
+            verdict_reason = REVIEWER_REASON
+        elif verdict_reason is not REVIEWER_REASON:
+            whose = (
+                "a grader"
+                if verdict_reason is VerdictReason.INSUFFICIENT_EVIDENCE
+                else "the learner"
+            )
+            raise ReviewError(
+                f"A reviewer cannot record {verdict_reason.value}. That is {whose}'s "
+                "answer, not theirs."
+            )
+    elif verdict_reason is not None:
+        raise ReviewError(
+            f"A {verdict.value} ruling cannot also carry a reason for being indeterminate."
+        )
+
     cleaned = (note or "").strip()
-    if verdict is not RulingVerdict.PASS and len(cleaned) < MEANINGFUL_NOTE_CHARS:
+    if verdict is not Verdict.PASS and len(cleaned) < MEANINGFUL_NOTE_CHARS:
         raise ReviewError(
             "Say what is wrong. A fail or a recapture without a note is not something "
             "the tech or the next reviewer can act on."
@@ -326,6 +360,7 @@ def rule(
     ruling = Ruling(
         checklist_item_id=item.id,
         verdict=verdict,
+        verdict_reason=verdict_reason,
         note=cleaned or None,
         reviewer_id=reviewer.id,
         supersedes=previous.id if correcting and previous is not None else None,
@@ -337,7 +372,7 @@ def rule(
     item.state = RULING_STATE[verdict]
     item.reviewer = reviewer.id
 
-    if verdict is RulingVerdict.RECAPTURE_REQUESTED:
+    if verdict is not Verdict.PASS and verdict is not Verdict.FAIL:
         item.resolved_at = None
         item.resolved_by = None
     else:
@@ -440,7 +475,7 @@ def dashboard(session: Session, *, project_id: uuid.UUID, window_days: int = 30)
     stats: list[ReviewerStats] = []
     for reviewer_id, their in by_reviewer.items():
         user = users.get(reviewer_id)
-        passes = [r for r in their if r.verdict is RulingVerdict.PASS]
+        passes = [r for r in their if r.verdict is Verdict.PASS]
         with_note = [r for r in passes if r.note and len(r.note.strip()) >= MEANINGFUL_NOTE_CHARS]
         stats.append(
             ReviewerStats(
@@ -448,8 +483,10 @@ def dashboard(session: Session, *, project_id: uuid.UUID, window_days: int = 30)
                 display_name=user.display_name if user else "(unknown)",
                 rulings=len(their),
                 passes=len(passes),
-                fails=sum(1 for r in their if r.verdict is RulingVerdict.FAIL),
-                recaptures=sum(1 for r in their if r.verdict is RulingVerdict.RECAPTURE_REQUESTED),
+                fails=sum(1 for r in their if r.verdict is Verdict.FAIL),
+                recaptures=sum(
+                    1 for r in their if r.verdict_reason is VerdictReason.RECAPTURE_REQUESTED
+                ),
                 notes_on_passes=len(with_note),
                 labeling_rate=(len(with_note) / len(passes)) if passes else 1.0,
             )

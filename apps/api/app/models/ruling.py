@@ -14,19 +14,27 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Text, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
 from app.models._types import pg_enum
 from app.models.base import UUIDPrimaryKeyMixin
-from app.models.enums import RulingVerdict
+from app.models.enums import Verdict, VerdictReason
 
 
 class Ruling(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "ruling"
     __table_args__ = (
+        # The pairing is the whole point of the change: an indeterminate verdict
+        # that does not say which kind it is tells nobody anything, and a pass
+        # carrying a reason for being unsure is two contradictory claims in one
+        # row. Refused at the storage layer, in all three tables.
+        CheckConstraint(
+            "(verdict = 'indeterminate') = (verdict_reason IS NOT NULL)",
+            name="ck_ruling_reason_iff_indeterminate",
+        ),
         Index("ix_ruling_checklist_item_created", "checklist_item_id", "created_at"),
         Index("ix_ruling_reviewer_created", "reviewer_id", "created_at"),
     )
@@ -34,8 +42,15 @@ class Ruling(UUIDPrimaryKeyMixin, Base):
     checklist_item_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("checklist_item.id", ondelete="RESTRICT"), nullable=False
     )
-    verdict: Mapped[RulingVerdict] = mapped_column(
-        pg_enum(RulingVerdict, "ruling_verdict"), nullable=False
+    verdict: Mapped[Verdict] = mapped_column(pg_enum(Verdict, "verdict"), nullable=False)
+    verdict_reason: Mapped[VerdictReason | None] = mapped_column(
+        pg_enum(VerdictReason, "verdict_reason"),
+        nullable=True,
+        comment=(
+            "`recapture_requested` where a reviewer is sending the photograph back. That "
+            "is a judgement on the evidence, not the installation, so it produces no "
+            "LabeledExample and the item reopens."
+        ),
     )
     note: Mapped[str | None] = mapped_column(
         Text,

@@ -31,13 +31,30 @@ import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Banner, Button, Card, Chip } from '../components.tsx';
-import type { PredictedVerdict, ReferenceImage, WalkItem } from '../core/types.ts';
+import type { Verdict, VerdictReason, ReferenceImage, WalkItem } from '../core/types.ts';
 import { TAP_TARGET, colour, radius, space, type } from '../theme.ts';
 
-const CHOICES: { verdict: PredictedVerdict; label: string; hint: string }[] = [
-  { verdict: 'pass', label: 'Looks right', hint: 'It meets the requirement' },
-  { verdict: 'fail', label: 'Looks wrong', hint: 'Something is off' },
-  { verdict: 'unsure', label: 'Not sure', hint: 'Say so — it is a real answer' },
+/**
+ * The three answers, and what each one is on the wire.
+ *
+ * "Not sure" is `indeterminate` carrying the reason `unsure`, which is the R-00
+ * vocabulary. On the screen it stays "Not sure": a learner is not typing an
+ * enum, and "indeterminate" is not a word anybody says on a site.
+ */
+const CHOICES: {
+  verdict: Verdict;
+  verdict_reason: VerdictReason | null;
+  label: string;
+  hint: string;
+}[] = [
+  { verdict: 'pass', verdict_reason: null, label: 'Looks right', hint: 'It meets the requirement' },
+  { verdict: 'fail', verdict_reason: null, label: 'Looks wrong', hint: 'Something is off' },
+  {
+    verdict: 'indeterminate',
+    verdict_reason: 'unsure',
+    label: 'Not sure',
+    hint: 'Say so — it is a real answer',
+  },
 ];
 
 export function Predict({
@@ -53,17 +70,21 @@ export function Predict({
   assetTag: string;
   references: ReferenceImage[];
   imageFor: (referenceImageId: string) => { uri: string; headers: Record<string, string> };
-  onCommit: (verdict: PredictedVerdict, reason: string | null) => Promise<void>;
+  onCommit: (
+    verdict: Verdict,
+    verdictReason: VerdictReason | null,
+    disqualifier: string | null,
+  ) => Promise<void>;
   onBack: () => void;
   busy: boolean;
 }) {
-  const [verdict, setVerdict] = useState<PredictedVerdict | null>(null);
+  const [call, setCall] = useState<(typeof CHOICES)[number] | null>(null);
   const [reason, setReason] = useState<string | null>(null);
 
   const good = references.filter((r) => r.kind === 'good');
   const wrong = references.filter((r) => r.kind === 'wrong');
-  const needsReason = verdict === 'fail' && item.disqualifiers.length > 0;
-  const ready = verdict !== null && (!needsReason || reason !== null);
+  const needsReason = call?.verdict === 'fail' && item.disqualifiers.length > 0;
+  const ready = call !== null && (!needsReason || reason !== null);
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
@@ -100,14 +121,14 @@ export function Predict({
 
       <View style={styles.choices}>
         {CHOICES.map((choice) => {
-          const picked = verdict === choice.verdict;
+          const picked = call?.verdict === choice.verdict;
           return (
             <Pressable
               key={choice.verdict}
               accessibilityRole="radio"
               accessibilityState={{ selected: picked }}
               onPress={() => {
-                setVerdict(choice.verdict);
+                setCall(choice);
                 if (choice.verdict !== 'fail') setReason(null);
               }}
               style={[styles.choice, picked && styles.choicePicked]}
@@ -156,7 +177,9 @@ export function Predict({
           title="Record my call and photograph it"
           busy={busy}
           disabled={!ready}
-          onPress={() => verdict !== null && void onCommit(verdict, reason)}
+          onPress={() =>
+            call !== null && void onCommit(call.verdict, call.verdict_reason, reason)
+          }
         />
         <Button kind="secondary" title="Back to the walk" onPress={onBack} />
       </View>

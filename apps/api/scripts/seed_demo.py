@@ -60,12 +60,12 @@ from app.models.enums import (
     DocumentType,
     EvidenceStatus,
     MediaType,
-    PredictedVerdict,
     ReconciliationStatus,
     ReferenceKind,
     RequirementStatus,
-    RulingVerdict,
     UserRole,
+    Verdict,
+    VerdictReason,
     VerificationMethod,
 )
 from app.requirements_compiler.grouping import item_type_of
@@ -506,15 +506,17 @@ HISTORY = (
     ("DP-2C", "nameplate_tag", "jordan", "fail", None, None, "nameplate_wrong", None),
 )
 
-PREDICTED = {
-    "pass": PredictedVerdict.PASS,
-    "fail": PredictedVerdict.FAIL,
-    "unsure": PredictedVerdict.UNSURE,
+#: What the history above says, in the shared vocabulary. "unsure" and
+#: "recapture" are both `indeterminate`; the reason is what tells them apart.
+PREDICTED: dict[str, tuple[Verdict, VerdictReason | None]] = {
+    "pass": (Verdict.PASS, None),
+    "fail": (Verdict.FAIL, None),
+    "unsure": (Verdict.INDETERMINATE, VerdictReason.UNSURE),
 }
-RULED_AS = {
-    "pass": RulingVerdict.PASS,
-    "fail": RulingVerdict.FAIL,
-    "recapture": RulingVerdict.RECAPTURE_REQUESTED,
+RULED_AS: dict[str, tuple[Verdict, VerdictReason | None]] = {
+    "pass": (Verdict.PASS, None),
+    "fail": (Verdict.FAIL, None),
+    "recapture": (Verdict.INDETERMINATE, VerdictReason.RECAPTURE_REQUESTED),
 }
 DISQUALIFIER = {
     "filler_plates": "open position",
@@ -676,8 +678,9 @@ def main() -> None:
                 Prediction(
                     checklist_item_id=item.id,
                     predicted_by=learner.id,
-                    verdict=PREDICTED[call],
-                    reason=DISQUALIFIER[check_key] if call == "fail" else None,
+                    verdict=PREDICTED[call][0],
+                    verdict_reason=PREDICTED[call][1],
+                    disqualifier=DISQUALIFIER[check_key] if call == "fail" else None,
                     item_type=item_type,
                     created_at=when,
                 )
@@ -729,7 +732,8 @@ def main() -> None:
                 db,
                 item.id,
                 reviewer_id=people[reviewer_key].id,
-                verdict=RULED_AS[verdict],
+                verdict=RULED_AS[verdict][0],
+                verdict_reason=RULED_AS[verdict][1],
                 note=note,
                 item_type=item_type,
             )

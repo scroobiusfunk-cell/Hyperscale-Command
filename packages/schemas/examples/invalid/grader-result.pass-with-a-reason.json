@@ -1,9 +1,11 @@
 {
-  "id": "0b7c4e91-6a23-4f58-9d0e-8c2b5a3f7e16",
+  "_why_invalid": "A pass carrying a reason for being indeterminate. One of the two is untrue, and the pair must not be storable.",
+  "_expect": "verdict_reason",
+  "id": "5e1f8c40-92b7-4a36-8f21-0d7c6b4a9e35",
   "checklist_item_id": "8f3d1a6b-4e70-4c95-a2f8-5b0d9c3e7a24",
-  "verdict": "indeterminate",
+  "verdict": "pass",
   "verdict_reason": "insufficient_evidence",
-  "confidence": 0.31,
+  "confidence": 0.92,
   "evidence_used": [
     {
       "evidence_id": "3c7e9b25-0a48-4b61-8d29-6e1b4a7c5f03",
@@ -17,12 +19,15 @@
       ]
     }
   ],
-  "observed_value": null,
+  "observed_value": {
+    "kind": "presence",
+    "observed": "present"
+  },
   "expected_value": {
     "kind": "presence",
     "expected": "present"
   },
-  "explanation": "The label is in the photo but glare covers the text, so it cannot be read. Take the shot again from a slight angle.",
+  "explanation": "A pass that also claims it could not tell. One of the two is a lie, and the schema refuses to store the pair.",
   "grader_id": "vlm_presence",
   "grader_version": "0.3.0",
   "model_version": "claude-opus-5",

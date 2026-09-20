@@ -898,3 +898,47 @@ gets one call per checklist item, and a recapture does not reopen it. Being told
 to retake a blurry photograph says nothing about whether the installation was
 right, and a learner who has already judged this asset has already had the
 lesson.
+
+---
+
+## Q30 — `verdict_reason` may need a fourth value, and the architecture doc contradicts itself on the verdict set
+
+**Status:** open · raised 2026-09-20 · Registry TASKS.md R-00
+
+R-00 unified the verdict vocabulary on `pass | fail | indeterminate | not_visible`
+and moved the three old Understudy meanings into a `verdict_reason` enum:
+`insufficient_evidence`, `recapture_requested`, `unsure`. Implemented here in
+migration 0011. Two things came out of reading the Registry's `architecture.md`
+afterwards, and neither is settled.
+
+**A fourth reason probably exists.** Section 9 defines `measurement_tolerance`
+and says "a reading inside `design_tolerance ± measurement_tolerance` is
+`indeterminate`, never `pass`". That is a fourth kind of indeterminate: not a
+grader short of evidence, not a reviewer asking for another photograph, not a
+learner unsure, but a measurement that landed inside the noise band of the
+instrument. It has no value in the enum. Nothing in Understudy produces it,
+because Phase 1 has no measured checks, so it is not blocking here — but the
+enum is a closed shared contract and adding a value later is a schema version
+bump on both repos.
+
+**Not invented, deliberately.** The Registry's CLAUDE.md says not to invent code
+values, and `architecture.md` never names a reason enum at all: the split into
+verdict plus reason came out of R-00, not the design doc. So a value for it is
+the Registry's call, not something to add from this side. Proposed name if they
+want one: `within_measurement_tolerance`.
+
+**And the doc disagrees with itself.** Section 4's grader record table still
+gives the verdict enum as `pass, fail, insufficient_evidence`, while section 9
+says "Verdict set for every check, everywhere in the system: `pass`, `fail`,
+`indeterminate`, `not_visible`. Four values, no free text." Section 9 and R-00
+agree with each other, so that is what is built. Section 4's table wants
+updating, or an agent reading the doc top to bottom will implement the old set.
+
+**One naming note, for the record.** Section 6 uses the word "reason" for
+something else entirely: "the tech marks pass or fail and picks a reason from a
+short list", meaning which disqualifier they saw. Understudy had a
+`Prediction.reason` column holding exactly that. Two fields called `reason` on
+one table, meaning unrelated things, is the ambiguity this change exists to
+remove, so the new field is `verdict_reason` and the old one is now
+`disqualifier`. If the Registry names its field plain `reason`, the two repos
+disagree again on the first record that crosses.

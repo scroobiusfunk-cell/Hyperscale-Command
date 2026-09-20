@@ -12,7 +12,7 @@ import itertools
 
 import pytest
 
-from app.models.enums import Criticality, GraderVerdict
+from app.models.enums import Criticality, Verdict
 from app.policy import (
     FixedCalibration,
     NoCalibration,
@@ -23,7 +23,7 @@ from app.policy import (
 
 ITEM_TYPE = "visual_presence.arc_flash_label"
 
-ALL_VERDICTS: list[GraderVerdict | None] = [None, *list(GraderVerdict)]
+ALL_VERDICTS: list[Verdict | None] = [None, *list(Verdict)]
 ALL_CONFIDENCES: list[float | None] = [None, 0.0, 0.5, 0.94, 0.999, 1.0]
 ALL_CALIBRATIONS = [
     NoCalibration(),
@@ -92,7 +92,7 @@ class TestPhaseOneRoutesEverything:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.PASS,
+                verdict=Verdict.PASS,
                 confidence=1.0,
             ),
             NoCalibration(),
@@ -105,7 +105,7 @@ class TestPhaseOneRoutesEverything:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type="something.nobody.measured",
-                verdict=GraderVerdict.PASS,
+                verdict=Verdict.PASS,
                 confidence=1.0,
             ),
             FixedCalibration({ITEM_TYPE: 0.5}),
@@ -130,7 +130,7 @@ class TestTheCalibratedPath:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.PASS,
+                verdict=Verdict.PASS,
                 confidence=0.95,
             ),
             self.calibration,
@@ -144,7 +144,7 @@ class TestTheCalibratedPath:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.PASS,
+                verdict=Verdict.PASS,
                 confidence=0.9,
             ),
             self.calibration,
@@ -156,7 +156,7 @@ class TestTheCalibratedPath:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.PASS,
+                verdict=Verdict.PASS,
                 confidence=None,
             ),
             self.calibration,
@@ -168,7 +168,7 @@ class TestTheCalibratedPath:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.FAIL,
+                verdict=Verdict.FAIL,
                 confidence=1.0,
             ),
             self.calibration,
@@ -180,7 +180,7 @@ class TestTheCalibratedPath:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.INSUFFICIENT_EVIDENCE,
+                verdict=Verdict.INDETERMINATE,
                 confidence=0.2,
             ),
             self.calibration,
@@ -194,7 +194,7 @@ class TestTheCalibratedPath:
             PolicyInput(
                 criticality=Criticality.CONTRACTUAL,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.PASS,
+                verdict=Verdict.PASS,
                 confidence=0.95,
             ),
             self.calibration,
@@ -214,7 +214,7 @@ class TestThresholdsAreNeverConstants:
             PolicyInput(
                 criticality=Criticality.QUALITY,
                 item_type=ITEM_TYPE,
-                verdict=GraderVerdict.PASS,
+                verdict=Verdict.PASS,
                 confidence=0.99,
             ),
             FixedCalibration({ITEM_TYPE: 0.93}),
@@ -225,7 +225,7 @@ class TestThresholdsAreNeverConstants:
         item = PolicyInput(
             criticality=Criticality.QUALITY,
             item_type=ITEM_TYPE,
-            verdict=GraderVerdict.PASS,
+            verdict=Verdict.PASS,
             confidence=0.95,
         )
         assert decide(item, FixedCalibration({ITEM_TYPE: 0.9})).clears

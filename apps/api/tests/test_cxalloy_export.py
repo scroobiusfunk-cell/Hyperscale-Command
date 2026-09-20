@@ -34,7 +34,12 @@ from app.models import (
     Project,
     Ruling,
 )
-from app.models.enums import ChecklistItemState, CxAlloyDeliveryState, RulingVerdict, UserRole
+from app.models.enums import (
+    ChecklistItemState,
+    CxAlloyDeliveryState,
+    UserRole,
+    Verdict,
+)
 from app.storage import InMemoryStorage
 from tests import factories as f
 
@@ -89,9 +94,7 @@ def a_ruled_item(
     db.add(
         Ruling(
             checklist_item_id=item.id,
-            verdict=RulingVerdict.PASS
-            if state is ChecklistItemState.REVIEWER_PASSED
-            else RulingVerdict.FAIL,
+            verdict=Verdict.PASS if state is ChecklistItemState.REVIEWER_PASSED else Verdict.FAIL,
             note=note,
             reviewer_id=reviewer.id,
         )
@@ -254,7 +257,7 @@ class TestDeterminism:
 
         correction = Ruling(
             checklist_item_id=item.id,
-            verdict=RulingVerdict.FAIL,
+            verdict=Verdict.FAIL,
             note="On a second look the label is for the wrong voltage.",
             reviewer_id=reviewer.id,
             supersedes=original.id,

@@ -27,8 +27,8 @@ from app.models.enums import (
     Criticality,
     CxAlloyDeliveryState,
     RequirementStatus,
-    RulingVerdict,
     UserRole,
+    Verdict,
 )
 from tests import factories as f
 
@@ -116,7 +116,7 @@ class TestRulingsAreAppendOnly:
         item = f.make_checklist_item(db, asset, requirement)
         ruling = Ruling(
             checklist_item_id=item.id,
-            verdict=RulingVerdict.PASS,
+            verdict=Verdict.PASS,
             note="Label present and readable.",
             reviewer_id=reviewer.id,
         )
@@ -125,7 +125,7 @@ class TestRulingsAreAppendOnly:
         return ruling
 
     def test_ruling_cannot_be_updated(self, db: Session, ruling: Ruling) -> None:
-        ruling.verdict = RulingVerdict.FAIL
+        ruling.verdict = Verdict.FAIL
         with pytest.raises(DBAPIError, match="append-only"):
             db.flush()
 
@@ -139,7 +139,7 @@ class TestRulingsAreAppendOnly:
     ) -> None:
         correction = Ruling(
             checklist_item_id=ruling.checklist_item_id,
-            verdict=RulingVerdict.FAIL,
+            verdict=Verdict.FAIL,
             note="On a second look the label is for the wrong voltage.",
             reviewer_id=reviewer.id,
             supersedes=ruling.id,
@@ -150,7 +150,7 @@ class TestRulingsAreAppendOnly:
         rulings = db.query(Ruling).filter_by(checklist_item_id=ruling.checklist_item_id).all()
         assert len(rulings) == 2
         original = next(r for r in rulings if r.supersedes is None)
-        assert original.verdict is RulingVerdict.PASS, "the original ruling must stay readable"
+        assert original.verdict is Verdict.PASS, "the original ruling must stay readable"
         assert correction.supersedes == original.id
 
     def test_labeled_example_cannot_be_updated(
@@ -164,7 +164,7 @@ class TestRulingsAreAppendOnly:
             requirement_id=item.requirement_id,
             evidence_ids=[],
             item_type="visual_presence.label",
-            human_verdict=RulingVerdict.PASS,
+            human_verdict=Verdict.PASS,
             human_note="Label present and readable.",
             reviewer_id=reviewer.id,
             labeled_at=datetime.now(UTC),

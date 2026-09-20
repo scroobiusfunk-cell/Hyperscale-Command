@@ -157,6 +157,25 @@
         "version"
       ],
       "additionalProperties": false
+    },
+    "verdict": {
+      "description": "The one verdict vocabulary, shared by the Rule Registry and Inspection Understudy. Every judgement in either system is one of these four, whoever or whatever made it: a grader, a reviewer, or a learner committing to a call before the reveal. 'indeterminate' is a first-class answer, not a failure to answer, and it carries a verdict_reason saying which kind it is. 'not_visible' is narrower: the thing could not be seen, so no judgement about the installation was possible at all.",
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "indeterminate",
+        "not_visible"
+      ]
+    },
+    "verdict_reason": {
+      "description": "Which kind of 'indeterminate' this is. Required when verdict is 'indeterminate' and absent otherwise. These three carry the meanings that used to be separate verdicts in Understudy: a grader without enough to go on, a reviewer sending the photograph back, and a learner who honestly does not know.",
+      "type": "string",
+      "enum": [
+        "insufficient_evidence",
+        "recapture_requested",
+        "unsure"
+      ]
     }
   }
 }

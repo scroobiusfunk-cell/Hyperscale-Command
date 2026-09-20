@@ -12,13 +12,19 @@
       "$ref": "common/definitions.schema.json#/$defs/uuid"
     },
     "verdict": {
-      "type": "string",
-      "enum": [
-        "pass",
-        "fail",
-        "insufficient_evidence"
+      "$ref": "common/definitions.schema.json#/$defs/verdict",
+      "description": "'indeterminate' is a first-class verdict, not an error. The failure mode this system is designed against is a grader answering fluently when it should say it cannot tell. A grader that cannot tell returns 'indeterminate' with verdict_reason 'insufficient_evidence'."
+    },
+    "verdict_reason": {
+      "oneOf": [
+        {
+          "$ref": "common/definitions.schema.json#/$defs/verdict_reason"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "description": "insufficient_evidence is a first-class verdict, not an error. The failure mode this system is designed against is a grader answering fluently when it should say it cannot tell."
+      "description": "Required when verdict is 'indeterminate', null otherwise. A grader's own reason is 'insufficient_evidence'; the other values belong to a reviewer or a learner."
     },
     "confidence": {
       "type": "number",
@@ -81,6 +87,7 @@
     "id",
     "checklist_item_id",
     "verdict",
+    "verdict_reason",
     "confidence",
     "evidence_used",
     "observed_value",
@@ -94,11 +101,11 @@
   "additionalProperties": false,
   "allOf": [
     {
-      "$comment": "A grader that cannot tell must not also claim to be sure. Capping confidence on insufficient_evidence keeps a confident non-answer from clearing anything once auto-clear exists.",
+      "$comment": "A grader that cannot tell must not also claim to be sure. Capping confidence on an indeterminate verdict keeps a confident non-answer from clearing anything once auto-clear exists.",
       "if": {
         "properties": {
           "verdict": {
-            "const": "insufficient_evidence"
+            "const": "indeterminate"
           }
         },
         "required": [
@@ -110,6 +117,33 @@
           "confidence": {
             "type": "number",
             "maximum": 0.5
+          }
+        }
+      }
+    },
+    {
+      "title": "verdict_reason is present exactly when the verdict is indeterminate",
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "indeterminate"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verdict_reason": {
+            "type": "string"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "verdict_reason": {
+            "type": "null"
           }
         }
       }

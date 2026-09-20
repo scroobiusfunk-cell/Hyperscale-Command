@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import GraderResult
-from app.models.enums import GraderVerdict, UserRole
+from app.models.enums import UserRole, Verdict, VerdictReason
 from tests import factories as f
 
 
@@ -32,7 +32,7 @@ def checklist_item_id(db: Session) -> uuid.UUID:
 def _result(checklist_item_id: uuid.UUID, **overrides: Any) -> GraderResult:
     fields = {
         "checklist_item_id": checklist_item_id,
-        "verdict": GraderVerdict.PASS,
+        "verdict": Verdict.PASS,
         "confidence": 0.92,
         "evidence_used": [{"evidence_id": "00000000-0000-4000-8000-000000000000", "regions": []}],
         "observed_value": {"text": "SWBD-101"},
@@ -53,7 +53,7 @@ def test_a_grader_that_cannot_tell_may_not_also_be_confident(
     db.add(
         _result(
             checklist_item_id,
-            verdict=GraderVerdict.INSUFFICIENT_EVIDENCE,
+            verdict=Verdict.INDETERMINATE,
             confidence=0.95,
         )
     )
@@ -65,11 +65,42 @@ def test_insufficient_evidence_with_low_confidence_is_fine(
     db: Session, checklist_item_id: uuid.UUID
 ) -> None:
     result = _result(
-        checklist_item_id, verdict=GraderVerdict.INSUFFICIENT_EVIDENCE, confidence=0.31
+        checklist_item_id,
+        verdict=Verdict.INDETERMINATE,
+        verdict_reason=VerdictReason.INSUFFICIENT_EVIDENCE,
+        confidence=0.31,
     )
     db.add(result)
     db.flush()
-    assert result.verdict is GraderVerdict.INSUFFICIENT_EVIDENCE
+    assert result.verdict is Verdict.INDETERMINATE
+
+
+def test_indeterminate_must_say_which_kind(db: Session, checklist_item_id: uuid.UUID) -> None:
+    """R-00. "I cannot tell" with no reason tells the next reader nothing.
+
+    The three meanings that used to be separate verdicts now live in
+    verdict_reason, so an indeterminate row without one has lost the only part
+    that distinguished a grader out of its depth from a reviewer asking for
+    another photograph.
+    """
+    db.add(_result(checklist_item_id, verdict=Verdict.INDETERMINATE, confidence=0.3))
+    with pytest.raises(IntegrityError, match="ck_grader_result_reason_iff_indeterminate"):
+        db.flush()
+
+
+def test_a_definite_verdict_may_not_carry_a_reason(
+    db: Session, checklist_item_id: uuid.UUID
+) -> None:
+    """A pass that also says it could not tell is two contradictory claims."""
+    db.add(
+        _result(
+            checklist_item_id,
+            verdict=Verdict.PASS,
+            verdict_reason=VerdictReason.INSUFFICIENT_EVIDENCE,
+        )
+    )
+    with pytest.raises(IntegrityError, match="ck_grader_result_reason_iff_indeterminate"):
+        db.flush()
 
 
 def test_a_verdict_must_cite_evidence(db: Session, checklist_item_id: uuid.UUID) -> None:

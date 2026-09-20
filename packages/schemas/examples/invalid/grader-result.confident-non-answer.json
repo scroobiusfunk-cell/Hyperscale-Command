@@ -1,9 +1,10 @@
 {
-  "_why_invalid": "verdict is insufficient_evidence but confidence is 0.95. A grader that cannot tell must not also claim to be sure; that combination is what produces a confident wrong pass once auto-clear exists.",
+  "_why_invalid": "verdict is indeterminate but confidence is 0.95. A grader that cannot tell must not also claim to be sure; that combination is what produces a confident wrong pass once auto-clear exists.",
   "_expect": "confidence",
   "id": "0b7c4e91-6a23-4f58-9d0e-8c2b5a3f7e16",
   "checklist_item_id": "8f3d1a6b-4e70-4c95-a2f8-5b0d9c3e7a24",
-  "verdict": "insufficient_evidence",
+  "verdict": "indeterminate",
+  "verdict_reason": "insufficient_evidence",
   "confidence": 0.95,
   "evidence_used": [
     {

@@ -14,14 +14,33 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Verdict } from '../lib/api';
+import type { Verdict, VerdictReason } from '../lib/api';
 
 const MIN_NOTE = 8;
 
-const VERDICTS: { value: Verdict; label: string; key: string; className: string }[] = [
-  { value: 'pass', label: 'Pass', key: 'p', className: 'pass' },
-  { value: 'fail', label: 'Fail', key: 'f', className: 'fail' },
-  { value: 'recapture_requested', label: 'Recapture', key: 'r', className: 'recapture' },
+/**
+ * The three rulings, and what each one is on the wire.
+ *
+ * "Recapture" is `indeterminate` carrying the reason `recapture_requested`.
+ * The button keeps the word a reviewer would use; the vocabulary underneath is
+ * the one shared with the Rule Registry.
+ */
+const VERDICTS: {
+  value: Verdict;
+  reason: VerdictReason | null;
+  label: string;
+  key: string;
+  className: string;
+}[] = [
+  { value: 'pass', reason: null, label: 'Pass', key: 'p', className: 'pass' },
+  { value: 'fail', reason: null, label: 'Fail', key: 'f', className: 'fail' },
+  {
+    value: 'indeterminate',
+    reason: 'recapture_requested',
+    label: 'Recapture',
+    key: 'r',
+    className: 'recapture',
+  },
 ];
 
 export function RulingForm({
@@ -40,7 +59,7 @@ export function RulingForm({
   const [busy, setBusy] = useState(false);
   const noteRef = useRef<HTMLTextAreaElement>(null);
 
-  const noteRequired = verdict === 'fail' || verdict === 'recapture_requested';
+  const noteRequired = verdict !== null && verdict !== 'pass';
   const noteTooShort = note.trim().length < MIN_NOTE;
   const blocked = !verdict || (noteRequired && noteTooShort);
 
@@ -56,7 +75,11 @@ export function RulingForm({
     const response = await fetch(`/api/rule/${itemId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ verdict, note: note.trim() || null }),
+      body: JSON.stringify({
+        verdict,
+        verdict_reason: VERDICTS.find((v) => v.value === verdict)?.reason ?? null,
+        note: note.trim() || null,
+      }),
     });
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
@@ -147,7 +170,7 @@ export function RulingForm({
             ref={noteRef}
             value={note}
             placeholder={
-              verdict === 'recapture_requested'
+              verdict === 'indeterminate'
                 ? 'What is wrong with the photo, and what should they do differently?'
                 : verdict === 'fail'
                   ? 'What is wrong with the installation?'

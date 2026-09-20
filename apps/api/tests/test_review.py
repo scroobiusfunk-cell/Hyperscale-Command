@@ -25,8 +25,8 @@ from app.models.enums import (
     ChecklistItemState,
     Criticality,
     CxAlloyDeliveryState,
-    RulingVerdict,
     UserRole,
+    Verdict,
 )
 from app.review import service
 from tests import factories as f
@@ -94,7 +94,7 @@ class TestTheQueue:
         self, db: Session, project: Project, reviewer: AppUser
     ) -> None:
         item = an_item_awaiting_review(db, project)
-        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
         assert service.queue(db, project_id=project.id) == []
 
     def test_an_item_coming_back_after_a_recapture_is_flagged_as_such(
@@ -106,7 +106,7 @@ class TestTheQueue:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.RECAPTURE_REQUESTED,
+            verdict=Verdict.INDETERMINATE,
             note="Glare across the label, cannot read it.",
         )
         item.state = ChecklistItemState.EVIDENCE_CAPTURED
@@ -134,7 +134,7 @@ class TestRulingIsOneAction:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.PASS,
+            verdict=Verdict.PASS,
             note="Label present and readable from standing position.",
         )
 
@@ -147,7 +147,7 @@ class TestRulingIsOneAction:
         self, db: Session, project: Project, reviewer: AppUser
     ) -> None:
         item = an_item_awaiting_review(db, project)
-        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
         assert item.cxalloy_delivery_state is CxAlloyDeliveryState.PENDING_EXPORT
 
     def test_a_fail_without_a_note_is_refused(
@@ -157,9 +157,7 @@ class TestRulingIsOneAction:
         item = an_item_awaiting_review(db, project)
 
         with pytest.raises(service.ReviewError, match="Say what is wrong"):
-            service.rule(
-                db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.FAIL, note="no"
-            )
+            service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.FAIL, note="no")
 
         assert item.state is ChecklistItemState.EVIDENCE_CAPTURED, "nothing was recorded"
 
@@ -172,16 +170,14 @@ class TestRulingIsOneAction:
                 db,
                 item.id,
                 reviewer_id=reviewer.id,
-                verdict=RulingVerdict.RECAPTURE_REQUESTED,
+                verdict=Verdict.INDETERMINATE,
                 note=" ",
             )
 
     def test_a_pass_may_be_silent(self, db: Session, project: Project, reviewer: AppUser) -> None:
         """An obvious pass should not need a sentence invented for it."""
         item = an_item_awaiting_review(db, project)
-        ruling = service.rule(
-            db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None
-        )
+        ruling = service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
         assert ruling.note is None
 
     def test_a_recapture_sends_the_item_back_rather_than_resolving_it(
@@ -193,7 +189,7 @@ class TestRulingIsOneAction:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.RECAPTURE_REQUESTED,
+            verdict=Verdict.INDETERMINATE,
             note="Glare across the label; take it from a slight angle.",
         )
 
@@ -203,7 +199,7 @@ class TestRulingIsOneAction:
     def test_only_a_reviewer_may_rule(self, db: Session, project: Project, tech: AppUser) -> None:
         item = an_item_awaiting_review(db, project)
         with pytest.raises(service.ReviewError, match="not a reviewer"):
-            service.rule(db, item.id, reviewer_id=tech.id, verdict=RulingVerdict.PASS, note=None)
+            service.rule(db, item.id, reviewer_id=tech.id, verdict=Verdict.PASS, note=None)
 
 
 class TestTheFlywheel:
@@ -212,11 +208,11 @@ class TestTheFlywheel:
     ) -> None:
         """Every reviewer decision becomes a labelled example. This is the Phase 1 output."""
         item = an_item_awaiting_review(db, project)
-        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         example = db.query(LabeledExample).one()
         assert example.checklist_item_id == item.id
-        assert example.human_verdict is RulingVerdict.PASS
+        assert example.human_verdict is Verdict.PASS
         assert example.reviewer_id == reviewer.id
         assert example.item_type
 
@@ -228,7 +224,7 @@ class TestTheFlywheel:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.FAIL,
+            verdict=Verdict.FAIL,
             note="No label fitted to the front cover.",
         )
         assert db.query(LabeledExample).count() == 1
@@ -242,7 +238,7 @@ class TestTheFlywheel:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.RECAPTURE_REQUESTED,
+            verdict=Verdict.INDETERMINATE,
             note="Too far away to read anything.",
         )
         assert db.query(LabeledExample).count() == 0
@@ -253,15 +249,13 @@ class TestCorrections:
         self, db: Session, project: Project, reviewer: AppUser
     ) -> None:
         item = an_item_awaiting_review(db, project)
-        first = service.rule(
-            db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None
-        )
+        first = service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         second = service.rule(
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.FAIL,
+            verdict=Verdict.FAIL,
             note="On a second look the label is for the wrong voltage.",
         )
 
@@ -273,19 +267,17 @@ class TestCorrections:
         self, db: Session, project: Project, reviewer: AppUser
     ) -> None:
         item = an_item_awaiting_review(db, project)
-        first = service.rule(
-            db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None
-        )
+        first = service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
         service.rule(
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.FAIL,
+            verdict=Verdict.FAIL,
             note="On a second look the label is for the wrong voltage.",
         )
 
         db.refresh(first)
-        assert first.verdict is RulingVerdict.PASS
+        assert first.verdict is Verdict.PASS
 
 
 class TestTheDashboard:
@@ -299,7 +291,7 @@ class TestTheDashboard:
                 db,
                 item.id,
                 reviewer_id=reviewer.id,
-                verdict=RulingVerdict.PASS,
+                verdict=Verdict.PASS,
                 note="Label present and readable." if index < 3 else None,
             )
 
@@ -314,7 +306,7 @@ class TestTheDashboard:
     ) -> None:
         """ "ok" tells the next person nothing and tells the flywheel less."""
         item = an_item_awaiting_review(db, project)
-        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note="ok")
+        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note="ok")
 
         assert service.dashboard(db, project_id=project.id).reviewers[0].labeling_rate == 0.0
 
@@ -333,7 +325,7 @@ class TestTheDashboard:
         self, db: Session, project: Project, reviewer: AppUser
     ) -> None:
         item = an_item_awaiting_review(db, project)
-        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         assert service.dashboard(db, project_id=project.id).undelivered == 1
 
@@ -355,7 +347,7 @@ class TestTheDashboard:
                 db,
                 other_item.id,
                 reviewer_id=reviewer.id,
-                verdict=RulingVerdict.PASS,
+                verdict=Verdict.PASS,
                 note=None,
             )
         here = an_item_awaiting_review(db, project, tag="SWBD-101")
@@ -363,7 +355,7 @@ class TestTheDashboard:
             db,
             here.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.PASS,
+            verdict=Verdict.PASS,
             note="Plate seated flush across the whole row.",
         )
 
@@ -378,7 +370,7 @@ class TestTheDashboard:
     ) -> None:
         elsewhere = f.make_project(db, name="Some other job")
         item = an_item_awaiting_review(db, elsewhere, tag="OTHER-1")
-        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=RulingVerdict.PASS, note=None)
+        service.rule(db, item.id, reviewer_id=reviewer.id, verdict=Verdict.PASS, note=None)
 
         assert service.dashboard(db, project_id=project.id).reviewers == []
 
@@ -406,7 +398,7 @@ class TestItemDetail:
             db,
             item.id,
             reviewer_id=reviewer.id,
-            verdict=RulingVerdict.RECAPTURE_REQUESTED,
+            verdict=Verdict.INDETERMINATE,
             note="Cannot read the label in this shot.",
         )
         item.state = ChecklistItemState.EVIDENCE_CAPTURED
@@ -415,4 +407,4 @@ class TestItemDetail:
         detail = service.item_detail(db, item.id)
 
         assert len(detail.history) == 1
-        assert detail.history[0].verdict is RulingVerdict.RECAPTURE_REQUESTED
+        assert detail.history[0].verdict is Verdict.INDETERMINATE

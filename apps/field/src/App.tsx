@@ -28,7 +28,8 @@ import type {
   BlockedReason,
   DeclaredState,
   GateFailed,
-  PredictedVerdict,
+  Verdict,
+  VerdictReason,
   PredictionMade,
   ItemCaptured,
   ItemDeferred,
@@ -172,8 +173,9 @@ export default function App() {
   async function commitCall(
     item: WalkItem,
     assetTag: string,
-    verdict: PredictedVerdict,
-    reason: string | null,
+    verdict: Verdict,
+    verdictReason: VerdictReason | null,
+    disqualifier: string | null,
   ): Promise<void> {
     if (outbox === null || stored === null) return;
     setBusy(true);
@@ -182,7 +184,8 @@ export default function App() {
         event_type: 'prediction_made',
         checklist_item_id: item.checklist_item_id,
         verdict,
-        reason,
+        verdict_reason: verdictReason,
+        disqualifier,
       });
       await refreshCounts();
       setScreen({ name: 'capture', item, assetTag });
@@ -357,8 +360,8 @@ export default function App() {
             return api.referenceImage(referenceImageId);
           }}
           busy={busy}
-          onCommit={(verdict, reason) =>
-            commitCall(screen.item, screen.assetTag, verdict, reason)
+          onCommit={(verdict, verdictReason, disqualifier) =>
+            commitCall(screen.item, screen.assetTag, verdict, verdictReason, disqualifier)
           }
           onBack={() => setScreen({ name: 'walk' })}
         />

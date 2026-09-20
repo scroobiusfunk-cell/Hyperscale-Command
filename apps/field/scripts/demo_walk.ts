@@ -97,7 +97,8 @@ async function walk(): Promise<void> {
     event_type: 'prediction_made',
     checklist_item_id: item.checklist_item_id,
     verdict: 'pass',
-    reason: null,
+    verdict_reason: null,
+    disqualifier: null,
   });
   say('\n  Jordan calls it:  PASS');
 

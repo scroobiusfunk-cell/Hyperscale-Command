@@ -18,7 +18,7 @@ from app.capture.walk import DeclaredState, Walk, compile_walk, start_walk
 from app.coaching import service as coaching
 from app.coaching.reference import references_for
 from app.deps import AppSettings, CurrentUser, DbSession, Storage
-from app.models.enums import Criticality, ReferenceKind, RulingVerdict
+from app.models.enums import Criticality, ReferenceKind, Verdict, VerdictReason
 from app.sync.blobs import BlobRejectedError, confirm_uploads, store_blob
 from app.sync.events import EventEnvelope
 from app.sync.replay import sync as apply_sync
@@ -314,7 +314,8 @@ class FeedbackResponse(BaseModel):
     statement: str
     why_it_matters: str
     criticality: Criticality
-    verdict: RulingVerdict
+    verdict: Verdict
+    verdict_reason: VerdictReason | None
     note: str | None
     reviewer_name: str
     ruled_at: datetime
@@ -382,6 +383,7 @@ def read_my_work(
                 why_it_matters=f.why_it_matters,
                 criticality=f.criticality,
                 verdict=f.verdict,
+                verdict_reason=f.verdict_reason,
                 note=f.note,
                 reviewer_name=f.reviewer_name,
                 ruled_at=f.ruled_at,

@@ -116,20 +116,6 @@ class MediaType(StrEnum):
     MEASUREMENT = "measurement"
 
 
-class PredictedVerdict(StrEnum):
-    """The learner's own call, before the answer is shown.
-
-    `UNSURE` is deliberate and is not a wasted answer. Forcing a binary guess
-    teaches guessing; "I do not know" is the honest state a learner is often in,
-    and it is the one a senior most wants to see. It is excluded from the
-    agreement rate and counted on its own.
-    """
-
-    PASS = "pass"
-    FAIL = "fail"
-    UNSURE = "unsure"
-
-
 class ReferenceKind(StrEnum):
     """Which side of the lesson an example illustrates."""
 
@@ -144,20 +130,50 @@ class EvidenceStatus(StrEnum):
     REJECTED = "rejected"
 
 
-class GraderVerdict(StrEnum):
-    PASS = "pass"
-    FAIL = "fail"
-    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+class Verdict(StrEnum):
+    """The one verdict vocabulary, shared with the Rule Registry.
 
+    Every judgement in the system is one of these four, whoever made it: a
+    grader, a reviewer ruling on evidence, or a learner committing to a call
+    before the reveal. Three separate enums said almost the same thing in
+    slightly different words, which meant a reviewer's "send it back" and a
+    learner's "I do not know" could not be compared or counted together even
+    though both are the same shape of answer. See TASKS.md R-00.
 
-class RulingVerdict(StrEnum):
-    """A recapture request is a ruling on the *evidence*, not on the
-    installation, which is why it produces no LabeledExample.
+    `indeterminate` is a first-class answer rather than a failure to answer, and
+    it always carries a `VerdictReason` saying which kind it is.
+
+    `not_visible` is narrower and nothing in Phase 1 produces it yet: it is for
+    the case where the thing could not be seen at all, so no judgement about the
+    installation was possible. The synthetic generator and the observability
+    gate produce it; it is in the enum now because the vocabulary is shared and
+    a value that exists in one repo and not the other is the drift this change
+    exists to end.
     """
 
     PASS = "pass"
     FAIL = "fail"
+    INDETERMINATE = "indeterminate"
+    NOT_VISIBLE = "not_visible"
+
+
+class VerdictReason(StrEnum):
+    """Which kind of `indeterminate` this is.
+
+    Set exactly when the verdict is `indeterminate`, null otherwise, and the
+    database enforces the pairing on every table that stores a verdict. These
+    three carry the meanings that used to be separate verdicts.
+    """
+
+    #: A grader without enough to go on. Never a silent pass.
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    #: A reviewer sending the photograph back. A judgement on the evidence, not
+    #: on the installation, which is why it produces no LabeledExample and why
+    #: the item reopens rather than resolving.
     RECAPTURE_REQUESTED = "recapture_requested"
+    #: A learner who honestly does not know. Excluded from the agreement rate
+    #: and counted on its own; forcing a binary guess teaches guessing.
+    UNSURE = "unsure"
 
 
 class UserRole(StrEnum):

@@ -9,10 +9,13 @@ import { describeCriteria, shortTime } from '../../../lib/format';
 
 export const dynamic = 'force-dynamic';
 
+// The words a reviewer reads. `indeterminate` is the wire value, not something
+// anybody says out loud about a photograph.
 const VERDICT_WORD: Record<string, string> = {
   pass: 'Passed',
   fail: 'Failed',
-  recapture_requested: 'Asked for a recapture',
+  indeterminate: 'Asked for a recapture',
+  not_visible: 'Could not be seen',
 };
 
 export default async function ReviewPage({

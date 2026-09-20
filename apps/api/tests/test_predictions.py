@@ -27,9 +27,8 @@ from app.main import create_app
 from app.models import AppUser, CaptureRecipe, ChecklistItem, Prediction, Project
 from app.models.enums import (
     ChecklistItemState,
-    PredictedVerdict,
-    RulingVerdict,
     UserRole,
+    Verdict,
 )
 from app.review import service as review
 from app.sync.events import EventEnvelope
@@ -76,9 +75,20 @@ def make_item(
     )
 
 
+#: What a learner says, in the words the device uses, mapped to the wire shape.
+#: "unsure" is no longer a verdict of its own: it is `indeterminate` carrying the
+#: reason, which is the whole of R-00 in one line.
+LEARNER_CALL: dict[str, tuple[str, str | None]] = {
+    "pass": ("pass", None),
+    "fail": ("fail", None),
+    "unsure": ("indeterminate", "unsure"),
+}
+
+
 def prediction_event(
-    item: ChecklistItem, verdict: str, *, reason: str | None = None
+    item: ChecklistItem, verdict: str, *, disqualifier: str | None = None
 ) -> dict[str, object]:
+    called, reason = LEARNER_CALL.get(verdict, (verdict, None))
     return {
         "event_type": "prediction_made",
         "client_event_id": str(uuid.uuid4()),
@@ -86,8 +96,9 @@ def prediction_event(
         "sequence": 0,
         "occurred_at": datetime.now(UTC).isoformat(),
         "checklist_item_id": str(item.id),
-        "verdict": verdict,
-        "reason": reason,
+        "verdict": called,
+        "verdict_reason": reason,
+        "disqualifier": disqualifier,
     }
 
 
@@ -110,12 +121,13 @@ def stored(db: Session, item: ChecklistItem) -> Prediction | None:
 class TestMakingACall:
     def test_a_call_is_recorded(self, db: Session, project: Project, learner: AppUser) -> None:
         item = make_item(db, project)
-        predict(db, item, learner, "fail", reason="plate_missing")
+        predict(db, item, learner, "fail", disqualifier="plate_missing")
 
         row = stored(db, item)
         assert row is not None
-        assert row.verdict is PredictedVerdict.FAIL
-        assert row.reason == "plate_missing"
+        assert row.verdict is Verdict.FAIL
+        assert row.verdict_reason is None
+        assert row.disqualifier == "plate_missing"
 
     def test_unsure_is_a_real_answer(self, db: Session, project: Project, learner: AppUser) -> None:
         """Forcing a binary guess teaches guessing."""
@@ -124,7 +136,7 @@ class TestMakingACall:
 
         row = stored(db, item)
         assert row is not None
-        assert row.verdict is PredictedVerdict.UNSURE
+        assert row.verdict is Verdict.INDETERMINATE
 
     def test_the_call_is_filed_under_the_kind_of_check(
         self, db: Session, project: Project, learner: AppUser
@@ -154,9 +166,7 @@ class TestCallsThatArriveTooLate:
     ) -> None:
         """The guard the whole metric rests on."""
         item = make_item(db, project)
-        review.rule(
-            db, item.id, reviewer_id=senior.id, verdict=RulingVerdict.FAIL, note="Not fitted."
-        )
+        review.rule(db, item.id, reviewer_id=senior.id, verdict=Verdict.FAIL, note="Not fitted.")
 
         predict(db, item, learner, "fail")
 
@@ -167,7 +177,7 @@ class TestCallsThatArriveTooLate:
     ) -> None:
         """The server checks its own record, not the device's clock."""
         item = make_item(db, project)
-        review.rule(db, item.id, reviewer_id=senior.id, verdict=RulingVerdict.PASS, note=None)
+        review.rule(db, item.id, reviewer_id=senior.id, verdict=Verdict.PASS, note=None)
 
         event = prediction_event(item, "pass")
         event["occurred_at"] = "2020-01-01T00:00:00+00:00"
@@ -188,7 +198,7 @@ class TestCallsThatArriveTooLate:
 
         row = stored(db, item)
         assert row is not None
-        assert row.verdict is PredictedVerdict.PASS
+        assert row.verdict is Verdict.PASS
 
     def test_two_learners_may_each_call_the_same_item(
         self, db: Session, project: Project, learner: AppUser
@@ -244,7 +254,7 @@ class TestTheRecordCannotBeEdited:
             Prediction(
                 checklist_item_id=item.id,
                 predicted_by=learner.id,
-                verdict=PredictedVerdict.FAIL,
+                verdict=Verdict.FAIL,
                 item_type="whatever",
             )
         )
@@ -261,7 +271,7 @@ class TestAgreement:
         learner: AppUser,
         senior: AppUser,
         called: str,
-        ruled: RulingVerdict,
+        ruled: Verdict,
         *,
         statement: str = "Filler plates are fitted.",
     ) -> None:
@@ -272,14 +282,14 @@ class TestAgreement:
             item.id,
             reviewer_id=senior.id,
             verdict=ruled,
-            note=None if ruled is RulingVerdict.PASS else "Not fitted.",
+            note=None if ruled is Verdict.PASS else "Not fitted.",
         )
 
     def test_matching_calls_count_as_agreement(
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
-        self._call_and_rule(db, project, learner, senior, "pass", RulingVerdict.PASS)
-        self._call_and_rule(db, project, learner, senior, "fail", RulingVerdict.FAIL)
+        self._call_and_rule(db, project, learner, senior, "pass", Verdict.PASS)
+        self._call_and_rule(db, project, learner, senior, "fail", Verdict.FAIL)
 
         overall, _ = agreement(db, tech_id=learner.id)
 
@@ -290,8 +300,8 @@ class TestAgreement:
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
         """Calling a defect fine is the dangerous direction and is named."""
-        self._call_and_rule(db, project, learner, senior, "pass", RulingVerdict.FAIL)
-        self._call_and_rule(db, project, learner, senior, "fail", RulingVerdict.PASS)
+        self._call_and_rule(db, project, learner, senior, "pass", Verdict.FAIL)
+        self._call_and_rule(db, project, learner, senior, "fail", Verdict.PASS)
 
         overall, _ = agreement(db, tech_id=learner.id)
 
@@ -302,14 +312,14 @@ class TestAgreement:
     def test_catching_a_real_defect_is_counted(
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
-        self._call_and_rule(db, project, learner, senior, "fail", RulingVerdict.FAIL)
+        self._call_and_rule(db, project, learner, senior, "fail", Verdict.FAIL)
         assert agreement(db, tech_id=learner.id)[0].caught == 1
 
     def test_unsure_is_reported_but_not_scored(
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
-        self._call_and_rule(db, project, learner, senior, "unsure", RulingVerdict.FAIL)
-        self._call_and_rule(db, project, learner, senior, "pass", RulingVerdict.PASS)
+        self._call_and_rule(db, project, learner, senior, "unsure", Verdict.FAIL)
+        self._call_and_rule(db, project, learner, senior, "pass", Verdict.PASS)
 
         overall, _ = agreement(db, tech_id=learner.id)
 
@@ -321,7 +331,7 @@ class TestAgreement:
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
         """It judges the photograph, not the installation."""
-        self._call_and_rule(db, project, learner, senior, "pass", RulingVerdict.RECAPTURE_REQUESTED)
+        self._call_and_rule(db, project, learner, senior, "pass", Verdict.INDETERMINATE)
 
         overall, _ = agreement(db, tech_id=learner.id)
 
@@ -339,9 +349,7 @@ class TestAgreement:
         unsure about it. Nothing was ever revealed to them, so there is nothing
         to report.
         """
-        self._call_and_rule(
-            db, project, learner, senior, "unsure", RulingVerdict.RECAPTURE_REQUESTED
-        )
+        self._call_and_rule(db, project, learner, senior, "unsure", Verdict.INDETERMINATE)
 
         overall, _ = agreement(db, tech_id=learner.id)
 
@@ -353,7 +361,7 @@ class TestAgreement:
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
         """An all-zero row in the breakdown reads as a result. It is an absence."""
-        self._call_and_rule(db, project, learner, senior, "pass", RulingVerdict.RECAPTURE_REQUESTED)
+        self._call_and_rule(db, project, learner, senior, "pass", Verdict.INDETERMINATE)
 
         assert agreement(db, tech_id=learner.id)[1] == ()
 
@@ -368,12 +376,8 @@ class TestAgreement:
     ) -> None:
         item = make_item(db, project)
         predict(db, item, learner, "pass")
-        review.rule(
-            db, item.id, reviewer_id=senior.id, verdict=RulingVerdict.FAIL, note="Not fitted."
-        )
-        review.rule(
-            db, item.id, reviewer_id=senior.id, verdict=RulingVerdict.PASS, note="My mistake."
-        )
+        review.rule(db, item.id, reviewer_id=senior.id, verdict=Verdict.FAIL, note="Not fitted.")
+        review.rule(db, item.id, reviewer_id=senior.id, verdict=Verdict.PASS, note="My mistake.")
 
         overall, _ = agreement(db, tech_id=learner.id)
 
@@ -384,10 +388,10 @@ class TestAgreement:
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
         self._call_and_rule(
-            db, project, learner, senior, "pass", RulingVerdict.PASS, statement="Plates fitted."
+            db, project, learner, senior, "pass", Verdict.PASS, statement="Plates fitted."
         )
         self._call_and_rule(
-            db, project, learner, senior, "pass", RulingVerdict.FAIL, statement="Labels legible."
+            db, project, learner, senior, "pass", Verdict.FAIL, statement="Labels legible."
         )
 
         _, per_type = agreement(db, tech_id=learner.id)
@@ -398,7 +402,7 @@ class TestAgreement:
     def test_another_learner_s_calls_are_not_mine(
         self, db: Session, project: Project, learner: AppUser, senior: AppUser
     ) -> None:
-        self._call_and_rule(db, project, learner, senior, "pass", RulingVerdict.PASS)
+        self._call_and_rule(db, project, learner, senior, "pass", Verdict.PASS)
         other = f.make_user(db, UserRole.TECH)
 
         assert agreement(db, tech_id=other.id)[0].compared == 0
@@ -418,9 +422,7 @@ class TestOverHttp:
         recipe = db.execute(select(CaptureRecipe).limit(1)).scalars().one()
         f.make_evidence(db, item, recipe, learner)
         predict(db, item, learner, "pass")
-        review.rule(
-            db, item.id, reviewer_id=senior.id, verdict=RulingVerdict.FAIL, note="Not fitted."
-        )
+        review.rule(db, item.id, reviewer_id=senior.id, verdict=Verdict.FAIL, note="Not fitted.")
 
         body = api.get("/field/my-work", headers={"X-Dev-User-Id": str(learner.id)}).json()
 

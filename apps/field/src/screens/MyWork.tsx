@@ -33,7 +33,11 @@ import { colour, space, type } from '../theme.ts';
 const VERDICT: Record<Feedback['verdict'], { tone: Tone; icon: string; word: string }> = {
   pass: { tone: 'good', icon: '✓', word: 'Passed' },
   fail: { tone: 'critical', icon: '▲', word: 'Failed' },
-  recapture_requested: { tone: 'warning', icon: '●', word: 'Take it again' },
+  // The words a tech reads, not the words on the wire. "Indeterminate" is not
+  // something anybody says on a site; what they need to know is whether they
+  // are going back.
+  indeterminate: { tone: 'warning', icon: '●', word: 'Take it again' },
+  not_visible: { tone: 'warning', icon: '●', word: 'Could not be seen' },
 };
 
 export function MyWork({

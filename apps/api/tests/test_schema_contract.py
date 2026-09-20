@@ -30,10 +30,11 @@ from app.models.enums import (
     Criticality,
     CxAlloyDeliveryState,
     EvidenceStatus,
-    GraderVerdict,
     MediaType,
     ReconciliationStatus,
     RequirementStatus,
+    Verdict,
+    VerdictReason,
     VerificationMethod,
 )
 
@@ -102,10 +103,19 @@ PAIRS = [
         lambda: at("evidence.schema.json", "properties", "status"),
         EvidenceStatus,
     ),
+    # The R-00 vocabulary. These two are the ones shared with the Rule Registry
+    # rather than only between this API and its own apps, so a drift here is a
+    # drift between two repositories and nobody would see it until a record
+    # crossed.
     (
-        "grader_result.verdict",
-        lambda: at("grader-result.schema.json", "properties", "verdict"),
-        GraderVerdict,
+        "verdict",
+        lambda: at("common/definitions.schema.json", "$defs", "verdict"),
+        Verdict,
+    ),
+    (
+        "verdict_reason",
+        lambda: at("common/definitions.schema.json", "$defs", "verdict_reason"),
+        VerdictReason,
     ),
 ]
 

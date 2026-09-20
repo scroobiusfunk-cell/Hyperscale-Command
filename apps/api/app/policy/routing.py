@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from app.models.enums import Criticality, GraderVerdict
+from app.models.enums import Criticality, Verdict
 
 
 class Routing(StrEnum):
@@ -45,7 +45,7 @@ class PolicyInput:
 
     criticality: Criticality
     item_type: str
-    verdict: GraderVerdict | None = None
+    verdict: Verdict | None = None
     """None when nothing has graded this item. Phase 1 is always None."""
     confidence: float | None = None
 
@@ -127,14 +127,14 @@ def decide(item: PolicyInput, calibration: CalibrationSource | None = None) -> P
             ),
         )
 
-    if item.verdict is GraderVerdict.INSUFFICIENT_EVIDENCE:
+    if item.verdict is Verdict.INDETERMINATE or item.verdict is Verdict.NOT_VISIBLE:
         return PolicyDecision(
             routing=Routing.RECAPTURE,
             reason="The evidence does not show enough to judge this. Take it again.",
             threshold_used=threshold,
         )
 
-    if item.verdict is GraderVerdict.FAIL:
+    if item.verdict is Verdict.FAIL:
         return PolicyDecision(
             routing=Routing.ROUTE_TO_REVIEWER,
             reason="The grader thinks this fails, so a person confirms it before it counts.",

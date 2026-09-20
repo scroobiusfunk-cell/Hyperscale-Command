@@ -35,16 +35,19 @@ from sqlalchemy.orm import Session
 
 from app.logging import get_logger
 from app.models import Asset, ChecklistItem, Evidence, Prediction, Requirement, Ruling
-from app.models.enums import ChecklistItemState, Criticality, PredictedVerdict, RulingVerdict
+from app.models.enums import ChecklistItemState, Criticality, Verdict, VerdictReason
 from app.models.identity import AppUser
 
 log = get_logger(__name__)
 
-#: A recapture is work to redo; a fail is the lesson; a pass is the confirmation.
+#: Work to redo first, then the lesson, then the confirmation. A recapture is a
+#: job rather than a lesson, so it sorts above a failure; the learner who does
+#: not see it will not go back.
 _VERDICT_ORDER = {
-    RulingVerdict.RECAPTURE_REQUESTED: 0,
-    RulingVerdict.FAIL: 1,
-    RulingVerdict.PASS: 2,
+    Verdict.INDETERMINATE: 0,
+    Verdict.NOT_VISIBLE: 0,
+    Verdict.FAIL: 1,
+    Verdict.PASS: 2,
 }
 
 
@@ -58,7 +61,8 @@ class Feedback:
     statement: str
     why_it_matters: str
     criticality: Criticality
-    verdict: RulingVerdict
+    verdict: Verdict
+    verdict_reason: VerdictReason | None
     note: str | None
     reviewer_name: str
     ruled_at: datetime
@@ -170,11 +174,12 @@ def my_work(
                 why_it_matters=requirement.why_it_matters,
                 criticality=requirement.criticality,
                 verdict=ruling.verdict,
+                verdict_reason=ruling.verdict_reason,
                 note=ruling.note,
                 reviewer_name="A reviewer" if reviewer is None else reviewer.display_name,
                 ruled_at=ruling.created_at,
                 needs_another_visit=(
-                    ruling.verdict is RulingVerdict.RECAPTURE_REQUESTED
+                    ruling.verdict_reason is VerdictReason.RECAPTURE_REQUESTED
                     and item.state is ChecklistItemState.OPEN
                 ),
                 is_correction=ruling.supersedes is not None,
@@ -193,11 +198,9 @@ def my_work(
     )
     tally = Tally(
         ruled=len(entries),
-        passed=sum(1 for f in entries if f.verdict is RulingVerdict.PASS),
-        failed=sum(1 for f in entries if f.verdict is RulingVerdict.FAIL),
-        recapture_requested=sum(
-            1 for f in entries if f.verdict is RulingVerdict.RECAPTURE_REQUESTED
-        ),
+        passed=sum(1 for f in entries if f.verdict is Verdict.PASS),
+        failed=sum(1 for f in entries if f.verdict is Verdict.FAIL),
+        recapture_requested=sum(1 for f in entries if f.needs_another_visit),
         awaiting_review=awaiting,
     )
 
@@ -210,9 +213,10 @@ def my_work(
     return MyWork(tally=tally, feedback=tuple(entries[:limit]))
 
 
-# A recapture judges the photograph, not the installation, so it can neither
-# agree nor disagree with a call about whether the equipment is right.
-_COMPARABLE = {RulingVerdict.PASS: PredictedVerdict.PASS, RulingVerdict.FAIL: PredictedVerdict.FAIL}
+# Only a definite ruling can agree or disagree with a call about the equipment.
+# A recapture judges the photograph; `not_visible` says nobody could see the
+# thing at all. Neither is an answer to what the learner was asked.
+_COMPARABLE = frozenset({Verdict.PASS, Verdict.FAIL})
 
 
 @dataclass(frozen=True)
@@ -275,8 +279,7 @@ def agreement(
 
     buckets: dict[str, dict[str, int]] = {}
     for prediction, ruling in latest.values():
-        expected = _COMPARABLE.get(ruling.verdict)
-        if expected is None:
+        if ruling.verdict not in _COMPARABLE:
             # A recapture judges the photograph. It cannot agree or disagree
             # with a call about the equipment, and it cannot make an "I do not
             # know" into a data point either. The bucket is not created here
@@ -287,15 +290,16 @@ def agreement(
             prediction.item_type,
             {"compared": 0, "agreed": 0, "unsure": 0, "caught": 0, "missed": 0, "over": 0},
         )
-        if prediction.verdict is PredictedVerdict.UNSURE:
+        expected = ruling.verdict
+        if prediction.verdict is Verdict.INDETERMINATE:
             bucket["unsure"] += 1
             continue
         bucket["compared"] += 1
         if prediction.verdict is expected:
             bucket["agreed"] += 1
-            if expected is PredictedVerdict.FAIL:
+            if expected is Verdict.FAIL:
                 bucket["caught"] += 1
-        elif expected is PredictedVerdict.FAIL:
+        elif expected is Verdict.FAIL:
             bucket["missed"] += 1
         else:
             bucket["over"] += 1
