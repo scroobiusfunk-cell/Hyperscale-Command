@@ -1,0 +1,1929 @@
+﻿<!DOCTYPE html>
+<html>
+<head><script>window.__cxProject="pinecrest";window.__cxOrigin="https://cx-ai.demo";window.__cxHref="https://cx-ai.demo/?project_id=pinecrest&initial_limit=500";</script>
+    <title>Commissioning Status Matrix</title>
+    <style>__CX_CSS__</style>
+</head>
+<body>
+    <div style="background: #ffffff; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #C8102E; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 30px;">
+            <a href="/projects" data-transition="none" style="display: flex; align-items: center;">
+                <img src="__CX_LOGO__" alt="Suffolk" style="height: 60px; object-fit: contain;">
+            </a>
+            <a href="/" data-transition-face="matrix" style="color: #00205B; font-weight: 800; text-decoration: none; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">MATRIX AI</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 26px;">
+            <div class="header-menu">
+                <button class="header-menu-btn" type="button" onclick="toggleProjectMenu()">
+                    Pinecrest Pavilion
+                </button>
+                <div id="projectMenu" class="header-dropdown">
+                    <a href="/projects" data-transition="none">Project Selector</a>
+                    
+                    <a href="/select_project/willow-bend" data-transition="none">Willow Bend</a>
+                    
+                    <a href="/select_project/harborline-c" data-transition="none">Harborline C</a>
+                    
+                    <a href="/select_project/pinecrest" data-transition="none">Pinecrest Pavilion</a>
+                    
+                </div>
+            </div>
+            
+                <div class="header-menu">
+                    <button class="header-menu-btn" type="button" onclick="toggleSystemMenu()">System Configuration</button>
+                    <div id="systemConfigMenu" class="header-dropdown">
+                        <a href="/schedule" data-transition-face="schedule">Schedule</a>
+                        <a href="/executive_summary" data-transition-face="executive">Executive Summary</a>
+                        <a href="/config" data-transition-face="config">Project Configuration</a>
+                        <a href="/integrations" data-transition-face="integrations">Integrations</a>
+                    </div>
+                </div>
+            
+        </div>
+    </div>
+    
+    
+
+<style>
+    /* CSS Virtualization for massive row counts */
+    .data-row {
+        content-visibility: auto;
+        contain-intrinsic-size: 0 75px;
+    }
+
+    /* Collapsible Header Logic */
+    #collapsible-header {
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        overflow: hidden;
+        max-height: 500px;
+        opacity: 1;
+    }
+
+        #collapsible-header.collapsed {
+            max-height: 0px;
+            opacity: 0;
+        }
+
+    .header-toggle-container {
+        display: flex;
+        justify-content: center;
+        margin-top: -5px;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .header-toggle-btn {
+        background: #ffffff;
+        border: 1px solid #ced4da;
+        border-top: none;
+        color: #00205B;
+        font-size: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        padding: 4px 24px;
+        border-radius: 0 0 12px 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 2px 4px -1px rgba(0,0,0,0.05);
+        transition: background 0.2s;
+    }
+
+        .header-toggle-btn:hover {
+            background: #f8fafc;
+        }
+
+    /* Force perfect alignment between native Selects and Custom Dropdown */
+    .controls-toolbar .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .controls-toolbar label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #475569;
+        text-transform: uppercase;
+        margin-bottom: 0 !important;
+    }
+
+    .controls-toolbar select, .controls-toolbar .select-box {
+        height: 32px !important;
+        padding: 0 10px !important;
+        font-size: 13px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+        background-color: #ffffff !important;
+        box-sizing: border-box !important;
+        color: #333 !important;
+        font-family: inherit !important;
+        margin: 0 !important;
+    }
+
+    .controls-toolbar .select-box {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+
+    /* Excel-style matrix scrolling */
+    .matrix-wrapper {
+        max-height: calc(100vh - 330px);
+        overflow: auto;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #headerRow {
+        position: sticky;
+        top: 0;
+        z-index: 120;
+    }
+
+        #headerRow .matrix-cell {
+            position: sticky;
+            top: 0;
+            z-index: 121;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1);
+            background-clip: padding-box;
+        }
+
+        #headerRow .tag-cell {
+            z-index: 122;
+        }
+
+</style>
+
+<div id="collapsible-header">
+    <div class="header-container">
+        <h1 class="page-title">Pinecrest Medical Pavilion</h1>
+        <h2 class="page-subtitle">Commissioning Status Matrix</h2>
+    </div>
+
+    <div class="controls-toolbar">
+        <div class="filter-group">
+            <label>Priority</label>
+            <div class="custom-dropdown" id="priorityDropdownContainer">
+                <div class="select-box" onclick="toggleDropdown()">
+                    <span id="prioritySelectText">All Priorities</span>
+                    <span style="font-size: 10px;">&#9662;</span>
+                </div>
+                <div class="dropdown-list" id="priorityDropdown" style="display: none;">
+                    <label>
+                        <input type="checkbox" value="All" id="priorityAll" checked onchange="togglePriorityAll(this)">
+                        <span style="font-weight:700;">All Priorities</span>
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="1" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-1</strong> Air Side Units
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="1" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-1</strong> Cooling
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="1" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-1</strong> Computer Room Air
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="3" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-3</strong> Terminal Air Devices
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="2" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-2</strong> Pumping
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="1" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-1</strong> Switchgear and Distribution
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="1" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-1</strong> Standby Power
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="1" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-1</strong> Uninterruptible Power
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="4" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-4</strong> Lighting Control
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="2" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-2</strong> Fire Protection
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="4" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-4</strong> Plumbing
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" value="2" class="priority-chk" onchange="updatePrioritySelection()">
+                        <strong style="color:#C8102E; margin-right:5px;">P-2</strong> Building Controls
+                    </label>
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <label for="contractorFilter">Contractor</label>
+            <select id="contractorFilter" onchange="applyFilter()">
+                <option value="All">All Contractors</option>
+                
+                <option value="1">Ridgeline Mechanical Services</option>
+                <option value="2">Copperfield Electric Co.</option>
+                <option value="3">Tallgrass Controls Group</option>
+                <option value="4">Blue Harbor Plumbing</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="divFilter">Division</label>
+            <select id="divFilter" onchange="applyFilter()">
+                <option value="All">All Divisions</option>
+                
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="buildingFilter">Building</label>
+            <select id="buildingFilter" onchange="applyFilter()">
+                <option value="All">All Buildings</option>
+                
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="famFilter">Asset Family</label>
+            <select id="famFilter" onchange="applyFilter()">
+                <option value="All">All Families</option>
+                
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="typeFilter">Asset Type</label>
+            <select id="typeFilter" onchange="applyFilter()">
+                <option value="All">All Types</option>
+                
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="floorFilter">Floor</label>
+            <select id="floorFilter" onchange="applyFilter()">
+                <option value="All">All Floors</option>
+                
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="spaceFilter">Space</label>
+            <select id="spaceFilter" onchange="applyFilter()">
+                <option value="All">All Spaces</option>
+                
+            </select>
+        </div>
+
+        <div class="toggle-group" style="margin-left: auto;">
+            <label class="toggle-label" for="showDatesToggle" style="margin-left: 10px;">Show Dates</label>
+            <label class="switch">
+                <input type="checkbox" id="showDatesToggle" onchange="applyFilter()">
+                <span class="slider"></span>
+            </label>
+
+            <div style="width: 15px;"></div>
+
+            <label class="toggle-label" for="collapseAssetsToggle">Hide Completed / Empty</label>
+            <label class="switch">
+                <input type="checkbox" id="collapseAssetsToggle" onchange="applyFilter()">
+                <span class="slider"></span>
+            </label>
+
+            <div style="width: 15px;"></div>
+
+            <label class="toggle-label" for="collapseToggle">Hide Completed Stages</label>
+            <label class="switch">
+                <input type="checkbox" id="collapseToggle" onchange="applyFilter()">
+                <span class="slider"></span>
+            </label>
+
+            <div style="width: 25px; border-left: 1px solid #ced4da; height: 30px; margin-left: 10px;"></div>
+
+            <button class="btn-primary" onclick="openExportModal()" style="background-color: #C8102E; margin-left: 5px;">
+                &#x1F4C4; Export PDF
+            </button>
+            <button class="btn-primary" onclick="openDocumentViewer()" style="background-color: #00205B; margin-left: 5px;">
+                &#x1F4D1; Document Viewer
+            </button>
+        </div>
+    </div>
+
+    <div class="master-bar-wrapper">
+        <div class="master-bar">
+            <div id="masterBarComplete" class="mb-complete" style="width: 0%;"></div>
+            <div id="masterBarInProgress" class="mb-progress" style="width: 0%;"></div>
+            <div id="masterBarWarning" class="mb-warning" style="width: 0%;"></div>
+            <div id="masterBarOverdue" class="mb-overdue" style="width: 0%;"></div>
+        </div>
+        <div class="axis-labels">
+            <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span>
+            <span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span>
+        </div>
+        <div class="legend-container">
+            <div class="legend-item"><div class="legend-box lb-complete"></div> Complete</div>
+            <div class="legend-item"><div class="legend-box lb-progress"></div> In Progress</div>
+            <div class="legend-item"><div class="legend-box lb-warning"></div> Due Soon (Warning)</div>
+            <div class="legend-item"><div class="legend-box lb-overdue"></div> Incomplete / Overdue</div>
+        </div>
+    </div>
+</div>
+
+<!-- Header Toggle Pill -->
+<div class="header-toggle-container">
+    <button id="headerToggleBtn" class="header-toggle-btn" onclick="toggleHeader()">&#x25B2; COLLAPSE</button>
+</div>
+
+<div class="matrix-wrapper" id="matrixWrapper">
+    <div class="matrix-container" id="matrixContainer" style="--stage-count: 6;">
+        <div class="matrix-row" id="headerRow">
+            <div class="matrix-cell header-cell tag-cell" style="vertical-align: bottom; padding: 15px;">
+                <div style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                        <span style="font-size: 16px; font-weight: 800; color: #00205B;">ASSET</span>
+                        <select id="sortSelect" onchange="applyFilter()" style="padding: 4px 8px; font-size: 10px; font-weight: 800; color: #00205B; border: 1px solid #ced4da; border-radius: 4px; cursor: pointer; text-transform: uppercase; outline: none; background: #f8fafc; width: 50%; min-width: 0; max-width: 160px; margin-left: auto; margin-bottom: 0;">
+                            <option value="default">Default Sort</option>
+                            <option value="complete">Most Complete</option>
+                            <option value="incomplete">Most Incomplete</option>
+                            <option value="overdue">Most Overdue</option>
+                            <option value="warning">Most Due Soon</option>
+                            <option value="in_progress">Most In Progress</option>
+                        </select>
+                    </div>
+                    <input type="text" id="assetSearchInput" onkeyup="applyFilter()" placeholder="&#x1F50D; Search assets..." style="width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box; background: #ffffff; margin-bottom: 0; transition: background-color 0.3s;">
+                </div>
+            </div>
+
+            
+            <div class="matrix-cell header-cell stage-header" data-stage-index="0">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Pre-Installation</span>
+                    
+                </div>
+                <div class="pie-chart"></div>
+            </div>
+            
+            <div class="matrix-cell header-cell stage-header" data-stage-index="1">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Installation</span>
+                    
+                </div>
+                <div class="pie-chart"></div>
+            </div>
+            
+            <div class="matrix-cell header-cell stage-header" data-stage-index="2">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Pre-Functional Checklist</span>
+                    
+                </div>
+                <div class="pie-chart"></div>
+            </div>
+            
+            <div class="matrix-cell header-cell stage-header" data-stage-index="3">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Start-Up &amp; TAB</span>
+                    
+                </div>
+                <div class="pie-chart"></div>
+            </div>
+            
+            <div class="matrix-cell header-cell stage-header" data-stage-index="4">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Functional Testing</span>
+                    
+                </div>
+                <div class="pie-chart"></div>
+            </div>
+            
+            <div class="matrix-cell header-cell stage-header" data-stage-index="5">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Corrective Action</span>
+                    
+                </div>
+                <div class="pie-chart"></div>
+            </div>
+            
+        </div>
+
+        
+        
+    </div>
+</div>
+<div id="matrixLoadStatus" style="margin: -8px 0 20px; color: #64748b; font-size: 12px; font-weight: 800; text-transform: uppercase;">
+    Loaded 0 of 0 assets
+</div>
+
+<div class="modal-overlay" id="exportModal">
+    <div class="modal-content" style="max-width: 720px;">
+        <div class="modal-title">Export PDF Settings</div>
+        <div class="modal-subtitle">Select report-only filters and columns</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 22px; margin: 20px 0;">
+            <div class="schema-section" style="margin: 0;">
+                <h3 class="schema-title">Statuses</h3>
+                <label style="display:block; margin: 10px 0;"><input type="checkbox" class="export-status" value="overdue" checked> Overdue</label>
+                <label style="display:block; margin: 10px 0;"><input type="checkbox" class="export-status" value="warning" checked> Due Soon</label>
+                <label style="display:block; margin: 10px 0;"><input type="checkbox" class="export-status" value="in_progress" checked> In Progress</label>
+                <label style="display:block; margin: 10px 0;"><input type="checkbox" class="export-status" value="complete" checked> Complete</label>
+            </div>
+
+            <div class="schema-section" style="margin: 0;">
+                <h3 class="schema-title">Columns</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;">
+                    <label><input type="checkbox" class="export-column" value="asset" checked> Asset</label>
+                    <label><input type="checkbox" class="export-column" value="stage" checked> Stage</label>
+                    <label><input type="checkbox" class="export-column" value="checklist" checked> Checklist</label>
+                    <label><input type="checkbox" class="export-column" value="contractor"> Contractor</label>
+                    <label><input type="checkbox" class="export-column" value="status"> Status</label>
+                    <label><input type="checkbox" class="export-column" value="percent" checked> Complete</label>
+                    <label><input type="checkbox" class="export-column" value="due" checked> Due Date</label>
+                    <label><input type="checkbox" class="export-column" value="lastEdit"> Last Edited</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="document.getElementById('exportModal').style.display='none'">Cancel</button>
+            <button class="btn-save" type="button" onclick="exportPDF()">Generate PDF</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="drawingPageModal">
+    <div class="modal-content" style="max-width: 560px;">
+        <div class="modal-title">Drawing Pages</div>
+        <div class="modal-subtitle">Select the page to open</div>
+        <div id="drawingPageList" style="margin-bottom: 20px;"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="document.getElementById('drawingPageModal').style.display='none'">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+    const allPriorities = [{"critical_panels": "Yes", "family": "Air Side Units", "priority": 1, "trade": "MECH"}, {"critical_panels": "Yes", "family": "Cooling", "priority": 1, "trade": "MECH"}, {"critical_panels": "Yes", "family": "Computer Room Air", "priority": 1, "trade": "MECH"}, {"critical_panels": "No", "family": "Terminal Air Devices", "priority": 3, "trade": "MECH"}, {"critical_panels": "No", "family": "Pumping", "priority": 2, "trade": "MECH"}, {"critical_panels": "Yes", "family": "Switchgear and Distribution", "priority": 1, "trade": "ELEC"}, {"critical_panels": "Yes", "family": "Standby Power", "priority": 1, "trade": "ELEC"}, {"critical_panels": "Yes", "family": "Uninterruptible Power", "priority": 1, "trade": "ELEC"}, {"critical_panels": "No", "family": "Lighting Control", "priority": 4, "trade": "ELEC"}, {"critical_panels": "No", "family": "Fire Protection", "priority": 2, "trade": "FP"}, {"critical_panels": "No", "family": "Plumbing", "priority": 4, "trade": "PLMB"}, {"critical_panels": "No", "family": "Building Controls", "priority": 2, "trade": "CTRL"}];
+    const matrixDatasetSignature = {"drawing_maps": [], "sources": {"checklists.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 2}, "contractors.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 295}, "document_links.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 2}, "equipments.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 2}, "issues.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 86}, "priorities.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 1568}, "project_configuration.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 965}, "settings.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 26}, "stages.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 685}, "templates.json": {"exists": true, "mtime_ns": 1756080000000000000, "size": 2}}, "version": 1};
+    const matrixSignatureKey = JSON.stringify(matrixDatasetSignature);
+
+    // --- IN-MEMORY DOM MAP FOR BLAZING FAST FILTERING ---
+    let memoryMap = [];
+    let activeStageColumnFilter = null;
+    let activeAssetRowFilter = null;
+    let matrixRowsLoaded = 0;
+    const matrixRowsTotal = 0;
+    const matrixChunkSize = 150;
+    let matrixRowsLoading = false;
+    let matrixRestoredFromCache = false;
+    let matrixCacheReady = Promise.resolve(null);
+
+    function openMatrixRowsDb() {
+        return new Promise((resolve, reject) => {
+            if (!('indexedDB' in window)) {
+                resolve(null);
+                return;
+            }
+            const request = indexedDB.open('MatrixAIRowCache', 1);
+            request.onupgradeneeded = () => {
+                const db = request.result;
+                if (!db.objectStoreNames.contains('chunks')) {
+                    db.createObjectStore('chunks', { keyPath: 'key' });
+                }
+                if (!db.objectStoreNames.contains('meta')) {
+                    db.createObjectStore('meta', { keyPath: 'key' });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    function withMatrixStore(storeName, mode, callback) {
+        return matrixCacheReady.then(db => new Promise((resolve, reject) => {
+            if (!db) {
+                resolve(null);
+                return;
+            }
+            const transaction = db.transaction(storeName, mode);
+            const store = transaction.objectStore(storeName);
+            let result;
+            try {
+                result = callback(store);
+            } catch (error) {
+                reject(error);
+                return;
+            }
+            transaction.oncomplete = () => resolve(result);
+            transaction.onerror = () => reject(transaction.error);
+        })).catch(() => null);
+    }
+
+    function getMatrixCacheMeta() {
+        return withMatrixStore('meta', 'readonly', store => new Promise(resolve => {
+            const request = store.get('matrix');
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => resolve(null);
+        }));
+    }
+
+    function putMatrixCacheMeta(meta) {
+        return withMatrixStore('meta', 'readwrite', store => {
+            store.put({ key: 'matrix', ...meta });
+        });
+    }
+
+    function putMatrixChunk(offset, html) {
+        if (!html) return Promise.resolve();
+        return withMatrixStore('chunks', 'readwrite', store => {
+            store.put({
+                key: `${matrixSignatureKey}:${offset}`,
+                signature: matrixSignatureKey,
+                offset,
+                html
+            });
+        });
+    }
+
+    function getMatrixCachedChunks() {
+        return withMatrixStore('chunks', 'readonly', store => new Promise(resolve => {
+            const chunks = [];
+            const request = store.openCursor();
+            request.onsuccess = event => {
+                const cursor = event.target.result;
+                if (!cursor) {
+                    chunks.sort((a, b) => a.offset - b.offset);
+                    resolve(chunks);
+                    return;
+                }
+                if (cursor.value.signature === matrixSignatureKey) {
+                    chunks.push(cursor.value);
+                }
+                cursor.continue();
+            };
+            request.onerror = () => resolve([]);
+        }));
+    }
+
+    function cacheInitialMatrixRows() {
+        const initialHtml = Array.from(document.querySelectorAll('.data-row')).map(row => {
+            const cleanRow = row.cloneNode(true);
+            cleanRow.removeAttribute('data-initialized');
+            return cleanRow.outerHTML;
+        }).join('');
+        return putMatrixChunk(0, initialHtml);
+    }
+
+    function replaceMatrixRowsFromHtml(html) {
+        const container = document.getElementById('matrixContainer');
+        if (!container || !html) return [];
+        container.querySelectorAll('.data-row').forEach(row => row.remove());
+        memoryMap = [];
+        const template = document.createElement('template');
+        template.innerHTML = html.trim();
+        const rows = Array.from(template.content.querySelectorAll('.data-row'));
+        rows.forEach(row => row.removeAttribute('data-initialized'));
+        template.content.querySelectorAll('.stage-header .pie-chart').forEach(pie => pie.removeAttribute('data-initialized'));
+        container.appendChild(template.content);
+        initializeMatrixRows(rows);
+        return rows;
+    }
+
+    async function restoreMatrixRowsFromCache() {
+        const meta = await getMatrixCacheMeta();
+        if (!meta || meta.signature !== matrixSignatureKey || !meta.complete || meta.total !== matrixRowsTotal) {
+            return false;
+        }
+        const chunks = await getMatrixCachedChunks();
+        if (!chunks || chunks.length === 0) return false;
+        const html = chunks.map(chunk => chunk.html).join('');
+        const rows = replaceMatrixRowsFromHtml(html);
+        if (rows.length === 0) return false;
+        matrixRowsLoaded = rows.length;
+        matrixRestoredFromCache = true;
+        updateMatrixLoadStatus();
+        applyFilter();
+        refreshMatrixSnapshotCache();
+        return true;
+    }
+
+    // --- TOGGLE HEADER LOGIC ---
+    function toggleHeader() {
+        const header = document.getElementById('collapsible-header');
+        const btn = document.getElementById('headerToggleBtn');
+        const matrix = document.getElementById('matrixWrapper');
+
+        if (header.classList.contains('collapsed')) {
+            header.classList.remove('collapsed');
+            btn.innerHTML = '&#x25B2; COLLAPSE';
+            matrix.style.maxHeight = 'calc(100vh - 330px)';
+        } else {
+            header.classList.add('collapsed');
+            btn.innerHTML = '&#x226B; EXPAND &#x226A;';
+            matrix.style.maxHeight = 'calc(100vh - 120px)';
+        }
+    }
+
+    function initializeMatrixRows(rows) {
+        rows.forEach((row) => {
+            if (row.__matrixInitialized) return;
+            row.__matrixInitialized = true;
+            const assetName = row.getAttribute('data-asset-name') || '';
+            const assetTypeTxt = row.getAttribute('data-asset-type-txt') || '';
+
+            const stages = [];
+            const cells = row.querySelectorAll('.stage-cell');
+
+            cells.forEach((cell) => {
+                const boxes = Array.from(cell.querySelectorAll('.sq-box')).map(box => ({
+                    el: box,
+                    contractor: box.getAttribute('data-contractor'),
+                    contractorName: box.getAttribute('data-contractor-name'),
+                    status: box.getAttribute('data-status'),
+                    lastEdit: box.getAttribute('data-last-edit'),
+                    checklistName: box.getAttribute('data-checklist-name'),
+                    stageName: box.getAttribute('data-stage-name'),
+                    percent: box.getAttribute('data-percent'),
+                    due: box.getAttribute('data-due')
+                }));
+
+                stages.push({
+                    el: cell,
+                    hasDocs: cell.getAttribute('data-has-docs') === 'true',
+                    boxes: boxes,
+                    redPill: cell.querySelector('.red-pill:not(a)'),
+                    orangePill: cell.querySelector('.orange-pill'),
+                    progressWrapper: cell.querySelector('.progress-wrapper'),
+                    progressFill: cell.querySelector('.progress-fill'),
+                    progressText: cell.querySelector('.progress-text'),
+                    finalizedText: cell.querySelector('.finalized-text')
+                });
+            });
+
+            const rowIndex = parseInt(row.getAttribute('data-index'));
+            const rowPie = row.querySelector('.row-pie-chart');
+            if (rowPie) {
+                rowPie.setAttribute('role', 'button');
+                rowPie.setAttribute('tabindex', '0');
+                rowPie.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    toggleAssetRowFilter(rowIndex);
+                });
+                rowPie.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        toggleAssetRowFilter(rowIndex);
+                    }
+                });
+            }
+
+            memoryMap.push({
+                el: row,
+                index: rowIndex,
+                division: row.getAttribute('data-division'),
+                building: row.getAttribute('data-building'),
+                family: row.getAttribute('data-family'),
+                type: row.getAttribute('data-type'),
+                floor: row.getAttribute('data-floor'),
+                space: row.getAttribute('data-space'),
+                priority: row.getAttribute('data-priority'),
+                issuesCount: parseInt(row.getAttribute('data-issues')) || 0,
+                assetName: assetName,
+                assetTypeTxt: assetTypeTxt,
+                stages: stages,
+                rowPie: rowPie,
+                stats: { total: 0, complete: 0, incomplete: 0, overdue: 0, warning: 0, in_progress: 0 }
+            });
+        });
+    }
+
+    function initializeStageHeaderFilters() {
+        document.querySelectorAll('.stage-header .pie-chart').forEach((pie, index) => {
+            if (pie.__matrixInitialized) return;
+            pie.__matrixInitialized = true;
+            pie.setAttribute('role', 'button');
+            pie.setAttribute('tabindex', '0');
+            pie.addEventListener('click', (event) => {
+                event.preventDefault();
+                toggleStageColumnFilter(index);
+            });
+            pie.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    toggleStageColumnFilter(index);
+                }
+            });
+        });
+    }
+
+    function updateMatrixLoadStatus() {
+        const status = document.getElementById('matrixLoadStatus');
+        if (!status) return;
+        if (matrixRowsLoaded >= matrixRowsTotal) {
+            status.textContent = `Loaded ${matrixRowsTotal} of ${matrixRowsTotal} assets`;
+            status.style.opacity = '0.55';
+        } else {
+            status.textContent = `Loaded ${matrixRowsLoaded} of ${matrixRowsTotal} assets`;
+            status.style.opacity = '1';
+        }
+    }
+
+    function refreshMatrixSnapshotCache() {
+        if (typeof cacheCurrentPageSnapshot === 'function') {
+            window.setTimeout(cacheCurrentPageSnapshot, 100);
+        }
+    }
+
+    function loadRemainingMatrixRows() {
+        if (matrixRowsLoading || matrixRowsLoaded >= matrixRowsTotal) return;
+        matrixRowsLoading = true;
+        fetch(`/api/matrix_rows?offset=${matrixRowsLoaded}&limit=${matrixChunkSize}`)
+            .then(response => response.json())
+            .then(payload => {
+                const container = document.getElementById('matrixContainer');
+                if (!container || !payload.html) return;
+
+                const template = document.createElement('template');
+                template.innerHTML = payload.html.trim();
+                const newRows = Array.from(template.content.querySelectorAll('.data-row'));
+                container.appendChild(template.content);
+                initializeMatrixRows(newRows);
+                matrixRowsLoaded = payload.loaded || matrixRowsLoaded + newRows.length;
+                updateMatrixLoadStatus();
+                applyFilter();
+                refreshMatrixSnapshotCache();
+                putMatrixChunk(payload.offset, payload.html);
+                putMatrixCacheMeta({
+                    signature: matrixSignatureKey,
+                    total: matrixRowsTotal,
+                    loaded: matrixRowsLoaded,
+                    complete: !payload.has_more,
+                    savedAt: Date.now()
+                });
+            })
+            .catch(() => {
+                const status = document.getElementById('matrixLoadStatus');
+                if (status) status.textContent = `Loaded ${matrixRowsLoaded} of ${matrixRowsTotal} assets - more rows could not be loaded`;
+            })
+            .finally(() => {
+                matrixRowsLoading = false;
+                if (matrixRowsLoaded < matrixRowsTotal) {
+                    window.setTimeout(loadRemainingMatrixRows, 30);
+                }
+            });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        matrixCacheReady = openMatrixRowsDb();
+        initializeMatrixRows(Array.from(document.querySelectorAll('.data-row')));
+        initializeStageHeaderFilters();
+        updateMatrixLoadStatus();
+        applyFilter();
+        refreshMatrixSnapshotCache();
+        restoreMatrixRowsFromCache().then(restored => {
+            if (!restored) {
+                cacheInitialMatrixRows();
+                putMatrixCacheMeta({
+                    signature: matrixSignatureKey,
+                    total: matrixRowsTotal,
+                    loaded: matrixRowsLoaded,
+                    complete: matrixRowsLoaded >= matrixRowsTotal,
+                    savedAt: Date.now()
+                });
+                window.setTimeout(loadRemainingMatrixRows, 20);
+            }
+        });
+    });
+
+    function stageHasVisibleInfo(stage, contractorFilter) {
+        if (!stage) return false;
+        if (stage.hasDocs) return true;
+        return stage.boxes.some(box => {
+            if (!box.contractor) return true;
+            return contractorFilter === 'All' || box.contractor === contractorFilter;
+        });
+    }
+
+    function toggleStageColumnFilter(stageIndex) {
+        activeStageColumnFilter = activeStageColumnFilter === stageIndex ? null : stageIndex;
+        applyFilter();
+    }
+
+    function toggleAssetRowFilter(rowIndex) {
+        activeAssetRowFilter = activeAssetRowFilter === rowIndex ? null : rowIndex;
+        applyFilter();
+    }
+
+    function updatePieFilterIndicators() {
+        document.querySelectorAll('.stage-header .pie-chart').forEach((pie, index) => {
+            const active = activeStageColumnFilter === index;
+            pie.classList.toggle('pie-filter-active', active);
+            pie.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+
+        memoryMap.forEach(row => {
+            if (!row.rowPie) return;
+            const active = activeAssetRowFilter === row.index;
+            row.rowPie.classList.toggle('pie-filter-active', active);
+            row.rowPie.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+    }
+
+    function toggleDropdown() {
+        const list = document.getElementById('priorityDropdown');
+        list.style.display = list.style.display === 'none' ? 'block' : 'none';
+    }
+
+    window.onclick = function(event) {
+        if (!event.target.closest('#priorityDropdownContainer')) {
+            const d = document.getElementById('priorityDropdown');
+            if(d) d.style.display = 'none';
+        }
+    }
+
+    function togglePriorityAll(allCheckbox) {
+        const checkboxes = document.querySelectorAll('.priority-chk');
+        if (allCheckbox.checked) {
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+        updatePrioritySelection();
+    }
+
+    function updatePrioritySelection() {
+        const allCheckbox = document.getElementById('priorityAll');
+        const checkboxes = document.querySelectorAll('.priority-chk');
+        let selectedCount = 0;
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) selectedCount++;
+        });
+
+        if (selectedCount > 0) {
+            allCheckbox.checked = false;
+            document.getElementById('prioritySelectText').innerText = selectedCount + ' Priorities Selected';
+        } else {
+            allCheckbox.checked = true;
+            document.getElementById('prioritySelectText').innerText = 'All Priorities';
+        }
+        applyFilter();
+    }
+
+    function applyFilter() {
+        if (memoryMap.length === 0) return;
+
+        const contractorFilter = document.getElementById('contractorFilter').value;
+        const divFilter = document.getElementById('divFilter').value;
+        const buildingFilter = document.getElementById('buildingFilter').value;
+        const famFilter = document.getElementById('famFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+        const floorFilter = document.getElementById('floorFilter').value;
+        const spaceFilter = document.getElementById('spaceFilter').value;
+        const searchFilter = document.getElementById('assetSearchInput').value.toLowerCase();
+
+        const showDates = document.getElementById('showDatesToggle').checked;
+        const collapseCompleteStages = document.getElementById('collapseToggle').checked;
+        const collapseCompletedAssets = document.getElementById('collapseAssetsToggle').checked;
+
+        let selectedPriorities = [];
+        let criticalAssetNames = [];
+
+        if (document.getElementById('priorityAll').checked) {
+            selectedPriorities = ['All'];
+        } else {
+            document.querySelectorAll('.priority-chk:checked').forEach(cb => {
+                let pVal = cb.value;
+                selectedPriorities.push(pVal);
+
+                let pObj = allPriorities.find(p => p.priority.toString() === pVal);
+                if (pObj && pObj.critical_panels && pObj.critical_panels.toLowerCase() !== 'n/a') {
+                    let panels = pObj.critical_panels.split(',').map(s => s.trim().toLowerCase());
+                    criticalAssetNames.push(...panels);
+                }
+            });
+        }
+
+        const headerCells = document.querySelectorAll('.stage-header');
+
+        let globalTotal = 0; let globalComplete = 0; let globalOverdue = 0; let globalWarning = 0; let globalInProgress = 0;
+        let stageStats = Array.from(headerCells).map(function() { return { total: 0, complete: 0, warning: 0, overdue: 0 }; });
+        let activeAssetRowVisible = false;
+
+        memoryMap.forEach(row => {
+            const matchDiv = divFilter === 'All' || row.division === divFilter;
+            const matchBuilding = buildingFilter === 'All' || row.building === buildingFilter;
+            const matchFam = famFilter === 'All' || row.family === famFilter;
+            const matchType = typeFilter === 'All' || row.type === typeFilter;
+            const matchFloor = floorFilter === 'All' || row.floor === floorFilter;
+            const matchSpace = spaceFilter === 'All' || row.space === spaceFilter;
+            const matchSearch = searchFilter === '' || row.assetName.includes(searchFilter) || row.assetTypeTxt.includes(searchFilter);
+            const matchPriority = selectedPriorities.includes('All') || selectedPriorities.includes(row.priority) || criticalAssetNames.includes(row.assetName);
+            const matchStageColumn = activeStageColumnFilter === null || stageHasVisibleInfo(row.stages[activeStageColumnFilter], contractorFilter);
+
+            if (!matchDiv || !matchBuilding || !matchFam || !matchType || !matchFloor || !matchSpace || !matchPriority || !matchSearch || !matchStageColumn) {
+                row.el.style.display = 'none';
+                return;
+            }
+
+            let rowHasWork = false;
+            let rowTotalBoxes = 0;
+            let rowCompleteBoxes = 0;
+
+            row.stats = { total: 0, complete: 0, warning: 0, overdue: 0, in_progress: 0 };
+
+            row.stages.forEach((cell, index) => {
+                let cellTotal = 0; let cellComplete = 0; let cellOverdue = false; let cellWarning = false;
+                let latestCompletionDate = 0;
+
+                cell.boxes.forEach(box => {
+                    if (box.contractor) {
+                        if (contractorFilter === 'All' || box.contractor === contractorFilter) {
+                            box.el.style.display = 'inline-flex';
+                            cellTotal++; rowHasWork = true; globalTotal++;
+                            stageStats[index].total++; row.stats.total++;
+                            rowTotalBoxes++;
+
+                            if (showDates && box.lastEdit) {
+                                let d = new Date(box.lastEdit).getTime();
+                                if (isNaN(d)) d = new Date(box.lastEdit.replace(/-/g, '/')).getTime();
+                                const diffTime = Math.max(0, new Date().getTime() - d);
+                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                box.el.textContent = diffDays + 'd';
+                            } else {
+                                box.el.textContent = '';
+                            }
+
+                            if (box.status === 'complete') {
+                                cellComplete++; globalComplete++; stageStats[index].complete++; row.stats.complete++;
+                                rowCompleteBoxes++;
+
+                                if (box.lastEdit) {
+                                    let dt = new Date(box.lastEdit).getTime();
+                                    if (isNaN(dt)) dt = new Date(box.lastEdit.replace(/-/g, '/')).getTime();
+                                    if (!isNaN(dt) && dt > latestCompletionDate) {
+                                        latestCompletionDate = dt;
+                                    }
+                                }
+                            } else if (box.status === 'overdue') {
+                                cellOverdue = true; globalOverdue++; stageStats[index].overdue++; row.stats.overdue++;
+                            } else if (box.status === 'warning') {
+                                cellWarning = true; globalWarning++; stageStats[index].warning++; row.stats.warning++;
+                            } else if (box.status === 'in_progress') {
+                                globalInProgress++; row.stats.in_progress++;
+                            }
+                        } else {
+                            box.el.style.display = 'none';
+                        }
+                    } else {
+                        box.el.style.display = 'inline-flex';
+                        rowHasWork = true;
+                    }
+                });
+
+                if (cell.hasDocs) rowHasWork = true;
+
+                if(cell.redPill) cell.redPill.style.display = 'none';
+                if(cell.orangePill) cell.orangePill.style.display = 'none';
+                cell.progressWrapper.style.display = 'none';
+                cell.finalizedText.style.display = 'none';
+
+                cell.el.className = 'matrix-cell stage-cell';
+
+                if (cellTotal === 0 && cell.boxes.length === 0 && !cell.hasDocs) {
+                    cell.el.classList.add('bg-empty');
+                } else if ((cellTotal === 0 && cell.boxes.length > 0) || cell.hasDocs) {
+                    cell.el.classList.add('bg-progress');
+                } else if (cellOverdue) {
+                    cell.el.classList.add('bg-behind');
+                    if(cell.redPill) cell.redPill.style.display = 'inline-block';
+                    cell.progressWrapper.style.display = 'block';
+                } else if (cellWarning) {
+                    cell.el.classList.add('bg-warning');
+                    if(cell.orangePill) cell.orangePill.style.display = 'inline-block';
+                    cell.progressWrapper.style.display = 'block';
+                } else if (cellTotal === cellComplete) {
+                    cell.el.classList.add('bg-complete');
+                    cell.finalizedText.style.display = 'inline-block';
+
+                    if (latestCompletionDate > 0) {
+                        const dateObj = new Date(latestCompletionDate);
+                        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+                        cell.finalizedText.textContent = 'FINALIZED: ' + dateObj.toLocaleDateString('en-US', options).toUpperCase();
+                    } else {
+                        cell.finalizedText.textContent = 'STAGE FINALIZED';
+                    }
+
+                } else {
+                    cell.el.classList.add('bg-progress');
+                    cell.progressWrapper.style.display = 'block';
+                }
+
+                if (cellTotal > 0 && cellTotal !== cellComplete) {
+                    let pct = Math.round((cellComplete / cellTotal) * 100);
+                    cell.progressFill.style.width = pct + '%';
+                    cell.progressText.textContent = pct + '% Complete';
+                    if (cellOverdue) { cell.progressFill.style.backgroundColor = '#ef4444'; }
+                    else if (cellWarning) { cell.progressFill.style.backgroundColor = '#f97316'; }
+                    else { cell.progressFill.style.backgroundColor = '#00205B'; }
+                }
+            });
+
+            row.stats.incomplete = row.stats.total - row.stats.complete;
+
+            if (row.rowPie) {
+                if (row.stats.total > 0) {
+                    const pctC = (row.stats.complete / row.stats.total) * 100;
+                    const pctO = (row.stats.overdue / row.stats.total) * 100;
+                    const pctW = (row.stats.warning / row.stats.total) * 100;
+                    row.rowPie.style.background = `conic-gradient(#10b981 0% ${pctC}%, #ef4444 ${pctC}% ${pctC + pctO}%, #f97316 ${pctC + pctO}% ${pctC + pctO + pctW}%, #e9ecef ${pctC + pctO + pctW}% 100%)`;
+                    row.rowPie.title = `Toggle columns for this asset\nComplete: ${Math.round(pctC)}%\nOverdue: ${Math.round(pctO)}%\nDue Soon: ${Math.round(pctW)}%\nIn Progress: ${Math.round(100 - (pctC+pctO+pctW))}%`;
+                } else {
+                    row.rowPie.style.background = '#e9ecef';
+                    row.rowPie.title = "No checklist data";
+                }
+            }
+
+            let showRow = (contractorFilter === 'All' || rowHasWork);
+            if (collapseCompletedAssets && rowTotalBoxes === rowCompleteBoxes) {
+                showRow = false;
+            }
+            row.el.style.display = showRow ? '' : 'none'; // IMPORTANT: Empty string to inherit display: grid
+            if (showRow && row.index === activeAssetRowFilter) {
+                activeAssetRowVisible = true;
+            }
+        });
+
+        const barComplete = document.getElementById('masterBarComplete');
+        const barInProgress = document.getElementById('masterBarInProgress');
+        const barWarning = document.getElementById('masterBarWarning');
+        const barOverdue = document.getElementById('masterBarOverdue');
+
+        if (globalTotal > 0) {
+            barComplete.style.width = (globalComplete / globalTotal * 100) + '%';
+            barInProgress.style.width = (globalInProgress / globalTotal * 100) + '%';
+            barWarning.style.width = (globalWarning / globalTotal * 100) + '%';
+            barOverdue.style.width = (globalOverdue / globalTotal * 100) + '%';
+        } else {
+            barComplete.style.width = '0%'; barInProgress.style.width = '0%'; barWarning.style.width = '0%'; barOverdue.style.width = '0%';
+        }
+
+        headerCells.forEach((header, index) => {
+            const pie = header.querySelector('.pie-chart');
+            const stats = stageStats[index];
+            if (pie) {
+                if (stats.total > 0) {
+                    const pctC = (stats.complete / stats.total) * 100;
+                    const pctO = (stats.overdue / stats.total) * 100;
+                    const pctW = (stats.warning / stats.total) * 100;
+                    pie.style.background = `conic-gradient(#10b981 0% ${pctC}%, #ef4444 ${pctC}% ${pctC + pctO}%, #f97316 ${pctC + pctO}% ${pctC + pctO + pctW}%, #e9ecef ${pctC + pctO + pctW}% 100%)`;
+                    pie.title = `Toggle rows with data in this stage\nComplete: ${Math.round(pctC)}%\nOverdue: ${Math.round(pctO)}%\nDue Soon: ${Math.round(pctW)}%\nIn Progress: ${Math.round(100 - (pctC+pctO+pctW))}%`;
+                } else {
+                    pie.style.background = '#e9ecef';
+                    pie.title = "No checklist data";
+                }
+            }
+
+            let hideColumn = false;
+            if (collapseCompleteStages) {
+                hideColumn = true;
+                memoryMap.forEach(row => {
+                    if (row.el.style.display !== 'none') {
+                        const cellClass = row.stages[index].el.className;
+                        if (cellClass.includes('bg-behind') || cellClass.includes('bg-warning') || cellClass.includes('bg-progress')) {
+                            hideColumn = false;
+                        }
+                    }
+                });
+            }
+
+            if (!hideColumn && activeAssetRowFilter !== null && activeAssetRowVisible) {
+                const activeRow = memoryMap.find(row => row.index === activeAssetRowFilter);
+                hideColumn = !stageHasVisibleInfo(activeRow ? activeRow.stages[index] : null, contractorFilter);
+            }
+
+            header.style.display = hideColumn ? 'none' : '';
+            memoryMap.forEach(row => {
+                row.stages[index].el.style.display = hideColumn ? 'none' : '';
+            });
+        });
+
+        updatePieFilterIndicators();
+        updateMatrixColumnCount();
+        sortMatrix();
+    }
+
+    function updateMatrixColumnCount() {
+        const visibleStageCount = Array.from(document.querySelectorAll('.stage-header'))
+            .filter(header => header.style.display !== 'none').length;
+        document.querySelector('.matrix-container').style.setProperty('--stage-count', Math.max(1, visibleStageCount));
+    }
+
+    function sortMatrix() {
+        const container = document.querySelector('.matrix-container');
+        const sortType = document.getElementById('sortSelect').value;
+
+        if (sortType === 'default') {
+            memoryMap.sort((a, b) => a.index - b.index);
+        } else {
+            memoryMap.sort((a, b) => {
+                let aVal = a.stats[sortType] || 0;
+                let bVal = b.stats[sortType] || 0;
+                if (bVal === aVal) {
+                    return a.index - b.index;
+                }
+                return bVal - aVal;
+            });
+        }
+
+        memoryMap.forEach(row => container.appendChild(row.el));
+    }
+
+    function openDrawingPage(pageInfo) {
+        if (!pageInfo || !pageInfo.file) return;
+        const page = pageInfo.page || 1;
+        const href = `/view_pdf/${encodeURIComponent(pageInfo.file)}#page=${page}`;
+        const viewer = window.open(href, 'pdf_viewer');
+        if (viewer) viewer.focus();
+        const modal = document.getElementById('drawingPageModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+    }
+
+    function openAssetDrawingPages(button) {
+        let pages = [];
+        try {
+            pages = JSON.parse(button.getAttribute('data-pages') || '[]');
+        } catch (error) {
+            pages = [];
+        }
+
+        if (pages.length === 0) return;
+        if (pages.length === 1) {
+            openDrawingPage(pages[0]);
+            return;
+        }
+
+        const list = document.getElementById('drawingPageList');
+        const modal = document.getElementById('drawingPageModal');
+        if (!list || !modal) return;
+
+        list.innerHTML = pages.map((page, index) => `
+            <button type="button"
+                    class="drawing-page-option"
+                    data-index="${index}">
+                <span>${escapeHtml(page.label || `${page.file} - Page ${page.page || 1}`)}</span>
+                <strong>Open</strong>
+            </button>
+        `).join('');
+
+        list.querySelectorAll('.drawing-page-option').forEach(option => {
+            option.addEventListener('click', () => {
+                openDrawingPage(pages[parseInt(option.getAttribute('data-index'), 10)]);
+            });
+        });
+
+        modal.style.display = 'flex';
+    }
+
+    function openExportModal() {
+        const modal = document.getElementById('exportModal');
+        const contractorFilter = document.getElementById('contractorFilter').value;
+        const contractorColumn = document.querySelector('.export-column[value="contractor"]');
+
+        if (contractorColumn) {
+            contractorColumn.checked = contractorFilter === 'All' || contractorColumn.checked;
+            contractorColumn.disabled = contractorFilter === 'All';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function selectedExportValues(selector) {
+        return Array.from(document.querySelectorAll(selector + ':checked')).map(input => input.value);
+    }
+
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const contractorFilter = document.getElementById('contractorFilter').value;
+        const contractorF = document.getElementById('contractorFilter').options[document.getElementById('contractorFilter').selectedIndex].text;
+        const divF = document.getElementById('divFilter').options[document.getElementById('divFilter').selectedIndex].text;
+        const buildingF = document.getElementById('buildingFilter').options[document.getElementById('buildingFilter').selectedIndex].text;
+        const famF = document.getElementById('famFilter').options[document.getElementById('famFilter').selectedIndex].text;
+        const typeF = document.getElementById('typeFilter').options[document.getElementById('typeFilter').selectedIndex].text;
+        const floorF = document.getElementById('floorFilter').options[document.getElementById('floorFilter').selectedIndex].text;
+        const spaceF = document.getElementById('spaceFilter').options[document.getElementById('spaceFilter').selectedIndex].text;
+        const priorityF = document.getElementById('prioritySelectText').innerText;
+        const searchF = document.getElementById('assetSearchInput').value;
+        const dateStr = new Date().toISOString().split('T')[0];
+        const selectedStatuses = selectedExportValues('.export-status');
+        let selectedColumns = selectedExportValues('.export-column');
+
+        if (selectedStatuses.length === 0) {
+            alert('Select at least one status for the export.');
+            return;
+        }
+
+        if (contractorFilter === 'All' && !selectedColumns.includes('contractor')) {
+            selectedColumns.push('contractor');
+        }
+
+        if (selectedColumns.length === 0) {
+            alert('Select at least one column for the export.');
+            return;
+        }
+
+        let overdue = [], warning = [], inProgress = [], completed = [];
+        const reportBuckets = {
+            overdue: overdue,
+            warning: warning,
+            in_progress: inProgress,
+            complete: completed
+        };
+        const columnLabels = {
+            asset: 'Asset',
+            stage: 'Stage',
+            checklist: 'Checklist Name',
+            contractor: 'Contractor',
+            status: 'Status',
+            percent: 'Complete',
+            due: 'Due Date',
+            lastEdit: 'Last Edited'
+        };
+        const statusLabels = {
+            overdue: 'Overdue',
+            warning: 'Due Soon',
+            in_progress: 'In Progress',
+            complete: 'Complete'
+        };
+
+        memoryMap.forEach(row => {
+            if (row.el.style.display !== 'none') {
+                const fullAsset = `${row.assetName} (${row.assetTypeTxt})`;
+
+                row.stages.forEach(cell => {
+                    if (cell.el.style.display !== 'none') {
+                        cell.boxes.forEach(box => {
+                            if (box.el.style.display !== 'none' && box.contractor) {
+                                const normalizedStatus = box.status === 'complete' ? 'complete' :
+                                    box.status === 'overdue' ? 'overdue' :
+                                    box.status === 'warning' ? 'warning' : 'in_progress';
+
+                                if (!selectedStatuses.includes(normalizedStatus)) return;
+
+                                const rowValues = {
+                                    asset: fullAsset,
+                                    stage: box.stageName,
+                                    checklist: box.checklistName,
+                                    contractor: box.contractorName,
+                                    status: statusLabels[normalizedStatus],
+                                    percent: box.percent + '%',
+                                    due: box.due,
+                                    lastEdit: box.lastEdit
+                                };
+                                reportBuckets[normalizedStatus].push(selectedColumns.map(col => rowValues[col] || ''));
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        const total = overdue.length + warning.length + inProgress.length + completed.length;
+        const getPct = (count) => total > 0 ? Math.round((count / total) * 100) : 0;
+
+        doc.setFontSize(18);
+        doc.setTextColor(0, 32, 91);
+        doc.text("Pinecrest Medical Pavilion", 14, 20);
+
+        doc.setFontSize(12);
+        doc.setTextColor(200, 16, 46);
+        doc.text('Filtered Commissioning Status Report', 14, 28);
+
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Generated: ${dateStr}`, 14, 38);
+        doc.text('Filters Applied:', 14, 44);
+
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`- Contractor: ${contractorF}`, 20, 50);
+        doc.text(`- Division: ${divF}`, 20, 55);
+        doc.text(`- Building: ${buildingF}`, 20, 60);
+        doc.text(`- Asset Family: ${famF}`, 20, 65);
+        doc.text(`- Asset Type: ${typeF}`, 20, 70);
+        doc.text(`- Floor: ${floorF}`, 20, 75);
+        doc.text(`- Space: ${spaceF}`, 20, 80);
+        doc.text(`- Priority: ${priorityF}`, 20, 85);
+        if (searchF) doc.text(`- Search Term: "${searchF}"`, 20, 90);
+        doc.text(`- Export Statuses: ${selectedStatuses.map(status => statusLabels[status]).join(', ')}`, 20, searchF ? 95 : 90);
+
+        doc.setFontSize(12);
+        doc.setTextColor(0, 32, 91);
+        doc.text('Executive Summary', 14, 105);
+        doc.setLineWidth(0.5);
+        doc.line(14, 107, 196, 107);
+
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Total Exported Checklists: ${total}`, 14, 115);
+        doc.text(`Completed: ${completed.length} (${getPct(completed.length)}%)`, 14, 121);
+        doc.text(`In Progress: ${inProgress.length} (${getPct(inProgress.length)}%)`, 14, 127);
+        doc.text(`Due Soon (Warning): ${warning.length} (${getPct(warning.length)}%)`, 14, 133);
+        doc.text(`Overdue (Late): ${overdue.length} (${getPct(overdue.length)}%)`, 14, 139);
+
+        let finalY = 150;
+        const tableCols = [selectedColumns.map(col => columnLabels[col])];
+
+        function createTable(title, dataArray, headColor) {
+            if (dataArray.length === 0) return;
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(title, 14, finalY + 10);
+
+            doc.autoTable({
+                startY: finalY + 15,
+                head: tableCols,
+                body: dataArray,
+                headStyles: { fillColor: headColor, textColor: [255, 255, 255] },
+                styles: { fontSize: 8 },
+                theme: 'grid'
+            });
+            finalY = doc.lastAutoTable.finalY + 5;
+        }
+
+        createTable('1. OVERDUE & LATE (Action Required)', overdue, [211, 47, 47]);
+        createTable('2. DUE SOON / UPCOMING (Warning)', warning, [249, 115, 22]);
+        createTable('3. IN PROGRESS', inProgress, [0, 32, 91]);
+        createTable('4. COMPLETED', completed, [25, 120, 32]);
+
+        document.getElementById('exportModal').style.display = 'none';
+
+        let safeDiv = divF.replace(/[^a-zA-Z0-9]/g, '');
+        let safeFam = famF.replace(/[^a-zA-Z0-9]/g, '');
+        doc.save(`${dateStr}_CxReport_${safeDiv}_${safeFam}.pdf`);
+    }
+
+    // --- LIVE PDF VIEWER LOGIC ---
+    function openDocumentViewer() {
+        if (typeof rotatePageTransition === 'function') {
+            navigateWithTransition(new URL('/document_viewer', window.__cxHref), 'drawings');
+            return;
+        }
+        window.__cxNav('/document_viewer');
+    }
+
+    // --- CROSS-TAB COMMUNICATION ---
+    setInterval(() => {
+        fetch('/api/get_remote_search')
+            .then(response => response.json())
+            .then(data => {
+                if (data.search) {
+                    const searchInput = document.getElementById('assetSearchInput');
+                    searchInput.value = data.search;
+                    applyFilter();
+
+                    searchInput.style.backgroundColor = '#e0f2fe';
+                    setTimeout(() => { searchInput.style.backgroundColor = '#ffffff'; }, 800);
+                }
+            })
+            .catch(err => console.error("Polling error:", err));
+    }, 1000);
+</script>
+
+
+    <div id="pageTransitionOverlay" class="page-transition-overlay" aria-hidden="true">
+        <div class="page-transition-scene">
+            <div class="page-transition-zoom" id="pageTransitionZoom">
+                <div class="page-transition-cube" id="pageTransitionCube">
+                    <div class="page-transition-face page-transition-front" data-transition-face-key="matrix">
+                        <div id="pageTransitionSnapshot" class="page-transition-snapshot"></div>
+                    </div>
+                    <div class="page-transition-face page-transition-right page-transition-shell" data-transition-face-key="config">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Project Configuration</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-back page-transition-shell" data-transition-face-key="executive">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Executive Summary</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-left page-transition-shell" data-transition-face-key="integrations">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Integrations</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-top page-transition-shell" data-transition-face-key="schedule">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Schedule</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-bottom page-transition-shell" data-transition-face-key="drawings">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Document Viewer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="globalLoadingOverlay" class="global-loading-overlay" aria-live="polite" aria-hidden="false">
+        <div class="matrix-loader" role="status">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%" aria-hidden="true">
+                <defs>
+                    <style>
+                        .loader-grid-lines {
+                            stroke: #B31942;
+                            stroke-width: 4;
+                            stroke-linecap: round;
+                        }
+
+                        .loader-num {
+                            fill: #0A3161;
+                            font-family: 'Courier New', Courier, monospace;
+                            font-size: 26px;
+                            font-weight: bold;
+                            text-anchor: middle;
+                            dominant-baseline: central;
+                        }
+
+                        .loader-board {
+                            transform-origin: 0 0;
+                            transform-style: preserve-3d;
+                            animation: loader-spin-board 18s linear infinite;
+                        }
+
+                        .loader-mask-rect {
+                            animation: loader-expand-rect 16s ease-in-out infinite;
+                        }
+
+                        .loader-val-0 {
+                            animation: loader-flip-0 3s infinite ease-in-out;
+                        }
+
+                        .loader-val-1 {
+                            animation: loader-flip-1 3s infinite ease-in-out;
+                        }
+
+                        .loader-d1 { animation-delay: -0.1s; }
+                        .loader-d2 { animation-delay: -0.6s; }
+                        .loader-d3 { animation-delay: -1.2s; }
+                        .loader-d4 { animation-delay: -1.9s; }
+                        .loader-d5 { animation-delay: -2.5s; }
+                        .loader-d6 { animation-delay: -0.4s; }
+                        .loader-d7 { animation-delay: -1.5s; }
+                        .loader-d8 { animation-delay: -2.2s; }
+                        .loader-d9 { animation-delay: -2.8s; }
+
+                        @keyframes loader-spin-board {
+                            0% { transform: perspective(1200px) rotateX(60deg) rotateZ(0deg); }
+                            100% { transform: perspective(1200px) rotateX(60deg) rotateZ(360deg); }
+                        }
+
+                        @keyframes loader-expand-rect {
+                            0%, 8% { x: -58px; y: -58px; width: 116px; height: 116px; }
+                            12%, 18% { x: -58px; y: -58px; width: 156px; height: 116px; }
+                            22%, 28% { x: -58px; y: -58px; width: 156px; height: 156px; }
+                            32%, 38% { x: -98px; y: -58px; width: 196px; height: 156px; }
+                            42%, 48% { x: -98px; y: -98px; width: 196px; height: 196px; }
+                            52%, 58% { x: -98px; y: -98px; width: 236px; height: 196px; }
+                            62%, 68% { x: -98px; y: -98px; width: 236px; height: 236px; }
+                            72%, 78% { x: -138px; y: -98px; width: 276px; height: 236px; }
+                            82%, 92% { x: -138px; y: -138px; width: 276px; height: 276px; }
+                            96%, 100% { x: -58px; y: -58px; width: 116px; height: 116px; }
+                        }
+
+                        @keyframes loader-flip-0 {
+                            0% { opacity: 0; transform: rotateY(90deg); }
+                            10% { opacity: 1; transform: rotateY(0deg); }
+                            23% { opacity: 1; transform: rotateY(0deg); }
+                            33% { opacity: 0; transform: rotateY(-90deg); }
+                            100% { opacity: 0; transform: rotateY(-90deg); }
+                        }
+
+                        @keyframes loader-flip-1 {
+                            0%, 33% { opacity: 0; transform: rotateY(90deg); }
+                            43% { opacity: 1; transform: rotateY(0deg); }
+                            56% { opacity: 1; transform: rotateY(0deg); }
+                            66% { opacity: 0; transform: rotateY(-90deg); }
+                            100% { opacity: 0; transform: rotateY(-90deg); }
+                        }
+
+                        @media (prefers-reduced-motion: reduce) {
+                            .loader-board,
+                            .loader-mask-rect,
+                            .loader-val-0,
+                            .loader-val-1 {
+                                animation: none;
+                            }
+                        }
+                    </style>
+                    <clipPath id="loader-grow-mask">
+                        <rect class="loader-mask-rect" x="-58" y="-58" width="116" height="116" />
+                    </clipPath>
+                </defs>
+                <g transform="translate(400, 400)">
+                    <g class="loader-board" clip-path="url(#loader-grow-mask)">
+                        <path class="loader-grid-lines" d="M-100,-140 V140 M-60,-140 V140 M-20,-140 V140 M20,-140 V140 M60,-140 V140 M100,-140 V140 M-140,-100 H140 M-140,-60 H140 M-140,-20 H140 M-140,20 H140 M-140,60 H140 M-140,100 H140" />
+                        <g transform="translate(-120,-120)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(-80,-120)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(-40,-120)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(0,-120)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(40,-120)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(80,-120)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(120,-120)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(-120,-80)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(-80,-80)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(-40,-80)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(0,-80)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(40,-80)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(80,-80)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(120,-80)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(-120,-40)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(-80,-40)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(-40,-40)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(0,-40)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(40,-40)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(80,-40)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(120,-40)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(-120,0)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(-80,0)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(-40,0)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(0,0)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(40,0)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(80,0)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(120,0)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(-120,40)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(-80,40)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(-40,40)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(0,40)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(40,40)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(80,40)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(120,40)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(-120,80)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(-80,80)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(-40,80)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(0,80)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(40,80)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(80,80)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(120,80)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(-120,120)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(-80,120)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(-40,120)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(0,120)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(40,120)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(80,120)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(120,120)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                    </g>
+                </g>
+            </svg>
+            <div class="global-loading-text">Loading page...</div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSystemMenu() {
+            const menu = document.getElementById('systemConfigMenu');
+            if (menu) menu.classList.toggle('open');
+        }
+
+        function toggleProjectMenu() {
+            const menu = document.getElementById('projectMenu');
+            if (menu) menu.classList.toggle('open');
+        }
+
+        function pageFaceForUrl(url) {
+            const path = url.pathname.replace(/\/+$/, '') || '/';
+            if (path === '/') return 'matrix';
+            if (path === '/config') return 'config';
+            if (path === '/schedule') return 'schedule';
+            if (path === '/executive_summary') return 'executive';
+            if (path === '/integrations') return 'integrations';
+            if (path === '/document_viewer') return 'drawings';
+            return null;
+        }
+
+        function transitionFaceForUrl(url) {
+            const face = pageFaceForUrl(url);
+            if (face) return face;
+            return 'matrix';
+        }
+
+        function transitionSnapshotKey(face) {
+            return `matrixAiTransitionSnapshot:${face}`;
+        }
+
+        function currentTransitionFace() {
+            return pageFaceForUrl(new URL(window.__cxHref));
+        }
+
+        function buildCleanPageSnapshot() {
+            const clone = document.body.cloneNode(true);
+            clone.querySelectorAll('#pageTransitionOverlay, #globalLoadingOverlay, script').forEach(node => node.remove());
+            clone.querySelectorAll('.modal-overlay').forEach(node => {
+                if (window.getComputedStyle(node).display === 'none') node.remove();
+            });
+            return {
+                html: clone.innerHTML,
+                bodyClass: clone.className || '',
+                width: window.innerWidth,
+                height: window.innerHeight,
+                scrollX: window.scrollX || 0,
+                scrollY: window.scrollY || 0,
+                scrollHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, window.innerHeight),
+                bodyStyle: {
+                    background: window.getComputedStyle(document.body).background,
+                    color: window.getComputedStyle(document.body).color,
+                    font: window.getComputedStyle(document.body).font
+                }
+            };
+        }
+
+        function createSnapshotWrapper(snapshot) {
+            const record = typeof snapshot === 'string' ? { html: snapshot } : snapshot;
+            const width = record.width || window.innerWidth;
+            const height = record.height || window.innerHeight;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'page-transition-snapshot-scale';
+            wrapper.style.width = `${width}px`;
+            wrapper.style.height = `${height}px`;
+
+            const bodyCopy = document.createElement('div');
+            bodyCopy.className = `page-transition-body-copy ${record.bodyClass || ''}`.trim();
+            bodyCopy.style.width = `${width}px`;
+            bodyCopy.style.minHeight = `${record.scrollHeight || height}px`;
+            bodyCopy.style.transform = `translate(${-1 * (record.scrollX || 0)}px, ${-1 * (record.scrollY || 0)}px)`;
+            if (record.bodyStyle) {
+                bodyCopy.style.background = record.bodyStyle.background || '';
+                bodyCopy.style.color = record.bodyStyle.color || '';
+                bodyCopy.style.font = record.bodyStyle.font || '';
+            }
+            bodyCopy.innerHTML = record.html || '';
+            wrapper.appendChild(bodyCopy);
+            return wrapper;
+        }
+
+        function preparePageSnapshot() {
+            const snapshotHost = document.getElementById('pageTransitionSnapshot');
+            if (!snapshotHost) return;
+            snapshotHost.innerHTML = '';
+            snapshotHost.appendChild(createSnapshotWrapper(buildCleanPageSnapshot()));
+        }
+
+        function cacheCurrentPageSnapshot() {
+            try {
+                const face = currentTransitionFace();
+                if (!face) return;
+                const snapshot = buildCleanPageSnapshot();
+                if ((snapshot.html || '').length > 4000000) return;
+                snapshot.savedAt = Date.now();
+                sessionStorage.setItem(transitionSnapshotKey(face), JSON.stringify(snapshot));
+            } catch (error) {
+                // A full matrix can exceed browser storage; the header shell remains the fallback.
+            }
+        }
+
+        function clearCachedDestinationSnapshots() {
+            document.querySelectorAll('.page-transition-face.has-cached-snapshot').forEach(faceNode => {
+                faceNode.classList.remove('has-cached-snapshot');
+                const cached = faceNode.querySelector('.page-transition-cached-snapshot');
+                if (cached) cached.innerHTML = '';
+            });
+        }
+
+        function showCachedDestination(face, targetFace = face) {
+            clearCachedDestinationSnapshots();
+            let record = null;
+            try {
+                record = JSON.parse(sessionStorage.getItem(transitionSnapshotKey(face)) || 'null');
+            } catch (error) {
+                record = null;
+            }
+            if (!record || !record.html) return false;
+
+            const faceNode = document.querySelector(`.page-transition-face[data-transition-face-key="${targetFace}"]`);
+            if (!faceNode) return false;
+
+            if (face === targetFace && face === 'matrix') {
+                const snapshotHost = document.getElementById('pageTransitionSnapshot');
+                if (!snapshotHost) return false;
+                snapshotHost.innerHTML = '';
+                snapshotHost.appendChild(createSnapshotWrapper(record));
+                return true;
+            }
+
+            const cached = faceNode.querySelector('.page-transition-cached-snapshot');
+            if (!cached) return false;
+            cached.innerHTML = '';
+            cached.appendChild(createSnapshotWrapper(record));
+            faceNode.classList.add('has-cached-snapshot');
+            return true;
+        }
+
+        function seedCurrentSnapshotCache() {
+            window.setTimeout(cacheCurrentPageSnapshot, 250);
+            window.addEventListener('load', () => {
+                window.setTimeout(cacheCurrentPageSnapshot, 350);
+            });
+        }
+
+        function setTransitionGeometry(overlay, zoom) {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const depth = Math.max(width, height) / 2;
+            const outDepth = Math.max(width, height);
+            overlay.style.setProperty('--transition-w', `${width}px`);
+            overlay.style.setProperty('--transition-h', `${height}px`);
+            overlay.style.setProperty('--transition-z', `${depth}px`);
+            overlay.dataset.transitionDepth = String(depth);
+            overlay.dataset.transitionOutDepth = String(outDepth);
+            zoom.style.width = `${width}px`;
+            zoom.style.height = `${height}px`;
+        }
+
+        function rotatePageTransition(face) {
+            const rotations = {
+                matrix: 'rotateX(0deg) rotateY(-90deg)',
+                config: 'rotateX(0deg) rotateY(-90deg)',
+                executive: 'rotateX(0deg) rotateY(-180deg)',
+                integrations: 'rotateX(0deg) rotateY(90deg)',
+                schedule: 'rotateX(-90deg) rotateY(0deg)',
+                drawings: 'rotateX(90deg) rotateY(0deg)'
+            };
+            const overlay = document.getElementById('pageTransitionOverlay');
+            const zoom = document.getElementById('pageTransitionZoom');
+            const cube = document.getElementById('pageTransitionCube');
+            if (!overlay || !zoom || !cube) return false;
+
+            cacheCurrentPageSnapshot();
+            clearCachedDestinationSnapshots();
+            preparePageSnapshot();
+            setTransitionGeometry(overlay, zoom);
+            overlay.classList.add('is-active');
+            overlay.setAttribute('aria-hidden', 'false');
+            zoom.style.transition = 'none';
+            cube.style.transition = 'none';
+            zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+            cube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            overlay.offsetHeight;
+            zoom.style.transition = '';
+            cube.style.transition = '';
+
+            window.requestAnimationFrame(() => {
+                zoom.style.transform = `translateZ(-${overlay.dataset.transitionOutDepth}px)`;
+                window.setTimeout(() => {
+                    showCachedDestination(face, face === 'matrix' ? 'config' : face);
+                    cube.style.transform = rotations[face] || rotations.matrix;
+                    window.setTimeout(() => {
+                        zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+                    }, 600);
+                }, 400);
+            });
+            return true;
+        }
+
+        function resetPageTransition() {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            const zoom = document.getElementById('pageTransitionZoom');
+            const cube = document.getElementById('pageTransitionCube');
+            if (overlay) {
+                overlay.classList.remove('is-active');
+                overlay.setAttribute('aria-hidden', 'true');
+            }
+            clearCachedDestinationSnapshots();
+            if (zoom && overlay && overlay.dataset.transitionDepth) {
+                zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+            }
+            if (cube) cube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        }
+
+        function navigateWithTransition(url, face) {
+            const didStart = rotatePageTransition(face);
+            window.setTimeout(() => {
+                window.__cxNav(url.href);
+            }, didStart ? 1320 : 0);
+        }
+
+        seedCurrentSnapshotCache();
+
+        document.addEventListener('click', (event) => {
+            const menuWrap = event.target.closest('.header-menu');
+            if (menuWrap) return;
+            const menu = document.getElementById('systemConfigMenu');
+            if (menu) menu.classList.remove('open');
+            const projectMenu = document.getElementById('projectMenu');
+            if (projectMenu) projectMenu.classList.remove('open');
+        });
+
+        (() => {
+            const overlay = document.getElementById('globalLoadingOverlay');
+            if (!overlay) return;
+
+            function showPageLoader() {
+                overlay.classList.remove('is-hidden');
+                overlay.setAttribute('aria-hidden', 'false');
+            }
+
+            window.addEventListener('load', () => {
+                window.requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        overlay.classList.add('is-hidden');
+                        overlay.setAttribute('aria-hidden', 'true');
+                    }, 150);
+                });
+            });
+
+            document.addEventListener('click', event => {
+                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+
+                const link = event.target.closest('a[href]');
+                if (!link || link.target || link.hasAttribute('download')) {
+                    return;
+                }
+
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+                    return;
+                }
+
+                const url = new URL(href, window.__cxHref);
+                if (url.origin === window.__cxOrigin) {
+                    if (link.dataset.transition === 'none') {
+                        showPageLoader();
+                        return;
+                    }
+                    if (!link.dataset.transitionFace) {
+                        return;
+                    }
+                    event.preventDefault();
+                    const menu = document.getElementById('systemConfigMenu');
+                    if (menu) menu.classList.remove('open');
+                    const projectMenu = document.getElementById('projectMenu');
+                    if (projectMenu) projectMenu.classList.remove('open');
+                    navigateWithTransition(url, link.dataset.transitionFace);
+                }
+            }, true);
+        })();
+    </script>
+__CX_SHIM__</body>
+</html>

@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html>
+<head><script>window.__cxProject="pinecrest";window.__cxOrigin="https://cx-ai.demo";window.__cxHref="https://cx-ai.demo/config?project_id=pinecrest";</script>
+    <title>Commissioning Status Matrix</title>
+    <style>__CX_CSS__</style>
+</head>
+<body>
+    <div style="background: #ffffff; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #C8102E; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 30px;">
+            <a href="/projects" data-transition="none" style="display: flex; align-items: center;">
+                <img src="__CX_LOGO__" alt="Suffolk" style="height: 60px; object-fit: contain;">
+            </a>
+            <a href="/" data-transition-face="matrix" style="color: #00205B; font-weight: 800; text-decoration: none; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">MATRIX AI</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 26px;">
+            <div class="header-menu">
+                <button class="header-menu-btn" type="button" onclick="toggleProjectMenu()">
+                    Pinecrest Pavilion
+                </button>
+                <div id="projectMenu" class="header-dropdown">
+                    <a href="/projects" data-transition="none">Project Selector</a>
+                    
+                    <a href="/select_project/willow-bend" data-transition="none">Willow Bend</a>
+                    
+                    <a href="/select_project/harborline-c" data-transition="none">Harborline C</a>
+                    
+                    <a href="/select_project/pinecrest" data-transition="none">Pinecrest Pavilion</a>
+                    
+                </div>
+            </div>
+            
+                <div class="header-menu">
+                    <button class="header-menu-btn" type="button" onclick="toggleSystemMenu()">System Configuration</button>
+                    <div id="systemConfigMenu" class="header-dropdown">
+                        <a href="/schedule" data-transition-face="schedule">Schedule</a>
+                        <a href="/executive_summary" data-transition-face="executive">Executive Summary</a>
+                        <a href="/config" data-transition-face="config">Project Configuration</a>
+                        <a href="/integrations" data-transition-face="integrations">Integrations</a>
+                    </div>
+                </div>
+            
+        </div>
+    </div>
+    
+    
+
+<!-- ROCK-SOLID TAB STATE PRESERVATION (Executes before page renders) -->
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+
+        let targetContent = document.getElementById(tabName);
+        if (!targetContent) {
+            tabName = 'tab-assets';
+            targetContent = document.getElementById(tabName);
+        }
+        if (targetContent) {
+            targetContent.style.display = "block";
+            targetContent.classList.add("active");
+        }
+
+        if (evt && evt.currentTarget) {
+            evt.currentTarget.classList.add("active");
+        } else {
+            let btn = document.querySelector(`button[onclick*="${tabName}"]`);
+            if (btn) btn.classList.add("active");
+        }
+
+        localStorage.setItem('configActiveTab', tabName);
+        if (tabName === 'tab-linking' && typeof renderTemplateSuggestions === 'function') {
+            renderTemplateSuggestions();
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedTab = localStorage.getItem('configActiveTab') || 'tab-assets';
+        openTab(null, savedTab);
+
+        const scrollPos = localStorage.getItem('configScrollPos');
+        if (scrollPos) window.scrollTo(0, parseInt(scrollPos));
+    });
+
+    window.addEventListener('beforeunload', () => {
+        localStorage.setItem('configScrollPos', window.scrollY);
+    });
+</script>
+
+<div class="content">
+    <h1 class="page-title" style="text-align: center;">Project Configuration</h1>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <!-- Left Group -->
+        <div class="tab-container" style="margin-bottom: 0;">
+            <button class="tab-btn" onclick="openTab(event, 'tab-assets')">Project Assets</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-stages')">Stages / DataLinks</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-priority')">Priority List</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-settings')">View Settings</button>
+        </div>
+
+        <!-- Right Group -->
+        <div class="tab-container" style="margin-bottom: 0; background: #f8fafc; border: 1px solid #cbd5e1;">
+            <button class="tab-btn" onclick="openTab(event, 'tab-generator')" style="color: #00205B; font-weight: 800;">&#x2728; Template Generator</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-linking')" style="color: #C8102E; font-weight: 800;">&#x1F517; Link Templates</button>
+        </div>
+    </div>
+
+    <!-- TAB 1: ASSETS / TEMPLATE LIBRARY (DUAL PANE) -->
+    <div id="tab-assets" class="tab-content">
+        <div class="dual-pane" style="height: calc(100vh - 200px); margin-bottom: 20px; align-items: stretch;">
+            <!-- Left Pane: Inventory Tree -->
+            <div class="pane-card" style="display: flex; flex-direction: column; margin-bottom: 0; height: 100%; box-sizing: border-box; overflow: hidden;">
+                <div class="pane-title" style="flex-shrink: 0; margin-bottom: 15px;">Project Equipment Inventory</div>
+                <input type="text" id="inventorySearch" onkeyup="filterTree('inventorySearch', 'inventoryTree')" class="parser-input" placeholder="&#x1F50D; Search families, types, or tags..." style="flex-shrink: 0; padding: 10px 15px; margin-bottom: 15px; border-width: 2px;">
+
+                <div class="tree-view" id="inventoryTree" style="flex: 1; overflow-y: auto; min-height: 0;">
+                    
+                </div>
+            </div>
+
+            <!-- Right Pane: Master Template Library List -->
+            <div class="pane-card" style="display: flex; flex-direction: column; margin-bottom: 0; height: 100%; box-sizing: border-box; overflow: hidden; position: relative;">
+                <div class="pane-title" style="flex-shrink: 0; margin-bottom: 15px;">Master Template Library</div>
+
+                <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: STAGES / DATALINKS -->
+    <div id="tab-stages" class="tab-content">
+        <!-- NEW PLATFORM INTEGRATION TOGGLE -->
+        <div class="section-box" style="margin-bottom: 20px; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1;">
+            <div style="font-size: 13px; font-weight: 800; color: #00205B; margin-bottom: 15px; text-transform: uppercase;">Project Integration Mode</div>
+            <form id="modeForm" action="/set_platform_mode" method="POST" style="display: flex; justify-content: center; gap: 15px;">
+                <input type="hidden" name="mode" id="platformModeInput">
+
+                <button type="button"
+                        class="btn-primary"
+                        onclick="setMode('CX ALLOY')"
+                        style="background: #e2e8f0; color: #475569; box-shadow: none; padding: 10px 30px;">
+                    CX ALLOY
+                </button>
+
+                <button type="button"
+                        class="btn-primary"
+                        onclick="setMode('PROCORE')"
+                        style="background: #e2e8f0; color: #475569; box-shadow: none; padding: 10px 30px;">
+                    PROCORE
+                </button>
+
+                <button type="button"
+                        class="btn-primary"
+                        onclick="setMode('STANDALONE')"
+                        style="background: #00205B; color: white; padding: 10px 30px;">
+                    STANDALONE (Custom)
+                </button>
+            </form>
+            <p style="font-size: 11px; color: #64748b; margin-top: 15px;">
+                <strong>Warning:</strong> Changing the integration mode will automatically replace your current project stages and wipe all active templates.
+            </p>
+        </div>
+
+        <div class="section-box">
+            <div class="section-title">Manage Project Stages & DataLinks</div>
+
+            <form class="add-stage-form" action="/add_stage" method="POST">
+                <input type="text" name="stage_name" class="add-stage-input" placeholder="Enter new stage name..." required>
+                <button type="submit" class="btn-primary">Add Stage</button>
+            </form>
+
+            <table class="stage-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">Drag</th>
+                        <th style="width: 60px;">Order</th>
+                        <th>Stage Name</th>
+                        <th style="width: 200px;">DataLink Status</th>
+                        <th style="width: 250px; text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="stageBody">
+                    
+                    <tr draggable="true" class="draggable-stage-row" data-stage-id="1" style="transition: transform 0.2s;">
+                        <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                        <td style="font-weight: 600; color: #adb5bd; text-align: center;" class="s-order">1</td>
+                        <td style="font-weight: 600; ">Pre-Installation</td>
+
+                        <td style="font-size: 11px; font-weight: 600; color: #64748b;">
+                            
+                            <div style="color: #94a3b8;">Unlinked</div>
+                            
+                        </td>
+
+                        <td style="text-align: center; display: flex; gap: 5px; justify-content: center;">
+                            <button type="button" class="btn-cell-action" onclick="openDataLink('Pre-Installation', '1')" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">&#x1F517; DataLink</button>
+
+                            <form action="/toggle_stage_visibility/1" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-cell-action">
+                                     &#x1F576; Hide 
+                                </button>
+                            </form>
+
+                            <form action="/delete_stage/1" method="POST" onsubmit="return confirm('Delete stage?');" style="margin:0;">
+                                <button type="submit" class="btn-delete-small" style="margin-top: 8px;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <tr draggable="true" class="draggable-stage-row" data-stage-id="2" style="transition: transform 0.2s;">
+                        <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                        <td style="font-weight: 600; color: #adb5bd; text-align: center;" class="s-order">2</td>
+                        <td style="font-weight: 600; ">Installation</td>
+
+                        <td style="font-size: 11px; font-weight: 600; color: #64748b;">
+                            
+                            <div style="color: #94a3b8;">Unlinked</div>
+                            
+                        </td>
+
+                        <td style="text-align: center; display: flex; gap: 5px; justify-content: center;">
+                            <button type="button" class="btn-cell-action" onclick="openDataLink('Installation', '2')" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">&#x1F517; DataLink</button>
+
+                            <form action="/toggle_stage_visibility/2" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-cell-action">
+                                     &#x1F576; Hide 
+                                </button>
+                            </form>
+
+                            <form action="/delete_stage/2" method="POST" onsubmit="return confirm('Delete stage?');" style="margin:0;">
+                                <button type="submit" class="btn-delete-small" style="margin-top: 8px;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <tr draggable="true" class="draggable-stage-row" data-stage-id="3" style="transition: transform 0.2s;">
+                        <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                        <td style="font-weight: 600; color: #adb5bd; text-align: center;" class="s-order">3</td>
+                        <td style="font-weight: 600; ">Pre-Functional Checklist</td>
+
+                        <td style="font-size: 11px; font-weight: 600; color: #64748b;">
+                            
+                            <div style="color: #94a3b8;">Unlinked</div>
+                            
+                        </td>
+
+                        <td style="text-align: center; display: flex; gap: 5px; justify-content: center;">
+                            <button type="button" class="btn-cell-action" onclick="openDataLink('Pre-Functional Checklist', '3')" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">&#x1F517; DataLink</button>
+
+                            <form action="/toggle_stage_visibility/3" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-cell-action">
+                                     &#x1F576; Hide 
+                                </button>
+                            </form>
+
+                            <form action="/delete_stage/3" method="POST" onsubmit="return confirm('Delete stage?');" style="margin:0;">
+                                <button type="submit" class="btn-delete-small" style="margin-top: 8px;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <tr draggable="true" class="draggable-stage-row" data-stage-id="4" style="transition: transform 0.2s;">
+                        <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                        <td style="font-weight: 600; color: #adb5bd; text-align: center;" class="s-order">4</td>
+                        <td style="font-weight: 600; ">Start-Up &amp; TAB</td>
+
+                        <td style="font-size: 11px; font-weight: 600; color: #64748b;">
+                            
+                            <div style="color: #94a3b8;">Unlinked</div>
+                            
+                        </td>
+
+                        <td style="text-align: center; display: flex; gap: 5px; justify-content: center;">
+                            <button type="button" class="btn-cell-action" onclick="openDataLink('Start-Up &amp; TAB', '4')" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">&#x1F517; DataLink</button>
+
+                            <form action="/toggle_stage_visibility/4" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-cell-action">
+                                     &#x1F576; Hide 
+                                </button>
+                            </form>
+
+                            <form action="/delete_stage/4" method="POST" onsubmit="return confirm('Delete stage?');" style="margin:0;">
+                                <button type="submit" class="btn-delete-small" style="margin-top: 8px;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <tr draggable="true" class="draggable-stage-row" data-stage-id="5" style="transition: transform 0.2s;">
+                        <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                        <td style="font-weight: 600; color: #adb5bd; text-align: center;" class="s-order">5</td>
+                        <td style="font-weight: 600; ">Functional Testing</td>
+
+                        <td style="font-size: 11px; font-weight: 600; color: #64748b;">
+                            
+                            <div style="color: #94a3b8;">Unlinked</div>
+                            
+                        </td>
+
+                        <td style="text-align: center; display: flex; gap: 5px; justify-content: center;">
+                            <button type="button" class="btn-cell-action" onclick="openDataLink('Functional Testing', '5')" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">&#x1F517; DataLink</button>
+
+                            <form action="/toggle_stage_visibility/5" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-cell-action">
+                                     &#x1F576; Hide 
+                                </button>
+                            </form>
+
+                            <form action="/delete_stage/5" method="POST" onsubmit="return confirm('Delete stage?');" style="margin:0;">
+                                <button type="submit" class="btn-delete-small" style="margin-top: 8px;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <tr draggable="true" class="draggable-stage-row" data-stage-id="6" style="transition: transform 0.2s;">
+                        <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                        <td style="font-weight: 600; color: #adb5bd; text-align: center;" class="s-order">6</td>
+                        <td style="font-weight: 600; ">Corrective Action</td>
+
+                        <td style="font-size: 11px; font-weight: 600; color: #64748b;">
+                            
+                            <div style="color: #94a3b8;">Unlinked</div>
+                            
+                        </td>
+
+                        <td style="text-align: center; display: flex; gap: 5px; justify-content: center;">
+                            <button type="button" class="btn-cell-action" onclick="openDataLink('Corrective Action', '6')" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">&#x1F517; DataLink</button>
+
+                            <form action="/toggle_stage_visibility/6" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-cell-action">
+                                     &#x1F576; Hide 
+                                </button>
+                            </form>
+
+                            <form action="/delete_stage/6" method="POST" onsubmit="return confirm('Delete stage?');" style="margin:0;">
+                                <button type="submit" class="btn-delete-small" style="margin-top: 8px;">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 3: PRIORITY LIST -->
+    <div id="tab-priority" class="tab-content">
+        <div class="section-box">
+            <div class="section-title">Commissioning Priority Matrix</div>
+
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+                <div style="font-size: 13px; font-weight: 800; color: #00205B; margin-bottom: 10px; text-transform: uppercase;">+ Add New Priority Rule</div>
+                <form action="/add_priority" method="POST" style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Trade</label>
+                        <select name="trade" class="parser-input" style="padding: 10px; margin-bottom: 0;" required>
+                            <option value="ELEC">ELEC</option>
+                            <option value="HVAC">HVAC</option>
+                            <option value="PLUM">PLUM</option>
+                            <option value="FIRE">FIRE</option>
+                            <option value="ARCH">ARCH</option>
+                        </select>
+                    </div>
+                    <div style="flex: 2;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Asset Family (From DB)</label>
+                        <select name="family" class="parser-input" style="padding: 10px; margin-bottom: 0;" required>
+                            
+                        </select>
+                    </div>
+                    <div style="flex: 2;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Critical Linked Assets</label>
+                        <div class="custom-dropdown" id="critAddDropdownContainer">
+                            <div class="select-box parser-input" onclick="document.getElementById('critAddDropdown').style.display = document.getElementById('critAddDropdown').style.display === 'none' ? 'block' : 'none';" style="margin-bottom: 0; padding: 10px;">
+                                <span id="critAddText">n/A</span>
+                                <span style="font-size: 10px;">&#9662;</span>
+                            </div>
+                            <div class="dropdown-list" id="critAddDropdown" style="display: none;">
+                                <label><input type="checkbox" value="n/A" id="critNA" onchange="updateCritAdd()" class="crit-add-chk" checked> <strong style="margin-left:5px;">n/A</strong></label>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <div style="align-self: flex-end;">
+                        <button type="submit" class="btn-primary" style="padding: 11px 20px;">Add</button>
+                    </div>
+                </form>
+            </div>
+
+            <form action="/update_priorities" method="POST" id="priorityForm">
+                <input type="hidden" name="priorities_data" id="prioritiesData">
+                <table class="stage-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">Drag</th>
+                            <th style="width: 60px; text-align: center;">Priority</th>
+                            <th style="width: 100px;">Trade</th>
+                            <th>Asset Family</th>
+                            <th>Critical Linked Assets</th>
+                            <th style="width: 80px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="priorityBody">
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">1</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">MECH</td>
+                            <td style="font-weight: 600;" class="p-family">Air Side Units</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="Yes" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('1')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">1</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">MECH</td>
+                            <td style="font-weight: 600;" class="p-family">Cooling</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="Yes" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('1')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">1</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">MECH</td>
+                            <td style="font-weight: 600;" class="p-family">Computer Room Air</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="Yes" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('1')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">3</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">MECH</td>
+                            <td style="font-weight: 600;" class="p-family">Terminal Air Devices</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="No" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('3')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">2</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">MECH</td>
+                            <td style="font-weight: 600;" class="p-family">Pumping</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="No" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('2')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">1</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">ELEC</td>
+                            <td style="font-weight: 600;" class="p-family">Switchgear and Distribution</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="Yes" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('1')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">1</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">ELEC</td>
+                            <td style="font-weight: 600;" class="p-family">Standby Power</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="Yes" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('1')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">1</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">ELEC</td>
+                            <td style="font-weight: 600;" class="p-family">Uninterruptible Power</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="Yes" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('1')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">4</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">ELEC</td>
+                            <td style="font-weight: 600;" class="p-family">Lighting Control</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="No" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('4')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">2</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">FP</td>
+                            <td style="font-weight: 600;" class="p-family">Fire Protection</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="No" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('2')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">4</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">PLMB</td>
+                            <td style="font-weight: 600;" class="p-family">Plumbing</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="No" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('4')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                        <tr draggable="true" class="draggable-row" style="transition: transform 0.2s;">
+                            <td style="text-align: center; cursor: grab; font-size: 16px; color: #cbd5e1;">&#x2630;</td>
+                            <td style="font-weight: 800; color: #C8102E; text-align: center;">P-<span class="p-priority">2</span></td>
+                            <td style="font-weight: 700; color: #00205B;" class="p-trade">CTRL</td>
+                            <td style="font-weight: 600;" class="p-family">Building Controls</td>
+                            <td>
+                                <input type="text" class="parser-input p-critical" value="No" style="padding: 6px 10px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" onclick="deletePriority('2')" class="btn-delete-small">Delete</button>
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button type="button" onclick="savePriorities()" class="btn-primary" style="background: #197820;">&#x1F4BE; Save Priority Order & Edits</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TAB 5: VIEW SETTINGS -->
+    <div id="tab-settings" class="tab-content">
+        <div class="section-box" style="margin-bottom: 20px;">
+            <div class="section-title">Global Platform Settings</div>
+            <form action="/update_settings" method="POST" style="max-width: 400px;">
+                
+                
+                <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 6px; text-transform: uppercase;">Project Type</label>
+                <select id="projectTypeSelect" name="project_type" class="parser-input" onchange="toggleProjectTypeOther()" style="margin-bottom: 12px;">
+                    
+                    <option value="Mission Critical" >Mission Critical</option>
+                    
+                    <option value="Core" >Core</option>
+                    
+                    <option value="Healthcare" selected>Healthcare</option>
+                    
+                    <option value="Aviation" >Aviation</option>
+                    
+                    <option value="Other" >Other</option>
+                    
+                </select>
+                <div id="projectTypeOtherWrap" style="display: none;">
+                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 6px; text-transform: uppercase;">Custom Project Type</label>
+                    <input type="text" id="customProjectType" name="custom_project_type" class="parser-input" value="" placeholder="Enter project type..." style="margin-bottom: 20px;">
+                </div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 6px; text-transform: uppercase;">Due Date Warning Threshold (Days)</label>
+                <input type="number" name="warning_days" class="parser-input" value="14" min="1" max="90" style="margin-bottom: 20px;">
+                <button type="submit" class="btn-primary" style="padding: 12px 24px;">Save Settings</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleProjectTypeOther() {
+            const select = document.getElementById('projectTypeSelect');
+            const otherWrap = document.getElementById('projectTypeOtherWrap');
+            const customInput = document.getElementById('customProjectType');
+            if (!select || !otherWrap || !customInput) return;
+            const isOther = select.value === 'Other';
+            otherWrap.style.display = isOther ? 'block' : 'none';
+            customInput.required = isOther;
+            if (!isOther) customInput.value = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', toggleProjectTypeOther);
+    </script>
+
+    <!-- TAB 6: TEMPLATE GENERATOR (Simple) -->
+    <div id="tab-generator" class="tab-content">
+        <div class="section-box" style="background: #fdfdfd; border: 2px dashed #00205B;">
+            <div class="section-title" style="color: #00205B;">&#x2728; AI-Powered Template Generator (Simple)</div>
+            <form class="parser-form" action="/parse_template" method="POST">
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <label>Template Name</label>
+                        <input type="text" name="template_name" class="parser-input" placeholder="e.g. Functional Test Procedure: Panelboards" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Default Stage</label>
+                        <select name="stage_id" class="parser-input" required>
+                            
+                            <option value="1">Pre-Installation</option>
+                            
+                            <option value="2">Installation</option>
+                            
+                            <option value="3">Pre-Functional Checklist</option>
+                            
+                            <option value="4">Start-Up &amp; TAB</option>
+                            
+                            <option value="5">Functional Testing</option>
+                            
+                            <option value="6">Corrective Action</option>
+                            
+                        </select>
+                    </div>
+                </div>
+
+                
+                <div style="margin-bottom: 15px; font-size: 13px; color: #197820; font-weight: 800; text-transform: uppercase;">
+                    &#x2713; Secure API Key automatically loaded from environment.
+                </div>
+                
+
+                <label>Paste Raw Content (Excel / Clipboard / Unstructured Text)</label>
+                <textarea name="excel_data" class="parser-textarea" placeholder="Paste test procedure, tables, and inspection steps here..." required></textarea>
+                <button type="submit" class="btn-generate">Generate Structured Schema with AI</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TAB 7: LINK TEMPLATES HUB -->
+    <div id="tab-linking" class="tab-content">
+        <div class="dual-pane" style="height: calc(100vh - 200px); margin-bottom: 20px; align-items: stretch;">
+            <!-- Left Pane -->
+            <div class="pane-card" style="display: flex; flex-direction: column; margin-bottom: 0; height: 100%; box-sizing: border-box; overflow: hidden;">
+                <div class="pane-title" style="flex-shrink: 0;">1. Select Target Asset Scope</div>
+                <input type="text" id="hubSearch" onkeyup="filterTree('hubSearch', 'hubTree')" class="parser-input" placeholder="&#x1F50D; Search families, types, or tags..." style="flex-shrink: 0; padding: 10px 15px; margin-bottom: 15px; border-width: 2px;">
+
+                <div class="tree-view" id="hubTree" style="flex: 1; overflow-y: auto; min-height: 0;">
+                    
+                </div>
+            </div>
+
+            <!-- Right Pane -->
+            <div class="pane-card" style="display: flex; flex-direction: column; margin-bottom: 0; height: 100%; box-sizing: border-box; overflow: hidden; position: relative;">
+                <div class="pane-title" style="flex-shrink: 0; margin-bottom: 15px;">2. Choose Templates (Grouped by Stage)</div>
+
+                <form action="/bulk_link_templates" method="POST" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
+                    <input type="hidden" name="scope_type" id="hubScopeType" value="">
+                    <input type="hidden" name="scope_value" id="hubScopeValue" value="">
+
+                    <div style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #e2e8f0;">
+                        <div>
+                            <label style="display:block; font-size:12px; font-weight:700; color:#00205B; margin-bottom:5px; text-transform:uppercase;">Selected Target</label>
+                            <div class="target-badge" id="hubTargetDisplay" style="margin-bottom: 0;">None Selected</div>
+                        </div>
+
+                        <div class="toggle-group" style="padding: 0; border: none;">
+                            <label class="toggle-label" for="filterTemplatesToggle" style="font-size: 11px;">Suggested Only</label>
+                            <label class="switch" style="margin-left: 5px;">
+                                <input type="checkbox" id="filterTemplatesToggle" checked onchange="renderTemplateSuggestions()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="hubTemplateList" style="flex: 1; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; min-height: 0;">
+                        <div style="font-size:13px; color:#6c757d; font-style:italic;">Please select an asset scope on the left to view template suggestions.</div>
+                    </div>
+
+                    <div style="flex-shrink: 0; padding-top: 15px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: auto;">
+                        <button type="submit" id="hubSubmitBtn" class="btn-primary" style="width:100%; padding: 14px; font-size: 14px;" disabled>
+                            &#x1F517; Link Selected Checklists
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- COMMON CSS FOR DROPZONES -->
+<style>
+    .drop-area {
+        border: 2px dashed #cbd5e1;
+        padding: 40px 20px;
+        text-align: center;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #f8fafc;
+        transition: all 0.2s ease;
+    }
+
+        .drop-area.highlight {
+            border-color: #00205B;
+            background: #f0f7ff;
+        }
+
+        .drop-area.ready {
+            border-color: #197820;
+            background: #e8f7ec;
+        }
+</style>
+
+<!-- INTEGRATION MODAL -->
+<div class="modal-overlay" id="integrationModal">
+    <div class="modal-content" style="width: 500px;">
+        <div class="modal-title">DataLink Integration</div>
+        <div class="modal-subtitle">Connect Stages to External Data Sources</div>
+
+        <div id="integrationButtons" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+            <button class="btn-primary" style="background: #e2e8f0; color: #475569; box-shadow: none;" onclick="handleIntegration('Procore')">&#x1F517; Connect to Procore</button>
+            <button class="btn-primary" style="background: #e2e8f0; color: #475569; box-shadow: none;" onclick="handleIntegration('CxAlloy')">&#x1F517; Connect to CxAlloy</button>
+            <div style="text-align: center; color: #94a3b8; font-weight: 800; font-size: 12px; margin: 5px 0;">OR</div>
+            <button class="btn-primary" style="background: #00205B;" onclick="handleIntegration('Manual')">&#x1F4BE; Upload Manual Export Files</button>
+        </div>
+
+        <div id="manualDropZone" style="display: none; margin-top: 20px;">
+            <div id="dropArea" class="drop-area">
+                <div id="dropIcon" style="font-size: 32px; margin-bottom: 10px;">&#x1F4C2;</div>
+                <div id="dropTitle" style="font-weight: 800; color: #00205B; font-size: 14px;">Drag & Drop Files Here</div>
+                <div id="dropSubtitle" style="font-size: 11px; color: #64748b; margin-top: 8px;"></div>
+                <input type="file" id="fileInput" multiple style="display: none;">
+            </div>
+            <div id="uploadStatus" style="margin-top: 15px; font-size: 12px; font-weight: 600; min-height: 40px; text-align: left;"></div>
+            <button id="btnRunSync" class="btn-primary" style="width: 100%; background: #C8102E; display: none;" onclick="submitManualSync()">Run DataLink Sync</button>
+
+            <div id="obsTableContainer" style="display:none; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <div style="font-size: 13px; font-weight: 800; color: #00205B; margin-bottom: 10px;">Active Linked PDF Reports</div>
+                <table class="stage-table" style="font-size: 12px; margin-bottom: 0;">
+                    <tbody id="activeLinksTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="document.getElementById('integrationModal').style.display='none'">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const allTemplates = [];
+const allStages = [{"id": 1, "is_hidden": false, "name": "Pre-Installation", "order": 1}, {"id": 2, "is_hidden": false, "name": "Installation", "order": 2}, {"id": 3, "is_hidden": false, "name": "Pre-Functional Checklist", "order": 3}, {"id": 4, "is_hidden": false, "name": "Start-Up \u0026 TAB", "order": 4}, {"id": 5, "is_hidden": false, "name": "Functional Testing", "order": 5}, {"id": 6, "is_hidden": false, "name": "Corrective Action", "order": 6}];
+const allEquipments = [];
+const allChecklists = [];
+const linkedPdfsByStage = {"corrective": ["source", "by_asset", "unassigned"]};
+let currentScope = { type: null, value: null, label: null, matchContext: null };
+
+// Global drag/drop prevention to stop browser from opening PDFs natively
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    window.addEventListener(eventName, function(e) { e.preventDefault(); e.stopPropagation(); }, false);
+    document.body.addEventListener(eventName, function(e) { e.preventDefault(); e.stopPropagation(); }, false);
+});
+
+// --- NEW PLATFORM MODE TOGGLE ---
+function setMode(mode) {
+    if(confirm("Changing the platform mode will wipe your current stages and delete any attached templates. Are you sure you want to proceed?")) {
+        document.getElementById('platformModeInput').value = mode;
+        document.getElementById('modeForm').submit();
+    }
+}
+// --- END PLATFORM MODE TOGGLE ---
+
+function toggleTree(element) {
+    const nextSibling = element.nextElementSibling;
+    if (nextSibling && nextSibling.classList.contains('tree-children')) {
+        nextSibling.style.display = nextSibling.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+function filterTree(inputId, containerId) {
+    const filter = document.getElementById(inputId).value.toLowerCase();
+    const treeContainer = document.getElementById(containerId);
+    const families = treeContainer.querySelectorAll('.tree-node-family');
+
+    families.forEach(familyNode => {
+        const familyText = familyNode.innerText.toLowerCase();
+        const familyChildren = familyNode.nextElementSibling;
+        const types = familyChildren.querySelectorAll('.tree-node-type');
+        let familyHasVisibleChild = false;
+
+        types.forEach(typeNode => {
+            const typeText = typeNode.innerText.toLowerCase();
+            const typeChildren = typeNode.nextElementSibling;
+            const assets = typeChildren.querySelectorAll('.tree-node-asset');
+            let typeHasVisibleChild = false;
+
+            assets.forEach(assetNode => {
+                const assetText = assetNode.innerText.toLowerCase();
+                if (assetText.includes(filter) || typeText.includes(filter) || familyText.includes(filter)) {
+                    assetNode.style.display = '';
+                    typeHasVisibleChild = true;
+                } else {
+                    assetNode.style.display = 'none';
+                }
+            });
+
+            if (typeHasVisibleChild || typeText.includes(filter) || familyText.includes(filter)) {
+                typeNode.style.display = '';
+                typeChildren.style.display = '';
+                familyHasVisibleChild = true;
+            } else {
+                typeNode.style.display = 'none';
+                typeChildren.style.display = 'none';
+            }
+        });
+
+        if (familyHasVisibleChild || familyText.includes(filter)) {
+            familyNode.style.display = '';
+            familyChildren.style.display = '';
+            if (filter.length > 0) familyChildren.style.display = 'block';
+            else if (containerId === 'inventoryTree') familyChildren.style.display = 'none';
+        } else {
+            familyNode.style.display = 'none';
+            familyChildren.style.display = 'none';
+        }
+    });
+}
+
+function selectScope(type, value, label, matchContext) {
+    currentScope = { type, value, label, matchContext };
+    document.getElementById('hubScopeType').value = type;
+    document.getElementById('hubScopeValue').value = value;
+    document.getElementById('hubTargetDisplay').innerText = label;
+    document.getElementById('hubSubmitBtn').disabled = false;
+    renderTemplateSuggestions();
+}
+
+function renderTemplateSuggestions() {
+    const container = document.getElementById('hubTemplateList');
+    container.innerHTML = '';
+    if (!currentScope.matchContext) {
+        container.innerHTML = '<div style="font-size:13px; color:#6c757d; font-style:italic;">Please select an asset scope on the left to view template suggestions.</div>';
+        return;
+    }
+
+    const filterOnlySuggested = document.getElementById('filterTemplatesToggle').checked;
+    let targetAssets = [];
+    if (currentScope.type === 'asset') targetAssets = allEquipments.filter(e => e.id == currentScope.value);
+    else if (currentScope.type === 'type') targetAssets = allEquipments.filter(e => e.asset_type === currentScope.matchContext);
+    else if (currentScope.type === 'family') targetAssets = allEquipments.filter(e => e.asset_family === currentScope.matchContext);
+
+    let finalHtml = '';
+
+    allStages.forEach(stage => {
+        const stageTemplates = allTemplates.filter(t => t.stage_id === stage.id);
+        if (stageTemplates.length === 0) return;
+
+        const relevantTemplates = stageTemplates.filter(t => {
+            const isMatch = isSuggested(t);
+            const hasLink = targetAssets.some(asset => allChecklists.some(c => c.equipment_id === asset.id && c.template_id === t.id));
+            if (filterOnlySuggested) return isMatch || hasLink;
+            return true;
+        });
+
+        if (relevantTemplates.length === 0) return;
+
+        let stageHtml = `<div style="font-size:12px; font-weight:800; color:#475569; margin-top:20px; margin-bottom:8px; text-transform:uppercase; letter-spacing: 0.5px;">Stage: ${stage.name}</div>`;
+
+        relevantTemplates.forEach(t => {
+            const isMatch = isSuggested(t);
+            stageHtml += `
+                <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <div style="background: #00205B; color: #ffffff; padding: 12px 15px; font-size: 13px; font-weight: 800; text-transform: uppercase;">
+                        ${t.name}
+                    </div>
+                    <div style="background: #f8fafc; padding: 0;">`;
+
+            targetAssets.forEach(asset => {
+                const isLinked = allChecklists.some(c => c.equipment_id === asset.id && c.template_id === t.id);
+                const dynamicName = t.name.replace('[TAG]', asset.asset_name);
+
+                let checkedState = ''; let badgeHtml = '';
+                if (isLinked) {
+                    checkedState = 'checked disabled';
+                    badgeHtml = '<span style="background: #e0f2fe; color: #0284c7; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; margin-left: 10px; border: 1px solid #bae6fd;">&#x2713; Linked</span>';
+                } else {
+                    checkedState = isMatch ? 'checked' : '';
+                    badgeHtml = isMatch ? '<span style="background: #e8f7ec; color: #197820; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; margin-left: 10px; border: 1px solid #c3e6cb;">&#x2713; Suggested</span>' : '';
+                }
+
+                stageHtml += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #e2e8f0; background: #ffffff; transition: background 0.2s;">
+                        <div style="display: flex; align-items: center;">
+                            <input type="checkbox" name="link_requests" value="${t.id}|${asset.id}" style="margin-right: 15px; cursor: pointer; width: 16px; height: 16px;" ${checkedState}>
+                            <span style="font-weight: 800; color: #00205B; font-size: 13px;">${dynamicName}</span>
+                            ${badgeHtml}
+                        </div>
+                        <a href="/preview_template/${t.id}" target="pdf_viewer" style="font-size: 11px; color: #64748b; font-weight: 800; text-decoration: underline; text-transform: uppercase;">Preview</a>
+                    </div>`;
+            });
+            stageHtml += `</div></div>`;
+        });
+        finalHtml += stageHtml;
+    });
+
+    container.innerHTML = finalHtml === '' ? '<div style="font-size:13px; color:#6c757d; font-style:italic;">No suggested templates found for this asset scope.</div>' : finalHtml;
+}
+
+function isSuggested(template) {
+    if (!currentScope.matchContext) return false;
+    const targetType = currentScope.matchContext.toLowerCase();
+    const templateName = template.name.toLowerCase();
+    if (template.suggested_asset_types && template.suggested_asset_types.length > 0) {
+        for (let tag of template.suggested_asset_types) {
+            if (targetType.includes(tag.toLowerCase()) || tag.toLowerCase().includes(targetType)) return true;
+        }
+    }
+    return templateName.includes(targetType);
+}
+
+function setupDragAndDrop(tbodyId, rowClass, saveCallback) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    let draggedRow = null;
+
+    tbody.addEventListener('dragstart', (e) => {
+        draggedRow = e.target.closest('tr');
+        if (!draggedRow) return;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+        setTimeout(() => { draggedRow.style.opacity = '0.5'; draggedRow.style.background = '#e2e8f0'; }, 0);
+    });
+
+    tbody.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const targetRow = e.target.closest('tr');
+        if (targetRow && targetRow !== draggedRow && targetRow.classList.contains(rowClass.replace('.',''))) {
+            const rect = targetRow.getBoundingClientRect();
+            const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            tbody.insertBefore(draggedRow, next && targetRow.nextElementSibling || targetRow);
+        }
+    });
+
+    tbody.addEventListener('dragend', (e) => {
+        if (!draggedRow) return;
+        draggedRow.style.opacity = '1';
+        draggedRow.style.background = 'transparent';
+        if (tbodyId === 'priorityBody') {
+            document.querySelectorAll('#priorityBody .draggable-row').forEach((row, index) => {
+                row.querySelector('.p-priority').innerText = index + 1;
+            });
+        } else if (tbodyId === 'stageBody') {
+            document.querySelectorAll('#stageBody .draggable-stage-row').forEach((row, index) => {
+                row.querySelector('.s-order').innerText = index + 1;
+            });
+            saveCallback();
+        }
+    });
+}
+
+function saveStageOrder() {
+    const rows = document.querySelectorAll('#stageBody .draggable-stage-row');
+    let orderData = [];
+    rows.forEach((row, index) => {
+        orderData.push({ id: parseInt(row.getAttribute('data-stage-id')), order: index + 1 });
+    });
+    fetch('/update_stage_order', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(orderData)
+    });
+}
+
+// DATALINK INTEGRATION LOGIC
+let activeIntegrationType = null;
+let currentDataLinkStage = { name: null, id: null };
+let selectedFiles = { summary: null, lists: null };
+let selectedObsFile = null;
+
+function openDataLink(stageName, stageId) {
+    currentDataLinkStage = { name: stageName, id: stageId };
+
+    let isPrefunc = stageName === 'Prefunctional Checklist';
+    let isDocLink = stageName.toLowerCase().includes('corrective action') ||
+                    stageName.toLowerCase().includes('issue') ||
+                    stageName.toLowerCase().includes('tab') ||
+                    stageName.toLowerCase().includes('o&m');
+
+    if (isPrefunc || isDocLink) {
+        document.getElementById('integrationButtons').style.display = 'flex';
+        document.getElementById('manualDropZone').style.display = 'none';
+        document.getElementById('obsTableContainer').style.display = 'none';
+
+        document.getElementById('uploadStatus').innerHTML = '';
+        document.getElementById('btnRunSync').style.display = 'none';
+
+        let dArea = document.getElementById('dropArea');
+        dArea.classList.remove('ready');
+        document.getElementById('dropIcon').innerHTML = '&#x1F4C2;';
+        document.getElementById('dropIcon').style.color = '#00205B';
+        document.getElementById('dropTitle').style.color = '#00205B';
+        document.getElementById('dropSubtitle').style.display = 'block';
+
+        if (isPrefunc) {
+            activeIntegrationType = 'prefunc';
+            document.getElementById('dropTitle').innerText = 'Drag & Drop Excel Files Here';
+            document.getElementById('dropSubtitle').innerHTML = 'Requires: <b>InspectionSummary.xlsx</b> & <b>InspectionLists.xlsx</b>';
+            document.getElementById('fileInput').accept = '.xlsx';
+            document.getElementById('fileInput').multiple = true;
+        } else {
+            activeIntegrationType = 'obs';
+            document.getElementById('dropTitle').innerText = `Drag & Drop ${stageName} (PDF)`;
+            document.getElementById('dropSubtitle').innerHTML = 'Requires: <b>.pdf file</b>';
+            document.getElementById('fileInput').accept = '.pdf';
+            document.getElementById('fileInput').multiple = false;
+        }
+
+        let tableHtml = `<tr><th style="padding: 8px;">Document Name</th><th style="width: 120px; text-align: center; padding: 8px;">Actions</th></tr>`;
+        let targetFiles = [];
+        if (stageName.toLowerCase().includes('corrective') || stageName.toLowerCase().includes('issue')) {
+            targetFiles = linkedPdfsByStage['corrective'] || [];
+        } else {
+            targetFiles = linkedPdfsByStage[stageId] || [];
+        }
+
+        if (targetFiles.length > 0) {
+            targetFiles.forEach(fileName => {
+                tableHtml += `
+                <tr>
+                    <td style="font-weight: 700; color: #00205B; padding: 8px;">&#x1F4C4; ${fileName}</td>
+                    <td style="text-align: center; display: flex; gap: 5px; justify-content: center; align-items: center; padding: 8px;">
+                        <form action="/delete_observation/${fileName}" method="POST" onsubmit="return confirm('Delete this Document Link?');" style="margin:0;">
+                            <button type="submit" class="btn-delete-small" style="padding: 4px 8px; font-size: 10px;">Delete</button>
+                        </form>
+                    </td>
+                </tr>`;
+            });
+        } else {
+            tableHtml += `<tr><td colspan="2" style="text-align: center; color: #6c757d; font-style: italic; padding: 8px;">No reports uploaded for this stage yet.</td></tr>`;
+        }
+        document.getElementById('activeLinksTable').innerHTML = tableHtml;
+
+        selectedFiles = { summary: null, lists: null };
+        selectedObsFile = null;
+        document.getElementById('integrationModal').style.display = 'flex';
+    } else {
+        alert('API Integration for [' + stageName + '] is coming soon!');
+    }
+}
+
+function handleIntegration(type) {
+    if (type === 'Manual') {
+        document.getElementById('integrationButtons').style.display = 'none';
+        document.getElementById('manualDropZone').style.display = 'block';
+        if (activeIntegrationType === 'obs') {
+            document.getElementById('obsTableContainer').style.display = 'block';
+        }
+    } else {
+        alert(type + ' API integration is currently in development.');
+    }
+}
+
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+const uploadStatus = document.getElementById('uploadStatus');
+const btnRunSync = document.getElementById('btnRunSync');
+
+['dragenter', 'dragover'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false); });
+['dragleave', 'drop'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false); });
+
+dropArea.addEventListener('drop', handleDrop, false);
+dropArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', function() { handleFiles(this.files); });
+
+function handleDrop(e) { handleFiles(e.dataTransfer.files); }
+
+function handleFiles(files) {
+    uploadStatus.innerHTML = '';
+    btnRunSync.style.display = 'none';
+    let html = '';
+
+    if (activeIntegrationType === 'prefunc') {
+        for (let i = 0; i < files.length; i++) {
+            let name = files[i].name.toLowerCase();
+            if (name.includes('summary')) selectedFiles.summary = files[i];
+            else if (name.includes('list')) selectedFiles.lists = files[i];
+            else html += `<div style="color:#b45309; margin-bottom:4px;">&#x26A0; Unrecognized file ignored: ${files[i].name}</div>`;
+        }
+        if (selectedFiles.summary) html += `<div style="color:#197820; margin-bottom:4px; font-weight:700;">&#x2713; Summary File Loaded: ${selectedFiles.summary.name}</div>`;
+        if (selectedFiles.lists) html += `<div style="color:#197820; font-weight:700;">&#x2713; Lists File Loaded: ${selectedFiles.lists.name}</div>`;
+        uploadStatus.innerHTML = html;
+
+        if (selectedFiles.summary && selectedFiles.lists) {
+            btnRunSync.style.display = 'block';
+            dropArea.classList.add('ready');
+            document.getElementById('dropIcon').innerHTML = '&#x2705;';
+            document.getElementById('dropIcon').style.color = '#197820';
+            document.getElementById('dropTitle').innerText = 'Files Recognized. Ready to Sync.';
+            document.getElementById('dropTitle').style.color = '#197820';
+            document.getElementById('dropSubtitle').style.display = 'none';
+        } else {
+            dropArea.classList.remove('ready');
+            document.getElementById('dropIcon').innerHTML = '&#x1F4C2;';
+            document.getElementById('dropIcon').style.color = '#00205B';
+            document.getElementById('dropTitle').innerText = 'Drag & Drop Excel Files Here';
+            document.getElementById('dropTitle').style.color = '#00205B';
+            document.getElementById('dropSubtitle').style.display = 'block';
+            uploadStatus.innerHTML += '<div style="color:#b45309; margin-top: 8px;">&#x26A0; Waiting for both Summary and Lists files...</div>';
+        }
+    } else if (activeIntegrationType === 'obs') {
+        let valid = false;
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].name.toLowerCase().endsWith('.pdf')) {
+                selectedObsFile = files[i];
+                valid = true;
+                html += `<div style="color:#197820; font-weight:700;">&#x2713; PDF Loaded: ${selectedObsFile.name}</div>`;
+                break;
+            }
+        }
+        uploadStatus.innerHTML = html;
+        if (valid) {
+            btnRunSync.style.display = 'block';
+            dropArea.classList.add('ready');
+            document.getElementById('dropIcon').innerHTML = '&#x2705;';
+            document.getElementById('dropIcon').style.color = '#197820';
+            document.getElementById('dropTitle').innerText = 'PDF Recognized. Ready to Scan.';
+            document.getElementById('dropTitle').style.color = '#197820';
+            document.getElementById('dropSubtitle').style.display = 'none';
+        } else {
+            html += `<div style="color:#b45309; margin-top: 8px;">&#x26A0; Waiting for a valid PDF file...</div>`;
+            dropArea.classList.remove('ready');
+            document.getElementById('dropIcon').innerHTML = '&#x1F4C2;';
+            document.getElementById('dropIcon').style.color = '#00205B';
+            document.getElementById('dropTitle').innerText = `Drag & Drop ${currentDataLinkStage.name} (PDF)`;
+            document.getElementById('dropTitle').style.color = '#00205B';
+            document.getElementById('dropSubtitle').style.display = 'block';
+        }
+    }
+}
+
+function submitManualSync() {
+    let btnRunSync = document.getElementById('btnRunSync');
+    btnRunSync.innerHTML = 'Processing DataLink... Please Wait';
+    btnRunSync.disabled = true;
+    btnRunSync.style.background = '#475569';
+
+    let formData = new FormData();
+    let endpoint = '';
+
+    if (activeIntegrationType === 'prefunc') {
+        formData.append('summary_file', selectedFiles.summary);
+        formData.append('lists_file', selectedFiles.lists);
+        endpoint = '/manual_integration_sync';
+    } else {
+        formData.append('obs_file', selectedObsFile);
+        formData.append('stage_id', currentDataLinkStage.id);
+        formData.append('stage_name', currentDataLinkStage.name);
+        endpoint = '/upload_datalink_pdf_ajax';
+    }
+
+    fetch(endpoint, { method: 'POST', body: formData }).then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if(response.ok) {
+            window.__cxNav(window.__cxHref);
+        } else {
+            alert(data.message || 'Error processing files.');
+            btnRunSync.innerHTML = 'Run Sync';
+            btnRunSync.disabled = false;
+            btnRunSync.style.background = '#197820';
+        }
+    }).catch(error => {
+        alert(error.message || 'Error processing files.');
+        btnRunSync.innerHTML = 'Run Sync';
+        btnRunSync.disabled = false;
+        btnRunSync.style.background = '#197820';
+    });
+}
+
+function updateCritAdd() {
+    const checkboxes = document.querySelectorAll('.crit-add-chk:checked');
+    let vals = [];
+    checkboxes.forEach(cb => { if (cb.value !== 'n/A') vals.push(cb.value); });
+    const naCheckbox = document.getElementById('critNA');
+    if (vals.length > 0) {
+        if(naCheckbox) naCheckbox.checked = false;
+        document.getElementById('critAddText').innerText = vals.join(', ');
+    } else {
+        if(naCheckbox) naCheckbox.checked = true;
+        document.getElementById('critAddText').innerText = 'n/A';
+    }
+}
+
+function deletePriority(priorityIdx) {
+    if(confirm('Are you sure you want to remove this priority rule?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/delete_priority/' + priorityIdx;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function savePriorities() {
+    const rows = document.querySelectorAll('#priorityBody tr');
+    let data = [];
+    rows.forEach((row, index) => {
+        data.push({
+            priority: index + 1,
+            trade: row.querySelector('.p-trade').innerText.trim(),
+            family: row.querySelector('.p-family').innerText.trim(),
+            critical_panels: row.querySelector('.p-critical').value.trim()
+        });
+    });
+    document.getElementById('prioritiesData').value = JSON.stringify(data);
+    document.getElementById('priorityForm').submit();
+}
+</script>
+
+
+    <div id="pageTransitionOverlay" class="page-transition-overlay" aria-hidden="true">
+        <div class="page-transition-scene">
+            <div class="page-transition-zoom" id="pageTransitionZoom">
+                <div class="page-transition-cube" id="pageTransitionCube">
+                    <div class="page-transition-face page-transition-front" data-transition-face-key="matrix">
+                        <div id="pageTransitionSnapshot" class="page-transition-snapshot"></div>
+                    </div>
+                    <div class="page-transition-face page-transition-right page-transition-shell" data-transition-face-key="config">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Project Configuration</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-back page-transition-shell" data-transition-face-key="executive">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Executive Summary</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-left page-transition-shell" data-transition-face-key="integrations">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Integrations</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-top page-transition-shell" data-transition-face-key="schedule">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Schedule</span>
+                        </div>
+                    </div>
+                    <div class="page-transition-face page-transition-bottom page-transition-shell" data-transition-face-key="drawings">
+                        <div class="page-transition-cached-snapshot"></div>
+                        <div class="page-transition-header-preview">
+                            <div class="page-transition-header-left">
+                                <img src="__CX_LOGO__" alt="">
+                                <span>Matrix AI</span>
+                            </div>
+                            <span>Document Viewer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="globalLoadingOverlay" class="global-loading-overlay" aria-live="polite" aria-hidden="false">
+        <div class="matrix-loader" role="status">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%" aria-hidden="true">
+                <defs>
+                    <style>
+                        .loader-grid-lines {
+                            stroke: #B31942;
+                            stroke-width: 4;
+                            stroke-linecap: round;
+                        }
+
+                        .loader-num {
+                            fill: #0A3161;
+                            font-family: 'Courier New', Courier, monospace;
+                            font-size: 26px;
+                            font-weight: bold;
+                            text-anchor: middle;
+                            dominant-baseline: central;
+                        }
+
+                        .loader-board {
+                            transform-origin: 0 0;
+                            transform-style: preserve-3d;
+                            animation: loader-spin-board 18s linear infinite;
+                        }
+
+                        .loader-mask-rect {
+                            animation: loader-expand-rect 16s ease-in-out infinite;
+                        }
+
+                        .loader-val-0 {
+                            animation: loader-flip-0 3s infinite ease-in-out;
+                        }
+
+                        .loader-val-1 {
+                            animation: loader-flip-1 3s infinite ease-in-out;
+                        }
+
+                        .loader-d1 { animation-delay: -0.1s; }
+                        .loader-d2 { animation-delay: -0.6s; }
+                        .loader-d3 { animation-delay: -1.2s; }
+                        .loader-d4 { animation-delay: -1.9s; }
+                        .loader-d5 { animation-delay: -2.5s; }
+                        .loader-d6 { animation-delay: -0.4s; }
+                        .loader-d7 { animation-delay: -1.5s; }
+                        .loader-d8 { animation-delay: -2.2s; }
+                        .loader-d9 { animation-delay: -2.8s; }
+
+                        @keyframes loader-spin-board {
+                            0% { transform: perspective(1200px) rotateX(60deg) rotateZ(0deg); }
+                            100% { transform: perspective(1200px) rotateX(60deg) rotateZ(360deg); }
+                        }
+
+                        @keyframes loader-expand-rect {
+                            0%, 8% { x: -58px; y: -58px; width: 116px; height: 116px; }
+                            12%, 18% { x: -58px; y: -58px; width: 156px; height: 116px; }
+                            22%, 28% { x: -58px; y: -58px; width: 156px; height: 156px; }
+                            32%, 38% { x: -98px; y: -58px; width: 196px; height: 156px; }
+                            42%, 48% { x: -98px; y: -98px; width: 196px; height: 196px; }
+                            52%, 58% { x: -98px; y: -98px; width: 236px; height: 196px; }
+                            62%, 68% { x: -98px; y: -98px; width: 236px; height: 236px; }
+                            72%, 78% { x: -138px; y: -98px; width: 276px; height: 236px; }
+                            82%, 92% { x: -138px; y: -138px; width: 276px; height: 276px; }
+                            96%, 100% { x: -58px; y: -58px; width: 116px; height: 116px; }
+                        }
+
+                        @keyframes loader-flip-0 {
+                            0% { opacity: 0; transform: rotateY(90deg); }
+                            10% { opacity: 1; transform: rotateY(0deg); }
+                            23% { opacity: 1; transform: rotateY(0deg); }
+                            33% { opacity: 0; transform: rotateY(-90deg); }
+                            100% { opacity: 0; transform: rotateY(-90deg); }
+                        }
+
+                        @keyframes loader-flip-1 {
+                            0%, 33% { opacity: 0; transform: rotateY(90deg); }
+                            43% { opacity: 1; transform: rotateY(0deg); }
+                            56% { opacity: 1; transform: rotateY(0deg); }
+                            66% { opacity: 0; transform: rotateY(-90deg); }
+                            100% { opacity: 0; transform: rotateY(-90deg); }
+                        }
+
+                        @media (prefers-reduced-motion: reduce) {
+                            .loader-board,
+                            .loader-mask-rect,
+                            .loader-val-0,
+                            .loader-val-1 {
+                                animation: none;
+                            }
+                        }
+                    </style>
+                    <clipPath id="loader-grow-mask">
+                        <rect class="loader-mask-rect" x="-58" y="-58" width="116" height="116" />
+                    </clipPath>
+                </defs>
+                <g transform="translate(400, 400)">
+                    <g class="loader-board" clip-path="url(#loader-grow-mask)">
+                        <path class="loader-grid-lines" d="M-100,-140 V140 M-60,-140 V140 M-20,-140 V140 M20,-140 V140 M60,-140 V140 M100,-140 V140 M-140,-100 H140 M-140,-60 H140 M-140,-20 H140 M-140,20 H140 M-140,60 H140 M-140,100 H140" />
+                        <g transform="translate(-120,-120)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(-80,-120)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(-40,-120)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(0,-120)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(40,-120)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(80,-120)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(120,-120)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(-120,-80)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(-80,-80)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(-40,-80)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(0,-80)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(40,-80)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(80,-80)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(120,-80)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(-120,-40)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(-80,-40)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(-40,-40)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(0,-40)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(40,-40)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(80,-40)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(120,-40)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(-120,0)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(-80,0)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(-40,0)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(0,0)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(40,0)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(80,0)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(120,0)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(-120,40)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(-80,40)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(-40,40)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(0,40)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(40,40)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(80,40)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(120,40)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(-120,80)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                        <g transform="translate(-80,80)"><text class="loader-num loader-val-0 loader-d9">0</text><text class="loader-num loader-val-1 loader-d9">1</text></g>
+                        <g transform="translate(-40,80)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(0,80)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(40,80)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(80,80)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(120,80)"><text class="loader-num loader-val-0 loader-d5">0</text><text class="loader-num loader-val-1 loader-d5">1</text></g>
+                        <g transform="translate(-120,120)"><text class="loader-num loader-val-0 loader-d6">0</text><text class="loader-num loader-val-1 loader-d6">1</text></g>
+                        <g transform="translate(-80,120)"><text class="loader-num loader-val-0 loader-d4">0</text><text class="loader-num loader-val-1 loader-d4">1</text></g>
+                        <g transform="translate(-40,120)"><text class="loader-num loader-val-0 loader-d1">0</text><text class="loader-num loader-val-1 loader-d1">1</text></g>
+                        <g transform="translate(0,120)"><text class="loader-num loader-val-0 loader-d7">0</text><text class="loader-num loader-val-1 loader-d7">1</text></g>
+                        <g transform="translate(40,120)"><text class="loader-num loader-val-0 loader-d8">0</text><text class="loader-num loader-val-1 loader-d8">1</text></g>
+                        <g transform="translate(80,120)"><text class="loader-num loader-val-0 loader-d3">0</text><text class="loader-num loader-val-1 loader-d3">1</text></g>
+                        <g transform="translate(120,120)"><text class="loader-num loader-val-0 loader-d2">0</text><text class="loader-num loader-val-1 loader-d2">1</text></g>
+                    </g>
+                </g>
+            </svg>
+            <div class="global-loading-text">Loading page...</div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSystemMenu() {
+            const menu = document.getElementById('systemConfigMenu');
+            if (menu) menu.classList.toggle('open');
+        }
+
+        function toggleProjectMenu() {
+            const menu = document.getElementById('projectMenu');
+            if (menu) menu.classList.toggle('open');
+        }
+
+        function pageFaceForUrl(url) {
+            const path = url.pathname.replace(/\/+$/, '') || '/';
+            if (path === '/') return 'matrix';
+            if (path === '/config') return 'config';
+            if (path === '/schedule') return 'schedule';
+            if (path === '/executive_summary') return 'executive';
+            if (path === '/integrations') return 'integrations';
+            if (path === '/document_viewer') return 'drawings';
+            return null;
+        }
+
+        function transitionFaceForUrl(url) {
+            const face = pageFaceForUrl(url);
+            if (face) return face;
+            return 'matrix';
+        }
+
+        function transitionSnapshotKey(face) {
+            return `matrixAiTransitionSnapshot:${face}`;
+        }
+
+        function currentTransitionFace() {
+            return pageFaceForUrl(new URL(window.__cxHref));
+        }
+
+        function buildCleanPageSnapshot() {
+            const clone = document.body.cloneNode(true);
+            clone.querySelectorAll('#pageTransitionOverlay, #globalLoadingOverlay, script').forEach(node => node.remove());
+            clone.querySelectorAll('.modal-overlay').forEach(node => {
+                if (window.getComputedStyle(node).display === 'none') node.remove();
+            });
+            return {
+                html: clone.innerHTML,
+                bodyClass: clone.className || '',
+                width: window.innerWidth,
+                height: window.innerHeight,
+                scrollX: window.scrollX || 0,
+                scrollY: window.scrollY || 0,
+                scrollHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, window.innerHeight),
+                bodyStyle: {
+                    background: window.getComputedStyle(document.body).background,
+                    color: window.getComputedStyle(document.body).color,
+                    font: window.getComputedStyle(document.body).font
+                }
+            };
+        }
+
+        function createSnapshotWrapper(snapshot) {
+            const record = typeof snapshot === 'string' ? { html: snapshot } : snapshot;
+            const width = record.width || window.innerWidth;
+            const height = record.height || window.innerHeight;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'page-transition-snapshot-scale';
+            wrapper.style.width = `${width}px`;
+            wrapper.style.height = `${height}px`;
+
+            const bodyCopy = document.createElement('div');
+            bodyCopy.className = `page-transition-body-copy ${record.bodyClass || ''}`.trim();
+            bodyCopy.style.width = `${width}px`;
+            bodyCopy.style.minHeight = `${record.scrollHeight || height}px`;
+            bodyCopy.style.transform = `translate(${-1 * (record.scrollX || 0)}px, ${-1 * (record.scrollY || 0)}px)`;
+            if (record.bodyStyle) {
+                bodyCopy.style.background = record.bodyStyle.background || '';
+                bodyCopy.style.color = record.bodyStyle.color || '';
+                bodyCopy.style.font = record.bodyStyle.font || '';
+            }
+            bodyCopy.innerHTML = record.html || '';
+            wrapper.appendChild(bodyCopy);
+            return wrapper;
+        }
+
+        function preparePageSnapshot() {
+            const snapshotHost = document.getElementById('pageTransitionSnapshot');
+            if (!snapshotHost) return;
+            snapshotHost.innerHTML = '';
+            snapshotHost.appendChild(createSnapshotWrapper(buildCleanPageSnapshot()));
+        }
+
+        function cacheCurrentPageSnapshot() {
+            try {
+                const face = currentTransitionFace();
+                if (!face) return;
+                const snapshot = buildCleanPageSnapshot();
+                if ((snapshot.html || '').length > 4000000) return;
+                snapshot.savedAt = Date.now();
+                sessionStorage.setItem(transitionSnapshotKey(face), JSON.stringify(snapshot));
+            } catch (error) {
+                // A full matrix can exceed browser storage; the header shell remains the fallback.
+            }
+        }
+
+        function clearCachedDestinationSnapshots() {
+            document.querySelectorAll('.page-transition-face.has-cached-snapshot').forEach(faceNode => {
+                faceNode.classList.remove('has-cached-snapshot');
+                const cached = faceNode.querySelector('.page-transition-cached-snapshot');
+                if (cached) cached.innerHTML = '';
+            });
+        }
+
+        function showCachedDestination(face, targetFace = face) {
+            clearCachedDestinationSnapshots();
+            let record = null;
+            try {
+                record = JSON.parse(sessionStorage.getItem(transitionSnapshotKey(face)) || 'null');
+            } catch (error) {
+                record = null;
+            }
+            if (!record || !record.html) return false;
+
+            const faceNode = document.querySelector(`.page-transition-face[data-transition-face-key="${targetFace}"]`);
+            if (!faceNode) return false;
+
+            if (face === targetFace && face === 'matrix') {
+                const snapshotHost = document.getElementById('pageTransitionSnapshot');
+                if (!snapshotHost) return false;
+                snapshotHost.innerHTML = '';
+                snapshotHost.appendChild(createSnapshotWrapper(record));
+                return true;
+            }
+
+            const cached = faceNode.querySelector('.page-transition-cached-snapshot');
+            if (!cached) return false;
+            cached.innerHTML = '';
+            cached.appendChild(createSnapshotWrapper(record));
+            faceNode.classList.add('has-cached-snapshot');
+            return true;
+        }
+
+        function seedCurrentSnapshotCache() {
+            window.setTimeout(cacheCurrentPageSnapshot, 250);
+            window.addEventListener('load', () => {
+                window.setTimeout(cacheCurrentPageSnapshot, 350);
+            });
+        }
+
+        function setTransitionGeometry(overlay, zoom) {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const depth = Math.max(width, height) / 2;
+            const outDepth = Math.max(width, height);
+            overlay.style.setProperty('--transition-w', `${width}px`);
+            overlay.style.setProperty('--transition-h', `${height}px`);
+            overlay.style.setProperty('--transition-z', `${depth}px`);
+            overlay.dataset.transitionDepth = String(depth);
+            overlay.dataset.transitionOutDepth = String(outDepth);
+            zoom.style.width = `${width}px`;
+            zoom.style.height = `${height}px`;
+        }
+
+        function rotatePageTransition(face) {
+            const rotations = {
+                matrix: 'rotateX(0deg) rotateY(-90deg)',
+                config: 'rotateX(0deg) rotateY(-90deg)',
+                executive: 'rotateX(0deg) rotateY(-180deg)',
+                integrations: 'rotateX(0deg) rotateY(90deg)',
+                schedule: 'rotateX(-90deg) rotateY(0deg)',
+                drawings: 'rotateX(90deg) rotateY(0deg)'
+            };
+            const overlay = document.getElementById('pageTransitionOverlay');
+            const zoom = document.getElementById('pageTransitionZoom');
+            const cube = document.getElementById('pageTransitionCube');
+            if (!overlay || !zoom || !cube) return false;
+
+            cacheCurrentPageSnapshot();
+            clearCachedDestinationSnapshots();
+            preparePageSnapshot();
+            setTransitionGeometry(overlay, zoom);
+            overlay.classList.add('is-active');
+            overlay.setAttribute('aria-hidden', 'false');
+            zoom.style.transition = 'none';
+            cube.style.transition = 'none';
+            zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+            cube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            overlay.offsetHeight;
+            zoom.style.transition = '';
+            cube.style.transition = '';
+
+            window.requestAnimationFrame(() => {
+                zoom.style.transform = `translateZ(-${overlay.dataset.transitionOutDepth}px)`;
+                window.setTimeout(() => {
+                    showCachedDestination(face, face === 'matrix' ? 'config' : face);
+                    cube.style.transform = rotations[face] || rotations.matrix;
+                    window.setTimeout(() => {
+                        zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+                    }, 600);
+                }, 400);
+            });
+            return true;
+        }
+
+        function resetPageTransition() {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            const zoom = document.getElementById('pageTransitionZoom');
+            const cube = document.getElementById('pageTransitionCube');
+            if (overlay) {
+                overlay.classList.remove('is-active');
+                overlay.setAttribute('aria-hidden', 'true');
+            }
+            clearCachedDestinationSnapshots();
+            if (zoom && overlay && overlay.dataset.transitionDepth) {
+                zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+            }
+            if (cube) cube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        }
+
+        function navigateWithTransition(url, face) {
+            const didStart = rotatePageTransition(face);
+            window.setTimeout(() => {
+                window.__cxNav(url.href);
+            }, didStart ? 1320 : 0);
+        }
+
+        seedCurrentSnapshotCache();
+
+        document.addEventListener('click', (event) => {
+            const menuWrap = event.target.closest('.header-menu');
+            if (menuWrap) return;
+            const menu = document.getElementById('systemConfigMenu');
+            if (menu) menu.classList.remove('open');
+            const projectMenu = document.getElementById('projectMenu');
+            if (projectMenu) projectMenu.classList.remove('open');
+        });
+
+        (() => {
+            const overlay = document.getElementById('globalLoadingOverlay');
+            if (!overlay) return;
+
+            function showPageLoader() {
+                overlay.classList.remove('is-hidden');
+                overlay.setAttribute('aria-hidden', 'false');
+            }
+
+            window.addEventListener('load', () => {
+                window.requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        overlay.classList.add('is-hidden');
+                        overlay.setAttribute('aria-hidden', 'true');
+                    }, 150);
+                });
+            });
+
+            document.addEventListener('click', event => {
+                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+
+                const link = event.target.closest('a[href]');
+                if (!link || link.target || link.hasAttribute('download')) {
+                    return;
+                }
+
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+                    return;
+                }
+
+                const url = new URL(href, window.__cxHref);
+                if (url.origin === window.__cxOrigin) {
+                    if (link.dataset.transition === 'none') {
+                        showPageLoader();
+                        return;
+                    }
+                    if (!link.dataset.transitionFace) {
+                        return;
+                    }
+                    event.preventDefault();
+                    const menu = document.getElementById('systemConfigMenu');
+                    if (menu) menu.classList.remove('open');
+                    const projectMenu = document.getElementById('projectMenu');
+                    if (projectMenu) projectMenu.classList.remove('open');
+                    navigateWithTransition(url, link.dataset.transitionFace);
+                }
+            }, true);
+        })();
+    </script>
+__CX_SHIM__</body>
+</html>

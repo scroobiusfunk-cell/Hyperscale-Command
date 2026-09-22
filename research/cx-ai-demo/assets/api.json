@@ -1,0 +1,17 @@
+{
+  "/api/get_remote_search": {
+    "search": null
+  },
+  "/api/pdfs": [],
+  "/api/pdf_categories": [
+    "Mechanical",
+    "Electrical",
+    "Plumbing",
+    "Fire Protection",
+    "Low Voltage",
+    "Other"
+  ],
+  "/api/matrix_signature": {
+    "signature": "demo"
+  }
+}

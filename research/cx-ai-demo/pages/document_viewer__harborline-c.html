@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script>window.__cxProject="harborline-c";window.__cxOrigin="https://cx-ai.demo";window.__cxHref="https://cx-ai.demo/document_viewer?project_id=harborline-c";</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Viewer</title>
+    <style>__CX_CSS__</style>
+    <style>
+        html, body {
+            min-height: 100%;
+            margin: 0;
+            background: #f1f5f9;
+            font-family: Arial, sans-serif;
+        }
+
+        .viewer-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewer-header {
+            position: relative;
+            min-height: 60px;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border-bottom: 3px solid #C8102E;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .viewer-header-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .viewer-header-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00205B;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .viewer-header-action {
+            background: transparent;
+            border: 0;
+            color: #00205B;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .document-stage {
+            position: relative;
+            flex: 1;
+            display: block;
+            padding: 28px 30px 40px;
+            overflow: auto;
+        }
+
+        .document-shell {
+            width: 100%;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            opacity: 1;
+            transform: none;
+            animation: none;
+        }
+
+        .document-shell-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 0 0 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .document-tools {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .document-search {
+            width: min(360px, 42vw);
+            height: 34px;
+            padding: 0 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            color: #00205B;
+            font-size: 13px;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .document-title {
+            margin: 0;
+            color: #00205B;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .document-subtitle {
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .refresh-btn {
+            background: #00205B;
+            border: 0;
+            border-radius: 4px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 10px 14px;
+            text-transform: uppercase;
+        }
+
+        .pdf-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 190px;
+            padding: 18px 0 0;
+        }
+
+        .pdf-group-title {
+            margin: 0 0 8px;
+            color: #00205B;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .pdf-group-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pdf-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 16px;
+            padding: 13px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: #ffffff;
+        }
+
+        .pdf-name {
+            min-width: 0;
+            color: #00205B;
+            font-size: 14px;
+            font-weight: 800;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-pill,
+        .open-btn,
+        .process-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 0;
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1;
+            padding: 9px 12px;
+            text-decoration: none;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .open-btn,
+        .process-btn {
+            background: #00205B;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .status-processing {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .status-missing {
+            background: #fef3c7;
+            color: #92400e;
+            margin-right: 6px;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #b91c1c;
+            margin-right: 6px;
+        }
+
+        .empty-state {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+
+        .viewer-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.45);
+        }
+
+        .viewer-modal.is-open {
+            display: flex;
+        }
+
+        .viewer-modal-content {
+            width: min(760px, 100%);
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.28);
+            overflow: hidden;
+        }
+
+        .viewer-modal-header {
+            padding: 20px 24px;
+            border-top: 5px solid #C8102E;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .viewer-modal-title {
+            color: #00205B;
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .viewer-modal-body {
+            padding: 22px 24px 24px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(220px, 0.35fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .drop-area {
+            border: 2px dashed #94a3b8;
+            border-radius: 6px;
+            padding: 34px 18px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+        }
+
+        .drop-area.highlight,
+        .drop-area.ready {
+            border-color: #197820;
+            background: #f0fdf4;
+        }
+
+        .upload-field label {
+            display: block;
+            margin-bottom: 6px;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .upload-field select,
+        .upload-field input {
+            width: 100%;
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            color: #00205B;
+            font-size: 13px;
+            font-weight: 700;
+            box-sizing: border-box;
+        }
+
+        .upload-status {
+            min-height: 44px;
+            margin-top: 14px;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .btn-cancel,
+        .btn-upload {
+            border: 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 10px 14px;
+            text-transform: uppercase;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: #00205B;
+        }
+
+        .btn-upload {
+            background: #197820;
+            color: #ffffff;
+        }
+
+        .btn-upload:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .transition-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: none;
+            place-items: center;
+            background: rgba(241, 245, 249, 0.94);
+            pointer-events: none;
+        }
+
+        .cube-scene {
+            width: 100vw;
+            height: 100vh;
+            perspective: 1200px;
+        }
+
+        .zoom-wrapper {
+            width: var(--transition-w, 100vw);
+            height: var(--transition-h, 100vh);
+            transform-style: preserve-3d;
+            transition: transform 0.4s ease-in-out;
+        }
+
+        .cube {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .cube-face {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            background: #ffffff;
+            backface-visibility: hidden;
+            overflow: hidden;
+        }
+
+        .viewer-snapshot {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        .viewer-cached-snapshot {
+            position: absolute;
+            inset: 0;
+            display: none;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        .cube-face.has-cached-snapshot .viewer-cached-snapshot {
+            display: block;
+        }
+
+        .cube-face.has-cached-snapshot .transition-header-preview {
+            display: none;
+        }
+
+        .viewer-snapshot-scale {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            overflow: hidden;
+            background: #f1f5f9;
+            transform: translate(-50%, -50%);
+            transform-origin: center center;
+        }
+
+        .viewer-snapshot-scale > body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .viewer-transition-body-copy {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            overflow: hidden;
+            text-align: initial;
+        }
+
+        .cube-face strong {
+            color: #00205B;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .cube-face-drawings {
+            align-items: stretch;
+            justify-content: flex-start;
+            background: #f1f5f9;
+            transform: rotateY(90deg) translateZ(var(--transition-z, 800px));
+        }
+
+        .cube-face-matrix {
+            align-items: stretch;
+            justify-content: flex-start;
+            background: #ffffff;
+            transform: rotateY(-90deg) translateZ(var(--transition-z, 800px));
+        }
+
+        .cube-face-front {
+            transform: translateZ(var(--transition-z, 800px));
+        }
+
+        .transition-header-preview {
+            width: 100%;
+            height: 60px;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border-bottom: 3px solid #C8102E;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-sizing: content-box;
+        }
+
+        .transition-header-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .transition-header-preview img {
+            height: 60px;
+            object-fit: contain;
+        }
+
+        @media (max-width: 720px) {
+            .document-stage {
+                padding: 18px;
+            }
+
+            .document-shell-header,
+            .pdf-row {
+                grid-template-columns: 1fr;
+            }
+
+            .document-shell-header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 0 0 16px;
+            }
+
+            .document-tools,
+            .upload-grid {
+                width: 100%;
+                grid-template-columns: 1fr;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .document-search {
+                width: 100%;
+            }
+
+            .pdf-list {
+                padding: 16px 0 0;
+            }
+
+            .pdf-row {
+                display: flex;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-page">
+        <div class="viewer-header">
+            <div class="viewer-header-left">
+                <a href="/" onclick="return openMatrixFromDocument(event)" style="display: flex; align-items: center;">
+                    <img src="__CX_LOGO__" alt="Suffolk" style="height: 60px; object-fit: contain;">
+                </a>
+                <a href="/" onclick="return openMatrixFromDocument(event)" style="color: #00205B; font-weight: 800; text-decoration: none; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">MATRIX AI</a>
+            </div>
+            <div class="viewer-header-title">Document Viewer</div>
+            <button class="viewer-header-action" type="button" onclick="openAddDocumentsModal()">Add Documents</button>
+        </div>
+
+        <main class="document-stage">
+            <section class="document-shell">
+                <div class="document-shell-header">
+                    <div>
+                        <h1 class="document-title">Select PDF</h1>
+                        <div class="document-subtitle">Open a processed drawing or reference document.</div>
+                    </div>
+                    <div class="document-tools">
+                        <input id="pdfSearchInput" class="document-search" type="search" placeholder="Search filenames..." oninput="renderPdfList()">
+                        <button class="refresh-btn" type="button" onclick="loadPdfs()">Refresh</button>
+                    </div>
+                </div>
+                <div id="pdfList" class="pdf-list">
+                    <div class="empty-state">Loading documents...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="addDocumentsModal" class="viewer-modal" aria-hidden="true">
+        <div class="viewer-modal-content">
+            <div class="viewer-modal-header">
+                <div class="viewer-modal-title">Add Documents</div>
+                <div class="document-subtitle">Upload reference PDFs and assign a grouping category.</div>
+            </div>
+            <div class="viewer-modal-body">
+                <div class="upload-grid">
+                    <div>
+                        <div id="documentDropArea" class="drop-area">
+                            <div style="font-size: 32px; margin-bottom: 10px;">&#x1F4C4;</div>
+                            <div style="font-weight: 900; color: #00205B; font-size: 14px;">Drag & Drop Reference Documents Here</div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 8px;">Upload one or more PDF files.</div>
+                            <input type="file" id="documentFileInput" multiple accept=".pdf" style="display:none;">
+                        </div>
+                        <div id="documentUploadStatus" class="upload-status"></div>
+                    </div>
+                    <div>
+                        <div class="upload-field">
+                            <label for="documentCategorySelect">PDF Category</label>
+                            <select id="documentCategorySelect" onchange="handleCategoryChange()"></select>
+                        </div>
+                        <div id="otherCategoryWrap" class="upload-field" style="display:none; margin-top: 12px;">
+                            <label for="otherCategoryInput">Category Name</label>
+                            <input id="otherCategoryInput" type="text" placeholder="Type category...">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" type="button" onclick="closeAddDocumentsModal()">Cancel</button>
+                    <button id="uploadDocumentsBtn" class="btn-upload" type="button" onclick="submitDocumentUploads()" disabled>Upload & Process</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="transition-overlay" aria-hidden="true">
+        <div class="cube-scene">
+            <div class="zoom-wrapper" id="zoom-wrapper">
+                <div class="cube" id="cube">
+                    <div class="cube-face cube-face-front">
+                        <div id="documentTransitionSnapshot" class="viewer-snapshot"></div>
+                    </div>
+                <div class="cube-face cube-face-drawings" data-transition-face-key="drawings">
+                    <div class="viewer-cached-snapshot"></div>
+                    <div class="transition-header-preview">
+                        <div class="transition-header-left">
+                            <img src="__CX_LOGO__" alt="">
+                            <strong>Matrix AI</strong>
+                        </div>
+                        <strong>Document Viewer</strong>
+                    </div>
+                </div>
+                <div class="cube-face cube-face-matrix" data-transition-face-key="matrix">
+                    <div class="viewer-cached-snapshot"></div>
+                    <div class="transition-header-preview">
+                        <div class="transition-header-left">
+                            <img src="__CX_LOGO__" alt="">
+                            <strong>Matrix AI</strong>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const listDiv = document.getElementById('pdfList');
+        const pdfSearchInput = document.getElementById('pdfSearchInput');
+        const addDocumentsModal = document.getElementById('addDocumentsModal');
+        const documentDropArea = document.getElementById('documentDropArea');
+        const documentFileInput = document.getElementById('documentFileInput');
+        const documentUploadStatus = document.getElementById('documentUploadStatus');
+        const uploadDocumentsBtn = document.getElementById('uploadDocumentsBtn');
+        const documentCategorySelect = document.getElementById('documentCategorySelect');
+        const otherCategoryWrap = document.getElementById('otherCategoryWrap');
+        const otherCategoryInput = document.getElementById('otherCategoryInput');
+        let allPdfs = [];
+        let filesToUpload = [];
+        const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+
+        function documentSnapshotKey(face) {
+            return `matrixAiTransitionSnapshot:${face}`;
+        }
+
+        function buildCleanDocumentSnapshot() {
+            const clone = document.body.cloneNode(true);
+            clone.querySelectorAll('.transition-overlay, script').forEach(node => node.remove());
+            return {
+                html: clone.innerHTML,
+                bodyClass: clone.className || '',
+                width: window.innerWidth,
+                height: window.innerHeight,
+                scrollX: window.scrollX || 0,
+                scrollY: window.scrollY || 0,
+                scrollHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, window.innerHeight),
+                bodyStyle: {
+                    background: window.getComputedStyle(document.body).background,
+                    color: window.getComputedStyle(document.body).color,
+                    font: window.getComputedStyle(document.body).font
+                }
+            };
+        }
+
+        function createDocumentSnapshotWrapper(snapshot) {
+            const record = typeof snapshot === 'string' ? { html: snapshot } : snapshot;
+            const width = record.width || window.innerWidth;
+            const height = record.height || window.innerHeight;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'viewer-snapshot-scale';
+            wrapper.style.width = `${width}px`;
+            wrapper.style.height = `${height}px`;
+
+            const bodyCopy = document.createElement('div');
+            bodyCopy.className = `viewer-transition-body-copy ${record.bodyClass || ''}`.trim();
+            bodyCopy.style.width = `${width}px`;
+            bodyCopy.style.minHeight = `${record.scrollHeight || height}px`;
+            bodyCopy.style.transform = `translate(${-1 * (record.scrollX || 0)}px, ${-1 * (record.scrollY || 0)}px)`;
+            if (record.bodyStyle) {
+                bodyCopy.style.background = record.bodyStyle.background || '';
+                bodyCopy.style.color = record.bodyStyle.color || '';
+                bodyCopy.style.font = record.bodyStyle.font || '';
+            }
+            bodyCopy.innerHTML = record.html || '';
+            wrapper.appendChild(bodyCopy);
+            return wrapper;
+        }
+
+        function prepareDocumentSnapshot() {
+            const snapshotHost = document.getElementById('documentTransitionSnapshot');
+            if (!snapshotHost) return;
+            snapshotHost.innerHTML = '';
+            snapshotHost.appendChild(createDocumentSnapshotWrapper(buildCleanDocumentSnapshot()));
+        }
+
+        function cacheDocumentSnapshot() {
+            try {
+                const snapshot = buildCleanDocumentSnapshot();
+                if ((snapshot.html || '').length > 4000000) return;
+                snapshot.savedAt = Date.now();
+                sessionStorage.setItem(documentSnapshotKey('drawings'), JSON.stringify(snapshot));
+            } catch (error) {
+                // Storage can be unavailable or full; header-only transition remains the fallback.
+            }
+        }
+
+        function clearDocumentCachedSnapshots() {
+            document.querySelectorAll('.cube-face.has-cached-snapshot').forEach(faceNode => {
+                faceNode.classList.remove('has-cached-snapshot');
+                const cached = faceNode.querySelector('.viewer-cached-snapshot');
+                if (cached) cached.innerHTML = '';
+            });
+        }
+
+        function showDocumentCachedDestination(face) {
+            clearDocumentCachedSnapshots();
+            let record = null;
+            try {
+                record = JSON.parse(sessionStorage.getItem(documentSnapshotKey(face)) || 'null');
+            } catch (error) {
+                record = null;
+            }
+            if (!record || !record.html) return false;
+            const faceNode = document.querySelector(`.cube-face[data-transition-face-key="${face}"]`);
+            const cached = faceNode ? faceNode.querySelector('.viewer-cached-snapshot') : null;
+            if (!faceNode || !cached) return false;
+            cached.innerHTML = '';
+            cached.appendChild(createDocumentSnapshotWrapper(record));
+            faceNode.classList.add('has-cached-snapshot');
+            return true;
+        }
+
+        function seedDocumentSnapshotCache() {
+            window.setTimeout(cacheDocumentSnapshot, 250);
+        }
+
+        function setDocumentTransitionGeometry(overlay, zoom) {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const depth = Math.max(width, height) / 2;
+            const outDepth = Math.max(width, height);
+            overlay.style.setProperty('--transition-w', `${width}px`);
+            overlay.style.setProperty('--transition-h', `${height}px`);
+            overlay.style.setProperty('--transition-z', `${depth}px`);
+            overlay.dataset.transitionDepth = String(depth);
+            overlay.dataset.transitionOutDepth = String(outDepth);
+            zoom.style.width = `${width}px`;
+            zoom.style.height = `${height}px`;
+        }
+
+        function playDocumentTransition(face = 'drawings') {
+            const overlay = document.querySelector('.transition-overlay');
+            const zoom = document.getElementById('zoom-wrapper');
+            const cube = document.getElementById('cube');
+            if (!overlay || !zoom || !cube) return false;
+            const rotation = face === 'matrix' ? 'rotateY(90deg)' : 'rotateY(-90deg)';
+            cacheDocumentSnapshot();
+            clearDocumentCachedSnapshots();
+            prepareDocumentSnapshot();
+            setDocumentTransitionGeometry(overlay, zoom);
+            overlay.style.animation = 'none';
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+            overlay.style.display = 'grid';
+            zoom.style.transition = 'none';
+            cube.style.transition = 'none';
+            zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+            cube.style.transform = 'rotateY(0deg)';
+            overlay.offsetHeight;
+            zoom.style.transition = '';
+            cube.style.transition = '';
+
+            requestAnimationFrame(() => {
+                zoom.style.transform = `translateZ(-${overlay.dataset.transitionOutDepth}px)`;
+                setTimeout(() => {
+                    showDocumentCachedDestination(face);
+                    cube.style.transform = rotation;
+                    setTimeout(() => {
+                        zoom.style.transform = `translateZ(-${overlay.dataset.transitionDepth}px)`;
+                    }, 600);
+                }, 400);
+            });
+            return true;
+        }
+
+        function openViewer(url) {
+            const viewer = window.open(url, 'pdf_viewer');
+            if (viewer) viewer.focus();
+            return false;
+        }
+
+        function openMatrixFromDocument(event) {
+            if (event) event.preventDefault();
+            const didStart = playDocumentTransition('matrix');
+            setTimeout(() => {
+                window.__cxNav('/');
+            }, didStart ? 1320 : 0);
+            return false;
+        }
+
+        function statusMarkup(pdf) {
+            if (pdf.ready) {
+                return `<a href="/view_pdf/${encodeURIComponent(pdf.name)}" target="pdf_viewer" onclick="return openViewer(this.href)" class="open-btn">Open Viewer</a>`;
+            }
+            if (pdf.state === 'error') {
+                return `<span title="${escapeHtml(pdf.message || 'Processing failed')}" class="status-pill status-error">Failed</span><form method="POST" action="/relink_pdf/${encodeURIComponent(pdf.name)}" style="display:inline;"><input type="hidden" name="next" value="document_viewer"><button type="submit" class="process-btn">Re-Process</button></form>`;
+            }
+            if (pdf.state === 'missing') {
+                return `<span title="This file has not been processed yet." class="status-pill status-missing">Not Processed</span><form method="POST" action="/relink_pdf/${encodeURIComponent(pdf.name)}" style="display:inline;"><input type="hidden" name="next" value="document_viewer"><button type="submit" class="process-btn">Process</button></form>`;
+            }
+            return `<span title="${escapeHtml(pdf.message || 'Processing')}" class="status-pill status-processing">Processing ${pdf.progress || 0}%</span>`;
+        }
+
+        function categoryRank(category) {
+            if (category === 'Uncategorized') return 'zzzzzz';
+            if (category === 'Other') return 'zzzzzy';
+            return category.toLowerCase();
+        }
+
+        function renderPdfList() {
+            const search = (pdfSearchInput ? pdfSearchInput.value : '').trim().toLowerCase();
+            const filtered = allPdfs.filter(pdf => !search || pdf.name.toLowerCase().includes(search));
+
+            if (!filtered.length) {
+                listDiv.innerHTML = allPdfs.length
+                    ? '<div class="empty-state">No documents match that search.</div>'
+                    : '<div class="empty-state">No documents uploaded. Click Add Documents to upload a PDF.</div>';
+                window.setTimeout(cacheDocumentSnapshot, 100);
+                return;
+            }
+
+            const groups = filtered.reduce((acc, pdf) => {
+                const category = pdf.category || 'Uncategorized';
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(pdf);
+                return acc;
+            }, {});
+
+            listDiv.innerHTML = Object.keys(groups)
+                .sort((a, b) => categoryRank(a).localeCompare(categoryRank(b)))
+                .map(category => `
+                    <section class="pdf-group">
+                        <h2 class="pdf-group-title">${escapeHtml(category)}</h2>
+                        <div class="pdf-group-list">
+                            ${groups[category].map(pdf => `
+                                <div class="pdf-row">
+                                    <div class="pdf-name" title="${escapeHtml(pdf.name)}">&#x1F4C4; ${escapeHtml(pdf.name)}</div>
+                                    <div>${statusMarkup(pdf)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+                `).join('');
+            window.setTimeout(cacheDocumentSnapshot, 100);
+        }
+
+        function loadPdfs() {
+            listDiv.innerHTML = '<div class="empty-state">Loading documents...</div>';
+            fetch('/api/pdfs')
+                .then(response => response.json())
+                .then(data => {
+                    allPdfs = Array.isArray(data) ? data : [];
+                    renderPdfList();
+                })
+                .catch(() => {
+                    listDiv.innerHTML = '<div class="empty-state">Could not load documents.</div>';
+                    window.setTimeout(cacheDocumentSnapshot, 100);
+                });
+        }
+
+        function loadPdfCategories() {
+            fetch('/api/pdf_categories')
+                .then(response => response.json())
+                .then(categories => {
+                    const values = Array.isArray(categories) && categories.length ? categories : ['Mechanical', 'Electrical', 'Plumbing', 'Fire Protection', 'Low Voltage', 'Other'];
+                    documentCategorySelect.innerHTML = values.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+                    handleCategoryChange();
+                })
+                .catch(() => {
+                    documentCategorySelect.innerHTML = ['Mechanical', 'Electrical', 'Plumbing', 'Fire Protection', 'Low Voltage', 'Other']
+                        .map(category => `<option value="${category}">${category}</option>`).join('');
+                });
+        }
+
+        function handleCategoryChange() {
+            const isOther = documentCategorySelect.value === 'Other';
+            otherCategoryWrap.style.display = isOther ? 'block' : 'none';
+        }
+
+        function openAddDocumentsModal() {
+            filesToUpload = [];
+            documentUploadStatus.innerHTML = '';
+            uploadDocumentsBtn.disabled = true;
+            documentDropArea.classList.remove('ready', 'highlight');
+            addDocumentsModal.classList.add('is-open');
+            addDocumentsModal.setAttribute('aria-hidden', 'false');
+            loadPdfCategories();
+        }
+
+        function closeAddDocumentsModal() {
+            addDocumentsModal.classList.remove('is-open');
+            addDocumentsModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function handleDocumentFiles(files) {
+            filesToUpload = [];
+            let html = '';
+            Array.from(files || []).forEach(file => {
+                if (file.name.toLowerCase().endsWith('.pdf')) {
+                    filesToUpload.push(file);
+                    html += `<div style="color:#197820;">&#x2713; PDF Queued: ${escapeHtml(file.name)}</div>`;
+                } else {
+                    html += `<div style="color:#b45309;">&#x26A0; Ignored non-PDF: ${escapeHtml(file.name)}</div>`;
+                }
+            });
+            documentUploadStatus.innerHTML = html || 'No PDF files selected.';
+            uploadDocumentsBtn.disabled = filesToUpload.length === 0;
+            documentDropArea.classList.toggle('ready', filesToUpload.length > 0);
+        }
+
+        function selectedUploadCategory() {
+            if (documentCategorySelect.value !== 'Other') return documentCategorySelect.value;
+            return otherCategoryInput.value.trim() || 'Other';
+        }
+
+        function submitDocumentUploads() {
+            if (!filesToUpload.length) return;
+            const formData = new FormData();
+            formData.append('category', selectedUploadCategory());
+            filesToUpload.forEach(file => formData.append('pdf_file', file));
+
+            uploadDocumentsBtn.disabled = true;
+            uploadDocumentsBtn.textContent = 'Uploading & Processing...';
+            fetch('/upload_pdf', { method: 'POST', body: formData })
+                .then(async response => {
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.message || 'Error uploading files.');
+                    documentUploadStatus.innerHTML = `<div style="color:#197820;">Uploaded ${data.uploaded || filesToUpload.length} document(s). Processing will continue in the background.</div>`;
+                    closeAddDocumentsModal();
+                    uploadDocumentsBtn.textContent = 'Upload & Process';
+                    loadPdfs();
+                })
+                .catch(error => {
+                    documentUploadStatus.innerHTML = `<div style="color:#b91c1c;">${escapeHtml(error.message || 'Error uploading files.')}</div>`;
+                    uploadDocumentsBtn.disabled = false;
+                    uploadDocumentsBtn.textContent = 'Upload & Process';
+                });
+        }
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            window.addEventListener(eventName, event => {
+                event.preventDefault();
+                event.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            documentDropArea.addEventListener(eventName, () => documentDropArea.classList.add('highlight'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            documentDropArea.addEventListener(eventName, () => documentDropArea.classList.remove('highlight'), false);
+        });
+
+        documentDropArea.addEventListener('drop', event => handleDocumentFiles(event.dataTransfer.files), false);
+        documentDropArea.addEventListener('click', () => documentFileInput.click());
+        documentFileInput.addEventListener('change', function() { handleDocumentFiles(this.files); });
+        otherCategoryInput.addEventListener('input', () => {
+            if (documentCategorySelect.value === 'Other') uploadDocumentsBtn.disabled = filesToUpload.length === 0;
+        });
+
+        prepareDocumentSnapshot();
+        loadPdfs();
+        loadPdfCategories();
+        seedDocumentSnapshotCache();
+    </script>
+__CX_SHIM__</body>
+</html>
