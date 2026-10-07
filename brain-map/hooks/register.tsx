@@ -195,8 +195,11 @@ export const register: Register = on => {
     const home = (await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? ''
     const out = `${home.replace(/\\/g, '/')}/brain-map.html`
     await $.fs.write(out, html)
-    try { await $.process.run(['cmd', '/c', 'start', '', out.replace(/\//g, '\\')]) } catch {}
-    return { text: `Wrote ${out} (${result.nodes.length} nodes) and tried to open it in your browser. If it did not open, double-click that file.` }
+    const winPath = out.replace(/\//g, '\\')
+    let opened = false
+    try { opened = (await $.process.run(['cmd', '/c', 'start', '', 'chrome', winPath])).exitCode === 0 } catch {}
+    if (!opened) { try { await $.process.run(['cmd', '/c', 'start', '', winPath]) } catch {} }
+    return { text: `Wrote ${out} (${result.nodes.length} nodes) and opened it in Chrome (or your default browser if Chrome was not found). If it did not open, double-click that file.` }
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
