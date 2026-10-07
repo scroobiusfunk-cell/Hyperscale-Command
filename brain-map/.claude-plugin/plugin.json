@@ -1,0 +1,1 @@
+{ "name": "brain-map", "version": "0.1.0", "description": "Mind map of your second brain folder in a pane: folder tree, note counts, and most-linked notes", "types": "./types/index.d.ts" }

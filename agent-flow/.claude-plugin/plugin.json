@@ -1,0 +1,1 @@
+{ "name": "agent-flow", "version": "0.1.0", "description": "Live pane showing how agents hand work to each other as a flow tree", "types": "./types/index.d.ts" }

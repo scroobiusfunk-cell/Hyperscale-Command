@@ -1,0 +1,8 @@
+{
+  "name": "hyperscale-command",
+  "owner": { "name": "scroobiusfunk-cell" },
+  "plugins": [
+    { "name": "brain-map", "source": "./brain-map" },
+    { "name": "agent-flow", "source": "./agent-flow" }
+  ]
+}
