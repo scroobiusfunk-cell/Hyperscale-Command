@@ -5,7 +5,7 @@ import type { BrainMap, GraphNode, MapNode } from '../types'
 
 const PANE = 'brain-map'
 const MAX_DEPTH = 6
-const MAX_NOTES = 250
+const MAX_NODES = 320
 const NOTE = /\.(md|markdown)$/i
 const DEFAULT_ROOT = 'C:/Users/DButler/Second Brain'
 const COLORS = ['cyan', 'magenta', 'yellow', 'green', 'blue', 'red']
@@ -114,8 +114,13 @@ export const register: Register = on => {
     await $.store.set('root', root)
 
     const groups: string[] = []
-    const files: { name: string; path: string; group: number }[] = []
-    const walk = async (path: string, name: string, depth: number, group: number): Promise<MapNode> => {
+    const nodes: GraphNode[] = []
+    const edges: [number, number][] = []
+    const files: { idx: number; name: string; path: string }[] = []
+    const addNode = (name: string, group: number): number =>
+      nodes.push({ name, group, degree: 0, x: 0, y: 0 }) - 1
+    const link = (a: number, b: number) => { edges.push([a, b]); nodes[a].degree++; nodes[b].degree++ }
+    const walk = async (path: string, name: string, depth: number, group: number, me: number): Promise<MapNode> => {
       const node: MapNode = { name, kind: 'dir', notes: 0, children: [] }
       const entries = (await $.fs.list(path)).filter(x => !x.name.startsWith('.'))
       entries.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'dir' ? -1 : 1))
@@ -123,13 +128,20 @@ export const register: Register = on => {
         if (x.kind === 'dir' && depth < MAX_DEPTH) {
           let g = group
           if (depth === 0) { g = groups.length; groups.push(x.name) }
-          const child = await walk(`${path}/${x.name}`, x.name, depth + 1, g)
+          const idx = addNode(x.name, g)
+          link(me, idx)
+          const child = await walk(`${path}/${x.name}`, x.name, depth + 1, g, idx)
           node.notes += child.notes
           node.children.push(child)
-        } else if (x.kind === 'file' && NOTE.test(x.name)) {
+        } else if (x.kind === 'file') {
           node.notes += 1
-          node.children.push({ name: x.name.replace(NOTE, ''), kind: 'file', notes: 0, children: [] })
-          files.push({ name: x.name.replace(NOTE, ''), path: `${path}/${x.name}`, group })
+          const label = x.name.replace(/\.[^.]+$/, '')
+          node.children.push({ name: label, kind: 'file', notes: 0, children: [] })
+          if (nodes.length < MAX_NODES) {
+            const idx = addNode(label, group)
+            link(me, idx)
+            if (NOTE.test(x.name)) files.push({ idx, name: label, path: `${path}/${x.name}` })
+          }
         }
       }
       return node
@@ -137,20 +149,20 @@ export const register: Register = on => {
 
     let result: BrainMap
     try {
-      const tree = await walk(root, root.split('/').pop() || root, 0, 0)
-      const used = files.slice(0, MAX_NOTES)
-      const nodes: GraphNode[] = used.map(f => ({ name: f.name, group: f.group, degree: 0, x: 0, y: 0 }))
-      const byName = new Map(used.map((f, i) => [f.name.toLowerCase(), i]))
-      const seen = new Set<string>()
-      const edges: [number, number][] = []
-      for (let i = 0; i < used.length; i++) {
+      const rootIdx = addNode(root.split('/').pop() || root, 0)
+      const tree = await walk(root, root.split('/').pop() || root, 0, 0, rootIdx)
+      const byName = new Map(files.map(f => [f.name.toLowerCase(), f.idx]))
+      const seen = new Set(edges.map(([a, b]) => `${Math.min(a, b)}:${Math.max(a, b)}`))
+      for (const f of files) {
         let text = ''
-        try { text = (await $.fs.read(used[i].path)) as string } catch { continue }
+        try { text = (await $.fs.read(f.path)) as string } catch { continue }
         for (const m of text.matchAll(/\[\[([^\]|#]+)/g)) {
           const j = byName.get(m[1].trim().split('/').pop()!.toLowerCase())
-          if (j === undefined || j === i || seen.has(`${Math.min(i, j)}:${Math.max(i, j)}`)) continue
-          seen.add(`${Math.min(i, j)}:${Math.max(i, j)}`)
-          edges.push([i, j]); nodes[i].degree++; nodes[j].degree++
+          if (j === undefined || j === f.idx) continue
+          const key = `${Math.min(f.idx, j)}:${Math.max(f.idx, j)}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          link(f.idx, j)
         }
       }
       layout(nodes, edges)
@@ -160,7 +172,7 @@ export const register: Register = on => {
     }
     await update($, map, () => result)
     await $.ui.open({ id: PANE, title: 'Second brain' })
-    return { text: `Mapped ${root}: ${result.tree.notes} notes, ${result.edges.length} links.` }
+    return { text: `Mapped ${root}: ${result.tree.notes} files, ${result.edges.length} connections.` }
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
@@ -169,8 +181,9 @@ export const register: Register = on => {
     if (!m) return <Text dimColor>Run /brain-map to draw your second brain.</Text>
     const cols = e.viewport?.columns ?? 100
     const rows = Math.max(8, (e.viewport?.rows ?? 30) - 6)
-    const side = Math.min(34, Math.floor(cols * 0.32))
-    const gw = Math.max(20, cols - side - 6)
+    const showTree = cols >= 100
+    const side = showTree ? Math.min(36, Math.floor(cols * 0.3)) : 0
+    const gw = Math.max(20, cols - (showTree ? side + 6 : 4))
 
     const lines: { text: string; color?: string; dim?: boolean }[] = []
     const draw = (n: MapNode, prefix: string, top: boolean) => {
@@ -178,7 +191,7 @@ export const register: Register = on => {
         const last = i === n.children.length - 1
         const color = c.kind === 'dir' ? COLORS[(top ? i : 0) % COLORS.length] : undefined
         const label = c.kind === 'dir' ? `▸ ${c.name} ${c.notes}` : c.name
-        lines.push({ text: `${prefix}${last ? '└ ' : '├ '}${label}`.slice(0, side - 1), color: top ? color : undefined, dim: c.kind === 'file' })
+        lines.push({ text: `${prefix}${last ? '└ ' : '├ '}${label}`.slice(0, Math.max(8, side - 5)), color: top ? color : undefined, dim: c.kind === 'file' })
         if (c.kind === 'dir') draw(c, prefix + (last ? '  ' : '│ '), false)
       })
     }
@@ -187,17 +200,17 @@ export const register: Register = on => {
     const grid = drawGraph(m, gw, rows)
     return (
       <Box flexDirection="column">
-        <Text bold>{m.tree.name} <Text dimColor>· {m.tree.notes} notes · {m.edges.length} links</Text></Text>
+        <Text bold>{m.tree.name} <Text dimColor>· {m.tree.notes} files · {m.edges.length} connections</Text></Text>
         {m.error && <Text color="red">{m.error}</Text>}
         <Box flexDirection="row">
-          <Box flexDirection="column" width={side} borderStyle="round" borderColor="gray">
+          {showTree && <Box flexDirection="column" width={side} borderStyle="round" borderColor="gray">
             <Text bold>Files</Text>
             {lines.slice(0, rows - 1).map(l => (
-              <Text color={l.color} dimColor={l.dim}>{l.text}</Text>
+              <Text color={l.color} dimColor={l.dim} wrap="truncate-end">{l.text}</Text>
             ))}
             {lines.length > rows - 1 && <Text dimColor>… {lines.length - rows + 1} more</Text>}
-          </Box>
-          <Box flexDirection="column" marginLeft={1}>
+          </Box>}
+          <Box flexDirection="column" marginLeft={showTree ? 1 : 0}>
             <Text bold>Graph view</Text>
             {grid.map(row => (
               <Text>
