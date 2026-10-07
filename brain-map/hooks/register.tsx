@@ -95,84 +95,108 @@ function drawGraph(m: BrainMap, w: number, h: number): Cell[][] {
   return grid
 }
 
+async function scan($: any, args: string): Promise<BrainMap | string> {
+  const home = (await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? ''
+  const stored = (await $.store.get('root')) as string | undefined
+  const root = (args.trim() || stored || DEFAULT_ROOT).replace(/^~/, home).replace(/\\/g, '/').replace(/\/+$/, '')
+  if (!(await $.fs.exists(root))) {
+    return `Folder not found: ${root}. Run /brain-map "<full path>" (this session must run on the machine that has the folder).`
+  }
+  await $.store.set('root', root)
+
+  const groups: string[] = []
+  const nodes: GraphNode[] = []
+  const edges: [number, number][] = []
+  const files: { idx: number; name: string; path: string }[] = []
+  const addNode = (name: string, group: number): number =>
+    nodes.push({ name, group, degree: 0, x: 0, y: 0 }) - 1
+  const link = (a: number, b: number) => { edges.push([a, b]); nodes[a].degree++; nodes[b].degree++ }
+  const walk = async (path: string, name: string, depth: number, group: number, me: number): Promise<MapNode> => {
+    const node: MapNode = { name, kind: 'dir', notes: 0, children: [] }
+    const entries = (await $.fs.list(path)).filter(x => !x.name.startsWith('.'))
+    entries.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'dir' ? -1 : 1))
+    for (const x of entries) {
+      if (x.kind === 'dir' && depth < MAX_DEPTH) {
+        let g = group
+        if (depth === 0) { g = groups.length; groups.push(x.name) }
+        const idx = addNode(x.name, g)
+        link(me, idx)
+        const child = await walk(`${path}/${x.name}`, x.name, depth + 1, g, idx)
+        node.notes += child.notes
+        node.children.push(child)
+      } else if (x.kind === 'file') {
+        node.notes += 1
+        const label = x.name.replace(/\.[^.]+$/, '')
+        node.children.push({ name: label, kind: 'file', notes: 0, children: [] })
+        if (nodes.length < MAX_NODES) {
+          const idx = addNode(label, group)
+          link(me, idx)
+          if (NOTE.test(x.name)) files.push({ idx, name: label, path: `${path}/${x.name}` })
+        }
+      }
+    }
+    return node
+  }
+
+  let result: BrainMap
+  try {
+    const rootIdx = addNode(root.split('/').pop() || root, 0)
+    const tree = await walk(root, root.split('/').pop() || root, 0, 0, rootIdx)
+    const byName = new Map(files.map(f => [f.name.toLowerCase(), f.idx]))
+    const seen = new Set(edges.map(([a, b]) => `${Math.min(a, b)}:${Math.max(a, b)}`))
+    for (const f of files) {
+      let text = ''
+      try { text = (await $.fs.read(f.path)) as string } catch { continue }
+      for (const m of text.matchAll(/\[\[([^\]|#]+)/g)) {
+        const j = byName.get(m[1].trim().split('/').pop()!.toLowerCase())
+        if (j === undefined || j === f.idx) continue
+        const key = `${Math.min(f.idx, j)}:${Math.max(f.idx, j)}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        link(f.idx, j)
+      }
+    }
+    layout(nodes, edges)
+    result = { root, tree, groups, nodes, edges }
+  } catch (err) {
+    result = { root, tree: { name: root, kind: 'dir', notes: 0, children: [] }, groups, nodes: [], edges: [], error: String(err) }
+  }
+  return result
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'brain-map',
       description: 'Obsidian-style map of your second brain: /brain-map [folder path]',
     })
+    await $.command.register({
+      name: 'brain-web',
+      description: 'Interactive brain graph in your web browser: /brain-web [folder path]',
+    })
     return next(e)
   })
 
   on('command.run', { command: 'brain-map' }, async ($, e) => {
-    const home = (await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? ''
-    const stored = (await $.store.get('root')) as string | undefined
-    const root = (e.args.trim() || stored || DEFAULT_ROOT).replace(/^~/, home).replace(/\\/g, '/').replace(/\/+$/, '')
-    if (!(await $.fs.exists(root))) {
-      return { text: `Folder not found: ${root}. Run /brain-map "<full path>" (this session must run on the machine that has the folder).` }
-    }
-    await $.store.set('root', root)
-
-    const groups: string[] = []
-    const nodes: GraphNode[] = []
-    const edges: [number, number][] = []
-    const files: { idx: number; name: string; path: string }[] = []
-    const addNode = (name: string, group: number): number =>
-      nodes.push({ name, group, degree: 0, x: 0, y: 0 }) - 1
-    const link = (a: number, b: number) => { edges.push([a, b]); nodes[a].degree++; nodes[b].degree++ }
-    const walk = async (path: string, name: string, depth: number, group: number, me: number): Promise<MapNode> => {
-      const node: MapNode = { name, kind: 'dir', notes: 0, children: [] }
-      const entries = (await $.fs.list(path)).filter(x => !x.name.startsWith('.'))
-      entries.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'dir' ? -1 : 1))
-      for (const x of entries) {
-        if (x.kind === 'dir' && depth < MAX_DEPTH) {
-          let g = group
-          if (depth === 0) { g = groups.length; groups.push(x.name) }
-          const idx = addNode(x.name, g)
-          link(me, idx)
-          const child = await walk(`${path}/${x.name}`, x.name, depth + 1, g, idx)
-          node.notes += child.notes
-          node.children.push(child)
-        } else if (x.kind === 'file') {
-          node.notes += 1
-          const label = x.name.replace(/\.[^.]+$/, '')
-          node.children.push({ name: label, kind: 'file', notes: 0, children: [] })
-          if (nodes.length < MAX_NODES) {
-            const idx = addNode(label, group)
-            link(me, idx)
-            if (NOTE.test(x.name)) files.push({ idx, name: label, path: `${path}/${x.name}` })
-          }
-        }
-      }
-      return node
-    }
-
-    let result: BrainMap
-    try {
-      const rootIdx = addNode(root.split('/').pop() || root, 0)
-      const tree = await walk(root, root.split('/').pop() || root, 0, 0, rootIdx)
-      const byName = new Map(files.map(f => [f.name.toLowerCase(), f.idx]))
-      const seen = new Set(edges.map(([a, b]) => `${Math.min(a, b)}:${Math.max(a, b)}`))
-      for (const f of files) {
-        let text = ''
-        try { text = (await $.fs.read(f.path)) as string } catch { continue }
-        for (const m of text.matchAll(/\[\[([^\]|#]+)/g)) {
-          const j = byName.get(m[1].trim().split('/').pop()!.toLowerCase())
-          if (j === undefined || j === f.idx) continue
-          const key = `${Math.min(f.idx, j)}:${Math.max(f.idx, j)}`
-          if (seen.has(key)) continue
-          seen.add(key)
-          link(f.idx, j)
-        }
-      }
-      layout(nodes, edges)
-      result = { root, tree, groups, nodes, edges }
-    } catch (err) {
-      result = { root, tree: { name: root, kind: 'dir', notes: 0, children: [] }, groups, nodes: [], edges: [], error: String(err) }
-    }
+    const result = await scan($, e.args)
+    if (typeof result === 'string') return { text: result }
     await update($, map, () => result)
     await $.ui.open({ id: PANE, title: 'Second brain' })
-    return { text: `Mapped ${root}: ${result.tree.notes} files, ${result.edges.length} connections.` }
+    return { text: `Mapped ${result.root}: ${result.tree.notes} files, ${result.edges.length} connections.` }
+  })
+
+  on('command.run', { command: 'brain-web' }, async ($, e) => {
+    const result = await scan($, e.args)
+    if (typeof result === 'string') return { text: result }
+    const html = ((await $.fs.read(`${$.plugin.root}/hooks/viewer.html`)) as string).replace(
+      '/*DATA*/null',
+      () => JSON.stringify({ root: result.root, groups: result.groups, nodes: result.nodes, edges: result.edges }).replace(/</g, '\\u003c'),
+    )
+    const home = (await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? ''
+    const out = `${home.replace(/\\/g, '/')}/brain-map.html`
+    await $.fs.write(out, html)
+    try { await $.process.run(['cmd', '/c', 'start', '', out.replace(/\//g, '\\')]) } catch {}
+    return { text: `Wrote ${out} (${result.nodes.length} nodes) and tried to open it in your browser. If it did not open, double-click that file.` }
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
