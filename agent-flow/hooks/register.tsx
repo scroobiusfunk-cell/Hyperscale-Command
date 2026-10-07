@@ -7,15 +7,35 @@ const PANE = 'agent-flow'
 const nodes = atom({ plugin: 'agent-flow', key: 'nodes' } as const, [])
 const MAIN = 'main'
 
+async function publish($: any) {
+  try {
+    const list = (await read($, nodes)) as FlowNode[]
+    const home = ((await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? '').replace(/\\/g, '/')
+    await $.fs.write(`${home}/agent-flow-data.js`, `window.FLOW=${JSON.stringify({ updated: Date.now(), nodes: list }).replace(/</g, '\\u003c')};`)
+  } catch {}
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'agent-flow', description: 'Show how agents pass work to each other' })
+    await $.command.register({ name: 'agent-flow', description: 'Live agent flow view in your web browser' })
+    await $.command.register({ name: 'agent-pane', description: 'Agent flow in a terminal pane' })
     return next(e)
   })
 
-  on('command.run', { command: 'agent-flow' }, async $ => {
+  on('command.run', { command: 'agent-pane' }, async $ => {
     await $.ui.open({ id: PANE, title: 'Agent flow' })
     return { text: 'Agent flow pane opened.' }
+  })
+
+  on('command.run', { command: 'agent-flow' }, async $ => {
+    const home = ((await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? '').replace(/\\/g, '/')
+    await publish($)
+    await $.fs.write(`${home}/agent-flow.html`, (await $.fs.read(`${$.plugin.root}/hooks/viewer.html`)) as string)
+    const win = `${home}/agent-flow.html`.replace(/\//g, '\\')
+    let opened = false
+    try { opened = (await $.process.run(['cmd', '/c', 'start', '', 'chrome', win])).exitCode === 0 } catch {}
+    if (!opened) { try { await $.process.run(['cmd', '/c', 'start', '', win]) } catch {} }
+    return { text: `Opened ${win} in Chrome. It updates live as agents run; ask Claude to use subagents to see the flow.` }
   })
 
   on('agent.spawn', async ($, e, next) => {
@@ -30,8 +50,12 @@ export const register: Register = on => {
         tools: 0,
         lastTool: '',
         isDone: false,
+        startedAt: Date.now(),
+        endedAt: 0,
+        recent: [],
       }
       await update($, nodes, list => [...list, node].slice(-100))
+      await publish($)
     }
     return r
   })
@@ -39,15 +63,19 @@ export const register: Register = on => {
   on('tool.call', async ($, e, next) => {
     if (e.agentId) {
       await update($, nodes, list =>
-        list.map(n => (n.id === e.agentId ? { ...n, tools: n.tools + 1, lastTool: e.tool } : n)),
+        list.map(n => (n.id === e.agentId ? { ...n, tools: n.tools + 1, lastTool: e.tool, recent: [...n.recent, e.tool].slice(-6) } : n)),
       )
+      await publish($)
     }
     return next(e)
   })
 
   on('turn.complete', async ($, e, next) => {
     const id = (e as { agentId?: string }).agentId
-    if (id) await update($, nodes, list => list.map(n => (n.id === id ? { ...n, isDone: true } : n)))
+    if (id) {
+      await update($, nodes, list => list.map(n => (n.id === id ? { ...n, isDone: true, endedAt: Date.now() } : n)))
+      await publish($)
+    }
     return next(e)
   })
 

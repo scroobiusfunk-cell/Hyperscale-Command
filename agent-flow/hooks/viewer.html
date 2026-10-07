@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Flow</title>
+<style>
+:root{--bg:#0b0d14;--fg:#e6e8ef;--mut:#8a90a6;--run:#ffd166;--done:#06d6a0;--main:#4cc9f0}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 20% 0%,#16203a 0%,var(--bg) 60%);color:var(--fg);font:14px system-ui,sans-serif}
+header{padding:16px 22px;display:flex;gap:18px;align-items:baseline;border-bottom:1px solid #ffffff12}
+header h1{font-size:17px;margin:0}header span{color:var(--mut);font-size:12px}
+#wrap{position:relative;height:calc(100vh - 54px);overflow:auto}
+svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.col{position:absolute;display:flex;flex-direction:column;gap:14px}
+.card{width:250px;background:#141824;border:1px solid #ffffff1a;border-radius:12px;padding:10px 12px;position:relative}
+.card.main{border-color:var(--main);box-shadow:0 0 22px #4cc9f033}
+.card.run{border-color:var(--run);box-shadow:0 0 22px #ffd16644;animation:pulse 1.6s infinite}
+.card.done{border-color:#06d6a066}
+@keyframes pulse{50%{box-shadow:0 0 6px #ffd16622}}
+.t{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:13px}
+.badge{font-size:11px;padding:2px 7px;border-radius:99px;background:#ffffff14;color:var(--mut)}
+.run .badge{background:#ffd16622;color:var(--run)}.done .badge{background:#06d6a022;color:var(--done)}
+.d{color:var(--mut);font-size:12px;margin:4px 0 6px;line-height:1.35}
+.m{font-size:11px;color:var(--mut)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.chips i{font-style:normal;font-size:10px;padding:1px 6px;border-radius:6px;background:#7b8cff22;color:#a9b4ff}
+#empty{margin:60px auto;text-align:center;color:var(--mut);max-width:420px;line-height:1.6}
+path{fill:none;stroke:#ffffff33;stroke-width:1.6}path.run{stroke:var(--run);stroke-dasharray:6 6;animation:dash 1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-12}}
+</style></head><body>
+<header><h1>Agent Flow</h1><span id="stat">waiting for agents…</span></header>
+<div id="wrap"><svg id="svg"></svg><div id="cols"></div></div>
+<script>
+const wrap=document.getElementById('wrap'),svg=document.getElementById('svg'),cols=document.getElementById('cols');
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const dur=n=>{const s=Math.round(((n.endedAt||Date.now())-n.startedAt)/1000);return s<60?s+'s':Math.floor(s/60)+'m '+s%60+'s'};
+let last='';
+function render(F){
+ const nodes=F.nodes||[];const sig=JSON.stringify(nodes.map(n=>[n.id,n.isDone,n.tools,n.lastTool]))+Math.floor(Date.now()/1000);
+ if(sig===last)return;last=sig;
+ const running=nodes.filter(n=>!n.isDone).length;
+ document.getElementById('stat').textContent=nodes.length+' agents · '+running+' running · '+nodes.reduce((a,n)=>a+n.tools,0)+' tool calls';
+ const depth={main:0};const ids=new Set(nodes.map(n=>n.id));
+ const d=n=>depth[n.id]??(depth[n.id]=n.parent==='main'||!ids.has(n.parent)?1:1+d(nodes.find(x=>x.id===n.parent)));
+ nodes.forEach(d);
+ const levels=[[{id:'main',main:true}]];
+ nodes.forEach(n=>{(levels[depth[n.id]]=levels[depth[n.id]]||[]).push(n)});
+ cols.innerHTML='';svg.innerHTML='';
+ if(!nodes.length){cols.innerHTML='';}
+ const pos={};
+ levels.forEach((lv,ci)=>{const c=document.createElement('div');c.className='col';c.style.left=(24+ci*340)+'px';c.style.top='30px';
+  lv.forEach(n=>{const el=document.createElement('div');
+   if(n.main){el.className='card main';el.innerHTML='<div class="t">You / main agent<span class="badge">orchestrator</span></div><div class="d">Delegates work to subagents</div>'}
+   else{el.className='card '+(n.isDone?'done':'run');el.innerHTML='<div class="t">'+esc(n.type)+'<span class="badge">'+(n.isDone?'done':'running')+'</span></div><div class="d">'+esc(n.label)+'</div><div class="m">'+esc(n.model)+' · '+n.tools+' tools · '+dur(n)+'</div>'+(n.recent.length?'<div class="chips">'+n.recent.map(r=>'<i>'+esc(r)+'</i>').join('')+'</div>':'')}
+   c.appendChild(el);pos[n.id]=el});cols.appendChild(c)});
+ const wr=wrap.getBoundingClientRect();let maxX=0,maxY=0;
+ nodes.forEach(n=>{const a=pos[ids.has(n.parent)?n.parent:'main'],b=pos[n.id];if(!a||!b)return;
+  const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();const x1=ra.right-wr.left+wrap.scrollLeft,y1=ra.top+ra.height/2-wr.top+wrap.scrollTop,x2=rb.left-wr.left+wrap.scrollLeft,y2=rb.top+rb.height/2-wr.top+wrap.scrollTop;
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d','M'+x1+' '+y1+' C'+(x1+60)+' '+y1+' '+(x2-60)+' '+y2+' '+x2+' '+y2);if(!n.isDone)p.setAttribute('class','run');svg.appendChild(p);maxX=Math.max(maxX,x2+260);maxY=Math.max(maxY,y2+80)});
+ svg.setAttribute('width',maxX);svg.setAttribute('height',maxY);
+ if(!nodes.length){const e=document.createElement('div');e.id='empty';e.style.cssText='position:absolute;left:380px;top:30px;width:420px';e.textContent='No subagents yet. Ask Claude something that uses subagents (e.g. “use 3 agents to research X, Y and Z”) and they will appear here live.';cols.appendChild(e)}
+}
+function poll(){const s=document.createElement('script');s.src='agent-flow-data.js?'+Date.now();s.onload=()=>{render(window.FLOW||{nodes:[]});s.remove()};s.onerror=()=>{render({nodes:[]});s.remove()};document.head.appendChild(s)}
+poll();setInterval(poll,1000);
+</script></body></html>

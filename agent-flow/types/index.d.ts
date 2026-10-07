@@ -7,6 +7,9 @@ export type FlowNode = {
   tools: number
   lastTool: string
   isDone: boolean
+  startedAt: number
+  endedAt: number
+  recent: string[]
 }
 
 declare module 'claude-code' {
