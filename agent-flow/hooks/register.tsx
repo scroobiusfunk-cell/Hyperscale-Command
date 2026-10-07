@@ -7,16 +7,32 @@ const PANE = 'agent-flow'
 const nodes = atom({ plugin: 'agent-flow', key: 'nodes' } as const, [])
 const MAIN = 'main'
 
+let writing = false
+let dirty = false
 async function publish($: any) {
+  if (writing) { dirty = true; return }
+  writing = true
+  try {
+    do {
+      dirty = false
+      await publishNow($)
+    } while (dirty)
+  } finally { writing = false }
+}
+
+async function publishNow($: any) {
   try {
     const list = (await read($, nodes)) as FlowNode[]
     const home = ((await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? '').replace(/\\/g, '/')
+    if (!home) return
     await $.fs.write(`${home}/agent-flow-data.js`, `window.FLOW=${JSON.stringify({ updated: Date.now(), nodes: list }).replace(/</g, '\\u003c')};`)
   } catch {}
 }
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    await update($, nodes, () => [])
+    await publish($)
     await $.command.register({ name: 'agent-flow', description: 'Live agent flow view in your web browser' })
     await $.command.register({ name: 'agent-pane', description: 'Agent flow in a terminal pane' })
     return next(e)
@@ -54,7 +70,7 @@ export const register: Register = on => {
         endedAt: 0,
         recent: [],
       }
-      await update($, nodes, list => [...list, node].slice(-100))
+      await update($, nodes, list => (list.length >= 100 ? list.filter((n, i) => !n.isDone || i >= list.length - 50) : list).concat(node))
       await publish($)
     }
     return r

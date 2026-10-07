@@ -29,12 +29,13 @@ function resize(){W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr}addE
 const N=DATA.nodes.map((n,i)=>({...n,i,x:(n.x-.5)*Math.min(W,H)*1.1,y:(n.y-.5)*Math.min(W,H)*1.1,vx:0,vy:0,fixed:false,r:3+Math.sqrt(n.degree)*2.2}));
 const E=DATA.edges.map(([a,b])=>({a:N[a],b:N[b]}));
 const adj=N.map(()=>new Set());E.forEach(e=>{adj[e.a.i].add(e.b.i);adj[e.b.i].add(e.a.i)});
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const hidden=new Set();let sel=null,hover=null,alpha=1;
 const col=n=>COLORS[n.group%COLORS.length];
 document.getElementById('title').textContent=DATA.root.split('/').pop();
 document.getElementById('stats').textContent=N.length+' nodes · '+E.length+' connections';
 const lg=document.getElementById('legend');
-DATA.groups.forEach((g,i)=>{const d=document.createElement('div');d.innerHTML='<i style="background:'+COLORS[i%COLORS.length]+'"></i>'+g.replace(/</g,'&lt;');
+DATA.groups.forEach((g,i)=>{const d=document.createElement('div');d.innerHTML='<i style="background:'+COLORS[i%COLORS.length]+'"></i>'+esc(g);
  d.onclick=()=>{hidden.has(i)?hidden.delete(i):hidden.add(i);d.classList.toggle('off');alpha=.3};lg.appendChild(d)});
 if(!DATA.groups.length)lg.style.display='none';
 let cam={x:0,y:0,k:1};
@@ -53,7 +54,7 @@ q.onkeydown=e=>{if(e.key==='Enter'&&match&&match.size){const n=N[[...match][0]];
 function focus(n){sel=n;cam.x=-n.x*cam.k;cam.y=-n.y*cam.k;showInfo(n)}
 const info=document.getElementById('info');
 function showInfo(n){if(!n){info.style.display='none';return}
- info.style.display='block';info.innerHTML='<b>'+n.name.replace(/</g,'&lt;')+'</b><span>'+DATA.groups[n.group]+' · '+adj[n.i].size+' connections</span><div></div>';
+ info.style.display='block';info.innerHTML='<b>'+esc(n.name)+'</b><span>'+esc(DATA.groups[n.group]||'')+' · '+adj[n.i].size+' connections</span><div></div>';
  const box=info.lastChild;[...adj[n.i]].slice(0,12).forEach(j=>{const a=document.createElement('div');a.className='row';const l=document.createElement('a');l.textContent='→ '+N[j].name;l.onclick=()=>focus(N[j]);a.appendChild(l);box.appendChild(a)})}
 function draw(){
  step();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);

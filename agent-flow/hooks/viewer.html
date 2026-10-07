@@ -28,16 +28,17 @@ path{fill:none;stroke:#ffffff33;stroke-width:1.6}path.run{stroke:var(--run);stro
 <div id="wrap"><svg id="svg"></svg><div id="cols"></div></div>
 <script>
 const wrap=document.getElementById('wrap'),svg=document.getElementById('svg'),cols=document.getElementById('cols');
-const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dur=n=>{const s=Math.round(((n.endedAt||Date.now())-n.startedAt)/1000);return s<60?s+'s':Math.floor(s/60)+'m '+s%60+'s'};
 let last='';
-function render(F){
+function render(F){try{render0(F)}catch(e){document.getElementById('stat').textContent='render error: '+e.message}}
+function render0(F){
  const nodes=F.nodes||[];const sig=JSON.stringify(nodes.map(n=>[n.id,n.isDone,n.tools,n.lastTool]))+Math.floor(Date.now()/1000);
  if(sig===last)return;last=sig;
  const running=nodes.filter(n=>!n.isDone).length;
- document.getElementById('stat').textContent=nodes.length+' agents · '+running+' running · '+nodes.reduce((a,n)=>a+n.tools,0)+' tool calls';
+ const age=Date.now()-(F.updated||0);document.getElementById('stat').textContent=(nodes.length&&age>600000?'(stale: last update '+Math.round(age/60000)+' min ago) ':'')+nodes.length+' agents · '+running+' running · '+nodes.reduce((a,n)=>a+n.tools,0)+' tool calls';
  const depth={main:0};const ids=new Set(nodes.map(n=>n.id));
- const d=n=>depth[n.id]??(depth[n.id]=n.parent==='main'||!ids.has(n.parent)?1:1+d(nodes.find(x=>x.id===n.parent)));
+ const seen=new Set();const d=n=>{if(depth[n.id]!==undefined)return depth[n.id];if(seen.has(n.id))return 1;seen.add(n.id);const p=n.parent==='main'||!ids.has(n.parent)?null:nodes.find(x=>x.id===n.parent);return depth[n.id]=p?1+d(p):1};
  nodes.forEach(d);
  const levels=[[{id:'main',main:true}]];
  nodes.forEach(n=>{(levels[depth[n.id]]=levels[depth[n.id]]||[]).push(n)});
@@ -47,7 +48,7 @@ function render(F){
  levels.forEach((lv,ci)=>{const c=document.createElement('div');c.className='col';c.style.left=(24+ci*340)+'px';c.style.top='30px';
   lv.forEach(n=>{const el=document.createElement('div');
    if(n.main){el.className='card main';el.innerHTML='<div class="t">You / main agent<span class="badge">orchestrator</span></div><div class="d">Delegates work to subagents</div>'}
-   else{el.className='card '+(n.isDone?'done':'run');el.innerHTML='<div class="t">'+esc(n.type)+'<span class="badge">'+(n.isDone?'done':'running')+'</span></div><div class="d">'+esc(n.label)+'</div><div class="m">'+esc(n.model)+' · '+n.tools+' tools · '+dur(n)+'</div>'+(n.recent.length?'<div class="chips">'+n.recent.map(r=>'<i>'+esc(r)+'</i>').join('')+'</div>':'')}
+   else{el.className='card '+(n.isDone?'done':'run');el.innerHTML='<div class="t">'+esc(n.type)+'<span class="badge">'+(n.isDone?'done':'running')+'</span></div><div class="d">'+esc(n.label)+'</div><div class="m">'+esc(n.model)+' · '+n.tools+' tools · '+dur(n)+'</div>'+((n.recent||[]).length?'<div class="chips">'+n.recent.map(r=>'<i>'+esc(r)+'</i>').join('')+'</div>':'')}
    c.appendChild(el);pos[n.id]=el});cols.appendChild(c)});
  const wr=wrap.getBoundingClientRect();let maxX=0,maxY=0;
  nodes.forEach(n=>{const a=pos[ids.has(n.parent)?n.parent:'main'],b=pos[n.id];if(!a||!b)return;

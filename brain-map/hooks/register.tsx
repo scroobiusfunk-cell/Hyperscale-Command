@@ -190,9 +190,10 @@ export const register: Register = on => {
     if (typeof result === 'string') return { text: result }
     const html = ((await $.fs.read(`${$.plugin.root}/hooks/viewer.html`)) as string).replace(
       '/*DATA*/null',
-      () => JSON.stringify({ root: result.root, groups: result.groups, nodes: result.nodes, edges: result.edges }).replace(/</g, '\\u003c'),
+      () => JSON.stringify({ root: result.root, groups: result.groups, nodes: result.nodes, edges: result.edges }).replace(/[<>&\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')),
     )
     const home = (await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? ''
+    if (!home) return { text: 'Could not find your home folder (USERPROFILE/HOME unset).' }
     const out = `${home.replace(/\\/g, '/')}/brain-map.html`
     await $.fs.write(out, html)
     const winPath = out.replace(/\//g, '\\')
