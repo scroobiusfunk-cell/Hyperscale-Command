@@ -1,0 +1,4093 @@
+{
+  "_note": "Training content extracted from the prototype. Source of truth for copy. Every rule/step carries a citation (c). TEAM is SAMPLE data for layout only.",
+  "passThreshold": 0.8,
+  "tracks": {
+    "aw": {
+      "name": "New hire",
+      "level": "Awareness",
+      "desc": "What each level is, why it matters, and your part in protecting quality."
+    },
+    "pr": {
+      "name": "Field engineer",
+      "level": "Practitioner",
+      "desc": "Run inspections, verify checklists, log issues, and hit every notice window."
+    },
+    "ad": {
+      "name": "QA/QC & Cx admin",
+      "level": "Administrator",
+      "desc": "Own the plan, the systems of record, the gates and the closeout evidence."
+    }
+  },
+  "modules": [
+    {
+      "code": "QA",
+      "levelLabel": "Foundations",
+      "title": "QA/QC Foundations",
+      "sub": "Standards, ownership, deficiencies",
+      "summary": "Every inspection on the CDR Campus traces to a four-tier standards stack. Learn who owns quality, where it is recorded, and what happens when work fails.",
+      "leads": "Trade Partner QC (self-inspection)",
+      "witness": "Suffolk QA verifies · QTS oversees",
+      "role": {
+        "aw": "Know who owns quality on your scope and where problems get logged. If you are unsure, stop and ask before proceeding.",
+        "pr": "Verify trade QC, log deficiencies and NCRs in Procore with closure evidence, and escalate repeat failures.",
+        "ad": "Own the QA/QC Plan, NCR trend reporting, and routing between Procore, CxAlloy and PYPE."
+      },
+      "rules": [
+        {
+          "t": "Most stringent requirement governs unless the Architect resolves it in writing first",
+          "c": "01 40 00 §1.4"
+        },
+        {
+          "t": "Special Inspector is engaged by the Owner, never the Contractor",
+          "c": "01 40 00 §1.11"
+        },
+        {
+          "t": "Retest and reinspection costs are charged to the Contractor",
+          "c": "01 40 00 §1.10"
+        },
+        {
+          "t": "Verbal confirmation is never closure evidence",
+          "c": "Training v2"
+        }
+      ],
+      "checklists": [],
+      "gate": [
+        "QC plan submitted and followed",
+        "Deficiencies logged with party, severity, due date",
+        "NCRs closed with documented evidence"
+      ],
+      "steps": [
+        {
+          "title": "The standards stack",
+          "body": "Tier 1 Owner: QTS CX Standard V1.4 (S7117) Rev 39. Tier 2 Contract: Specs 01 40 00 and 01 91 13. Tier 3 Implementation: the Suffolk Project QA/QC Plan. Tier 4 Execution: approved submittals, shop drawings and manufacturer instructions.",
+          "c": "01 40 00 §1.4",
+          "field": "When two requirements disagree, the most stringent governs unless the Architect resolves it in writing before you proceed."
+        },
+        {
+          "title": "QA vs QC: layered, not shared",
+          "body": "The Trade Partner owns QC: self-inspection, correction and documentation of its own work. Suffolk QA verifies, tracks trends, escalates and reports. It does not perform QC for the trade. QTS witnesses Cx inspections and gives final acceptance.",
+          "c": "Training v2",
+          "field": "No party can delegate accountability. The Owner engages the Special Inspector under IBC Chapter 17."
+        },
+        {
+          "title": "Deficiency or NCR?",
+          "body": "A deficiency is a documented condition that does not meet requirements, with a party, severity, due date and closure evidence. An NCR is triggered by unapproved material, damaged equipment, failed tests, concealed work, unauthorized deviations or repeat failures.",
+          "c": "01 40 00 §1.10",
+          "field": "Progress payments may be withheld for open NCRs, failed inspections, missing reports or unresolved punch items."
+        },
+        {
+          "title": "Systems of record",
+          "body": "Procore holds RFIs, submittals, drawings, punch, observations, NCRs, EPP walks and daily reports. CxAlloy holds L1–L5 inspections, FOD events, OFCI/CFCI tracking and test reports. PYPE holds closeout and final delivery to the Owner.",
+          "c": "Training v2",
+          "field": "A photo on your phone is not a record. Attach it to the asset in CxAlloy or the item in Procore."
+        }
+      ],
+      "quiz": {
+        "q": "Two referenced standards give different torque values for the same connection. What do you do?",
+        "opts": [
+          "Use the lower value to avoid over-torquing",
+          "Apply the most stringent unless the Architect resolves it in writing before you proceed",
+          "Use whichever value the foreman normally uses"
+        ],
+        "a": 1,
+        "why": "Spec 01 40 00 §1.4: the most stringent requirement governs. Refer uncertainties to the Architect before proceeding."
+      }
+    },
+    {
+      "code": "L1",
+      "levelLabel": "Level 1",
+      "title": "Procurement & FWT",
+      "sub": "Submittals to factory witness",
+      "summary": "Quality starts before anything ships: submittal review, an approved factory witness test plan, a documented pass, and document review before release.",
+      "leads": "DLB (CxA) · Vendor",
+      "witness": "QTS · Suffolk QA/QC",
+      "role": {
+        "aw": "Know that major equipment is tested before it ships, and that the results follow the equipment to site.",
+        "pr": "Attend witness tests, compare readings to the approved submittal, and log failures as CxAlloy Issues.",
+        "ad": "Track the FWT schedule, OSI/OAI uploads, and source inspection count against the minimum of 5."
+      },
+      "rules": [
+        {
+          "t": "FWT plan approved by the CxA and QTS before testing",
+          "c": "Flowchart R5"
+        },
+        {
+          "t": "Failed FWT steps are logged as CxAlloy Issues",
+          "c": "Flowchart R5"
+        },
+        {
+          "t": "Minimum 5 source inspections per project on long-lead / high-risk items",
+          "c": "Training v2"
+        },
+        {
+          "t": "Offsite storage (OSI) and offsite arrival (OAI) uploaded within 24 hrs",
+          "c": "Inspection Tracker"
+        }
+      ],
+      "checklists": [
+        "L1E/M - OSI - Equip Designation",
+        "L1E/M/C - OAI - Equip Designation",
+        "L1C - EPMS/BMS - Equip Designation",
+        "L1i - Integration - Equip Designation",
+        "L1V - Startup - Equip Designation",
+        "L1Q - Test - Equip Designation"
+      ],
+      "gate": [
+        "FWT passed and report issued",
+        "Failures resolved in CxAlloy",
+        "Mfg docs, BOL and O&M received; released to ship"
+      ],
+      "steps": [
+        {
+          "title": "Submittal review",
+          "body": "DLB, the EOR and Suffolk QA/QC review submittals. The approved submittal becomes the yardstick for every later check, including the factory test.",
+          "c": "01 91 13 §3.2.C",
+          "field": "Bring the approved submittal to the FWT. Compare nameplates, ratings and firmware to it, not to the vendor brochure."
+        },
+        {
+          "title": "FWT plan and witness",
+          "body": "The FWT plan names the tests and the witnesses: DLB, the vendor, QTS and Suffolk. It must be approved by the CxA and QTS. The test produces an FWT report with witnessed data.",
+          "c": "Flowchart R5",
+          "field": "Skids and PODs built at an integrator also get L1 checks: offsite arrival (OAI), integration, controls FAT, vendor startup and skid testing."
+        },
+        {
+          "title": "Pass, fail, ship",
+          "body": "A failed step becomes a CxAlloy Issue and is retested. On a pass, Suffolk QA/QC and MOFE review manufacturer docs, the bill of lading and O&M before the equipment ships.",
+          "c": "Flowchart R5",
+          "field": "OFCI equipment stored offsite needs a completed Offsite Storage Inspection (L1E/M - OSI) uploaded within 24 hours."
+        }
+      ],
+      "quiz": {
+        "q": "A UPS fails one step of its factory witness test. Where is that recorded?",
+        "opts": [
+          "In the FWT report only",
+          "As a CxAlloy Issue, tracked to resolution and retest",
+          "In a Procore daily report"
+        ],
+        "a": 1,
+        "why": "Flowchart R5: Fail → CxAlloy Issue. It stays open until resolved and retested."
+      }
+    },
+    {
+      "code": "L2",
+      "levelLabel": "Level 2",
+      "title": "Site Acceptance & Install",
+      "sub": "Arrive, set, verify, seal",
+      "summary": "From the truck to a sealed, verified installation. The L2 gate opens only at 100% complete with a clean walk.",
+      "leads": "Suffolk QA/QC · CEI · Loenbro · Baker",
+      "witness": "Owner's Quality Rep · DLB · QTS",
+      "role": {
+        "aw": "Protect installed equipment, keep FOD seals intact, and report damage the moment you see it.",
+        "pr": "Run benchmark inspections, verify installation checklists, and call the Owner's Quality Rep for SIP and PEI.",
+        "ad": "Track the 24-hour upload windows and the L2 gate status for every asset."
+      },
+      "rules": [
+        {
+          "t": "Receipt logged in Procore RIF within 24 hours of delivery",
+          "c": "Training v2"
+        },
+        {
+          "t": "OFCI damage or deviation reported to QTS and vendor within 48 hours",
+          "c": "Training v2"
+        },
+        {
+          "t": "Follow-up benchmark inspections at intervals of 15 days or less",
+          "c": "QA/QC Plan §12.4"
+        },
+        {
+          "t": "Installers complete and sign checklists daily for the prior day's work",
+          "c": "01 91 13 §3.5.C.3"
+        },
+        {
+          "t": "Broken FOD seal: repeat the full FOD inspection and apply a new seal",
+          "c": "Training v2"
+        }
+      ],
+      "checklists": [
+        "L2E/M/C - SAI - Equip Designation",
+        "L2Q - SIP - Equip Designation",
+        "L2E/M/C - EIV/MIV/CIV - Equip Designation",
+        "L2V - Prestartup - Equip Designation",
+        "L2Q - PEI - Equip Designation",
+        "L2E/M/C - CW - Equip Designation"
+      ],
+      "gate": [
+        "100% of L2 checklists closed in CxAlloy",
+        "Clean walk complete, FOD seal applied and intact",
+        "Asset data (mfr, model, serial) loaded in CxAlloy"
+      ],
+      "steps": [
+        {
+          "title": "Site arrival (SAI)",
+          "body": "Inspect condition on delivery: agreement with the approved submittal, cleanliness and no damage. Attach the bill of lading and applicable FAT. Required on all OFCI equipment and whenever ownership transfers.",
+          "c": "01 91 13 §3.2.C.3",
+          "field": "Log the receipt in Procore RIF within 24 hours. Damage or deviations on OFCI go to QTS and the vendor within 48 hours."
+        },
+        {
+          "title": "Benchmark and set-in-place",
+          "body": "The first in-place installation of each type is the benchmark that sets the accepted quality. Follow-ups run at 15-day intervals or less. SIP covers first of kind plus 10%, completed by the Owner's Quality Rep.",
+          "c": "QA/QC Plan §12.4",
+          "field": "Non-conforming benchmark work is corrected and re-inspected before repetitive installation continues."
+        },
+        {
+          "title": "Installation verification",
+          "body": "EIV, MIV and CIV checks confirm location, configuration, manufacturer instructions, attachment, access clearance, utilities and labeling. Electrical adds continuity, torque, cable and NETA testing, and SCCS settings.",
+          "c": "01 91 13 §3.2.C.4",
+          "field": "Installers complete and sign construction checklists daily for the preceding day's work."
+        },
+        {
+          "title": "Pre-energization and clean walk",
+          "body": "The Owner's Quality Rep completes the PEI; the CM calls the inspection. The clean walk is the FOD inspection, and the equipment is tamper-sealed before energization.",
+          "c": "Inspection Tracker",
+          "field": "If a FOD seal is broken for any reason, repeat the full FOD inspection and apply a new seal. No exceptions."
+        }
+      ],
+      "quiz": {
+        "q": "An electrician opens a sealed switchboard to fix a missing label. What happens next?",
+        "opts": [
+          "Close it and re-apply the original seal",
+          "Log a Procore observation, repeat the full FOD inspection, apply a new seal",
+          "Leave a note for the L3 startup tech"
+        ],
+        "a": 1,
+        "why": "A broken seal triggers a Procore observation and a repeat FOD inspection with a new seal, every time."
+      }
+    },
+    {
+      "code": "L3",
+      "levelLabel": "Level 3",
+      "title": "Startup & Pre-functional",
+      "sub": "Audit, energize, start up",
+      "summary": "Proves each piece of equipment is ready, energized safely and started per the manufacturer. Ends with CxA acceptance.",
+      "leads": "Suffolk Cx · DLB · CEI · Loenbro · Vendor",
+      "witness": "QTS · OEM rep",
+      "role": {
+        "aw": "Stay out of energized areas unless you are authorized. Respect every lock and tag.",
+        "pr": "Confirm prerequisites, issue 48-hour notice, witness OEM startup, and capture the report in CxAlloy.",
+        "ad": "Confirm every L3V and L3C checklist is marked Owner Agent Reviewed before L4 is scheduled."
+      },
+      "rules": [
+        {
+          "t": "48-hour minimum notice for any startup or dynamic operation",
+          "c": "Training v2"
+        },
+        {
+          "t": "Prestartup audit of completed installation checks before startup",
+          "c": "01 91 13 §3.5.E"
+        },
+        {
+          "t": "Manufacturer / factory-authorized rep field report required",
+          "c": "01 40 00 §1.8"
+        },
+        {
+          "t": "Contractor test equipment calibrated and CxA-approved",
+          "c": "Flowchart R5"
+        }
+      ],
+      "checklists": [
+        "L3V - Startup - Equip Designation",
+        "L3C - EPMS/BMS - Equip Designation"
+      ],
+      "gate": [
+        "Startup report with as-left settings (and TAB report where applicable)",
+        "Controls (EPMS/BMS) checklist complete",
+        "CxA marks \"Owner Agent Reviewed\": ready for L4"
+      ],
+      "steps": [
+        {
+          "title": "Prerequisites and prestartup audit",
+          "body": "Before startup, L1 and L2 are closed, the FOD seal is intact and test reports are complete. A prestartup audit reviews installation checks and reports anything that would keep the system from operating satisfactorily.",
+          "c": "01 91 13 §3.5.E",
+          "field": "Give at least 48 hours notice for startup or any dynamic operation."
+        },
+        {
+          "title": "LOTO and initial energization",
+          "body": "CEI and the Suffolk MEP PM control authorization under AutoLOTO. Initial energization follows the MV to LV sequence with CEI, Loenbro, the vendor and Cx present.",
+          "c": "Flowchart R5",
+          "field": "After first energization, site safety conditions change for every trade. Re-brief crews."
+        },
+        {
+          "title": "Manufacturer startup",
+          "body": "Performed per manufacturer procedures, approved submittals and O&M documentation, with an OEM witness and field report. The startup report includes all as-left settings and an FTE check.",
+          "c": "01 40 00 §1.8",
+          "field": "The CxA marks the L3V checklist 'Owner Agent Reviewed' to show the equipment is ready for L4."
+        }
+      ],
+      "quiz": {
+        "q": "A chiller startup is set for Thursday 8 AM. What is the latest the notice can go out?",
+        "opts": [
+          "Wednesday 8 AM",
+          "Tuesday 8 AM",
+          "Thursday 7 AM, if QTS is already on site"
+        ],
+        "a": 1,
+        "why": "Startup and dynamic operations need a minimum of 48 hours notice."
+      }
+    },
+    {
+      "code": "L4",
+      "levelLabel": "Level 4",
+      "title": "Functional Performance Test",
+      "sub": "Systems vs design intent",
+      "summary": "DLB-owned, QTS-approved scripts test each system against design intent. Failures become CxAlloy Issues and are retested until they pass.",
+      "leads": "DLB (CxA, owns scripts)",
+      "witness": "QTS · Suffolk Cx · Trades",
+      "role": {
+        "aw": "System tests fail on a single missing point or label, and retests cost real money. Finish your work completely.",
+        "pr": "Support script execution, record actual results, and log failures in CxAlloy within 24 hours.",
+        "ad": "Track issue aging, retests and the L4 to L5 gate."
+      },
+      "rules": [
+        {
+          "t": "Failed test: compliance issue report within 24 hours",
+          "c": "01 91 13 §3.5.K.4"
+        },
+        {
+          "t": "One issue per report, unless a whole device class shares it",
+          "c": "01 91 13 §3.5.K.5"
+        },
+        {
+          "t": "Repeat demonstrations caused by Contractor work are reimbursed to Owner",
+          "c": "01 91 13 §3.5.K.3"
+        },
+        {
+          "t": "Demonstrate 100% unless ASQ Z1.4 sampling is specified",
+          "c": "01 91 13 §3.3.C"
+        }
+      ],
+      "checklists": [],
+      "gate": [
+        "All FPT scripts passed",
+        "TAB complete: air and water balance",
+        "CxA and QTS acceptance"
+      ],
+      "steps": [
+        {
+          "title": "Scripts and TAB",
+          "body": "L4 scripts are owned by DLB and approved by QTS. TAB is executed by an independent AABC or NEBB-certified agency, not the mechanical contractor.",
+          "c": "Flowchart R5",
+          "field": "Controls go first: point-to-point, calibration, network, alarms, trends, graphics and sequence verification."
+        },
+        {
+          "title": "Testing against design intent",
+          "body": "Each system is tested under a full range of operating conditions and loads. Completed test data forms are the official record of results.",
+          "c": "01 91 13 §3.2.E",
+          "field": "Record what actually happened. Never edit an expected result to match."
+        },
+        {
+          "title": "Issue, fix, retest",
+          "body": "Results outside acceptance criteria are compliance issues. Submit the report within 24 hours, determine the cause, correct it and retest on a new form marked \"Retest\".",
+          "c": "01 91 13 §3.5.K",
+          "field": "If every actuator in a class fails the same way, they may share one report."
+        }
+      ],
+      "quiz": {
+        "q": "During FPT, a CRAH alarm shows at the unit but not on the BMS. Next step?",
+        "opts": [
+          "Pass it, the alarm works locally",
+          "Fail the step and submit a compliance issue report within 24 hours",
+          "Hold it for L5"
+        ],
+        "a": 1,
+        "why": "§3.5.K.4: results outside acceptance criteria are reported within 24 hours, corrected and retested."
+      }
+    },
+    {
+      "code": "L5",
+      "levelLabel": "Level 5",
+      "title": "MST + IST",
+      "sub": "Full load, failure modes",
+      "summary": "Mechanical systems testing, then integrated systems testing under full load with every trade and vendor on site. Ends with QTS final acceptance.",
+      "leads": "DLB (owns scripts)",
+      "witness": "QTS",
+      "role": {
+        "aw": "IST days are all-hands. Know your role in the test and where you need to be.",
+        "pr": "Confirm readiness, coordinate trades and vendors, and support NCR resolution and re-witness.",
+        "ad": "Maintain IST readiness tracking, NCR closure and the evidence package."
+      },
+      "rules": [
+        {
+          "t": "L1–L4 fully closed in CxAlloy before L5",
+          "c": "Training v2"
+        },
+        {
+          "t": "Scripts and load bank plan DLB-owned, QTS-approved",
+          "c": "Flowchart R5"
+        },
+        {
+          "t": "Vendor support mandatory; all trades on site",
+          "c": "Flowchart R5"
+        },
+        {
+          "t": "L5 failures route through NCR: correct, retest, re-witness",
+          "c": "Training v2"
+        }
+      ],
+      "checklists": [],
+      "gate": [
+        "MST and IST scripts passed",
+        "Failure-mode and resilience tests witnessed by QTS",
+        "IST acceptance by DLB and QTS"
+      ],
+      "steps": [
+        {
+          "title": "MST first",
+          "body": "DLB, Loenbro, Baker and Cx run the Mechanical Systems Test to prove the cooling plant and controls work as systems before full integration.",
+          "c": "Flowchart R5",
+          "field": "Suffolk does not author L5 scripts."
+        },
+        {
+          "title": "IST at full load",
+          "body": "Load banks simulate IT load. Electrical, mechanical and controls run together under full load, with all trades and vendors on site.",
+          "c": "01 91 13 §3.2.E.5",
+          "field": "Vendor support is mandatory. A missing vendor can cost the IST window."
+        },
+        {
+          "title": "Failure modes and resilience",
+          "body": "Failure scenarios are run with QTS witnessing to prove the facility rides through as designed. Failures go through the NCR workflow: corrective action, retest and re-witness.",
+          "c": "Training v2",
+          "field": "Successful L5 closure is the final gate to turnover under S7117 V1.4 Rev 39."
+        }
+      ],
+      "quiz": {
+        "q": "Can IST start while one L4 FPT is still open on a CRAH?",
+        "opts": [
+          "Yes, if the CRAH isn't in the first scenario",
+          "No. L1–L4 must be fully closed first",
+          "Yes, with Suffolk PM approval"
+        ],
+        "a": 1,
+        "why": "L5 prerequisites: L1–L4 fully closed and commissioning readiness verified."
+      }
+    },
+    {
+      "code": "CO",
+      "levelLabel": "Closeout",
+      "title": "Closeout & Turnover",
+      "sub": "Punch to owner acceptance",
+      "summary": "Punch and clean walk, permanent systems in, temporary removed, owner training, the final Cx report, then owner acceptance.",
+      "leads": "Suffolk QA/QC + Cx · DLB",
+      "witness": "QTS · EOR",
+      "role": {
+        "aw": "Close your punch items fast and completely. The 72-hour clock is real.",
+        "pr": "Verify 'Ready for Review' punch within 48 hours and support the CxA inspection.",
+        "ad": "Assemble closeout in PYPE: binders, PDFs and test data, plus the final Special Inspection Report."
+      },
+      "rules": [
+        {
+          "t": "Punch resolution by trade partner within 72 hours",
+          "c": "Training v2"
+        },
+        {
+          "t": "Suffolk verifies 'Ready for Review' punch within 48 hours",
+          "c": "Training v2"
+        },
+        {
+          "t": "Final Special Inspection Report at Substantial Completion",
+          "c": "01 40 00 §1.11"
+        },
+        {
+          "t": "Cx completion certificate before Substantial Completion inspection",
+          "c": "01 91 13 §3.10.D"
+        }
+      ],
+      "checklists": [],
+      "gate": [
+        "Punch and clean walk complete",
+        "Temporary cooling and power removed",
+        "Owner training, Cx final report, owner acceptance"
+      ],
+      "steps": [
+        {
+          "title": "Punch and clean walk",
+          "body": "Suffolk QA/QC, Cx, the EOR and QTS walk the work. The Contractor submits a complete list of items to finish, and the CxA inspects.",
+          "c": "01 91 13 §3.10.A",
+          "field": "Leaving an item off the list doesn't remove the responsibility to complete it."
+        },
+        {
+          "title": "Permanent systems and training",
+          "body": "Permanent cooling replaces temporary cooling. Temporary power is removed and verified by QA/QC. Vendors and DLB deliver owner training and burn-ins.",
+          "c": "Flowchart R5",
+          "field": "Training is scheduled per §4.0 of the Cx plan."
+        },
+        {
+          "title": "Final report and acceptance",
+          "body": "DLB issues the Cx final report with binders, PDF and test data. The CxA certificate of construction-phase Cx completion comes before the Substantial Completion inspection. QTS, DLB and Suffolk sign owner acceptance.",
+          "c": "01 91 13 §3.10.D",
+          "field": "Deferred checklists need written Owner approval and a completion schedule (§3.2.F)."
+        }
+      ],
+      "quiz": {
+        "q": "Who prepares the Certificate of Construction Phase Commissioning Process Completion?",
+        "opts": [
+          "The Contractor",
+          "The Commissioning Authority",
+          "QTS FacOps"
+        ],
+        "a": 1,
+        "why": "§3.10.D: the CxA prepares the certificate once construction-phase commissioning is complete."
+      }
+    },
+    {
+      "trade": true,
+      "code": "EL",
+      "levelLabel": "Trade focus · Electrical",
+      "title": "Electrical QA/QC",
+      "sub": "NETA ATS, grounding, transformers",
+      "summary": "The electrical acceptance tests that stand between installation and energization.",
+      "leads": "CEI",
+      "witness": "DLB · Suffolk QA/QC",
+      "role": {
+        "aw": "Know which tests must pass before gear is energized. Never work around an open test.",
+        "pr": "Confirm NETA reports, torque and interlock verification are complete and attached before PEI.",
+        "ad": "Track NETA, megger, TTR and grounding reports against every electrical asset."
+      },
+      "rules": [
+        {
+          "t": "MV and LV switchgear field acceptance",
+          "c": "NETA ATS §7.5"
+        },
+        {
+          "t": "Grounding: three-point fall-of-potential test",
+          "c": "NETA ATS §7.13 · IEEE 81"
+        },
+        {
+          "t": "Transformers: TTR, winding resistance, IR, oil per ASTM D923",
+          "c": "NETA ATS §7.2.2 · IEEE C57"
+        },
+        {
+          "t": "LV cables: insulation resistance (megger) before energization",
+          "c": "NETA ATS §7"
+        }
+      ],
+      "checklists": [
+        "L2E - EIV - Equip Designation"
+      ],
+      "gate": [
+        "NETA acceptance reports complete",
+        "Torque, grounding and bonding verified",
+        "Kirk key / interlocks verified, labeling complete"
+      ],
+      "steps": [
+        {
+          "title": "Switchgear and cables",
+          "body": "Medium- and low-voltage switchgear get NETA field acceptance testing. Low-voltage cables get insulation resistance (megger) testing before energization.",
+          "c": "NETA ATS §7.5",
+          "field": "A failed megger is a failed test: it triggers an NCR, correction and retest before energization."
+        },
+        {
+          "title": "Grounding and transformers",
+          "body": "Grounding is tested by three-point fall-of-potential per IEEE 81. Transformer acceptance covers TTR, winding resistance, insulation resistance and oil testing per ASTM D923.",
+          "c": "NETA ATS §7.13",
+          "field": "Attach each report to the asset in CxAlloy as part of the L2 EIV."
+        },
+        {
+          "title": "Energization readiness",
+          "body": "Torque verification, grounding and bonding, Kirk key and interlock verification, and labeling must all be complete.",
+          "c": "Training v2",
+          "field": "Gear, panel, transformer and UPS openings are sealed for FOD; heaters or bulbs stay on in switchboards."
+        }
+      ],
+      "quiz": {
+        "q": "Which method is specified for ground system testing?",
+        "opts": [
+          "Two-point continuity check",
+          "Three-point fall-of-potential per IEEE 81",
+          "Visual inspection of ground lugs"
+        ],
+        "a": 1,
+        "why": "NETA ATS §7.13 with IEEE 81: three-point fall-of-potential."
+      }
+    },
+    {
+      "trade": true,
+      "code": "ME",
+      "levelLabel": "Trade focus · Mech / Plumbing / FP",
+      "title": "Mechanical, Plumbing & FP",
+      "sub": "TAB, hydro, firestopping, concrete",
+      "summary": "Test values and independent agencies for mechanical, plumbing, fire protection and concrete.",
+      "leads": "Loenbro · SA Comunale",
+      "witness": "DLB · Suffolk QA/QC",
+      "role": {
+        "aw": "Know the test pressures and durations so you can spot a shortcut.",
+        "pr": "Witness hydros for the full duration, confirm certificates, and verify TAB is by an independent agency.",
+        "ad": "Track test certificates, cylinder breaks and firestop sampling against the 10% minimum."
+      },
+      "rules": [
+        {
+          "t": "TAB by an independent AABC MN-1 or NEBB agency, not the mechanical contractor",
+          "c": "Training v2"
+        },
+        {
+          "t": "Domestic water: hydrostatic 150 psi for 4 hours; disinfect per AWWA C651",
+          "c": "UPC / IPC"
+        },
+        {
+          "t": "Wet sprinkler: hydrostatic 200 psi for 2 hours, with material & test certificate",
+          "c": "NFPA 13"
+        },
+        {
+          "t": "Firestopping: listed UL system; destructive sample 10% minimum",
+          "c": "ASTM E2174"
+        }
+      ],
+      "checklists": [
+        "L2M - MIV - Equip Designation"
+      ],
+      "gate": [
+        "TAB report from an independent agency",
+        "Hydro and disinfection records with bacteriological sample",
+        "Firestop inspection and concrete test records complete"
+      ],
+      "steps": [
+        {
+          "title": "Independent TAB",
+          "body": "Testing, adjusting and balancing is executed by an independent AABC MN-1 or NEBB-certified agency. It is never the mechanical contractor.",
+          "c": "Training v2",
+          "field": "The TAB report is attached to the system in CxAlloy before L4."
+        },
+        {
+          "title": "Pressure tests",
+          "body": "Domestic water: hydrostatic 150 psi for 4 hours, then disinfection per AWWA C651 with a bacteriological sample. Wet sprinkler: hydrostatic 200 psi for 2 hours with the NFPA 13 contractor material and test certificate.",
+          "c": "NFPA 13 · AWWA C651",
+          "field": "A test cut short is a failed test. Restart the clock."
+        },
+        {
+          "title": "Firestopping and concrete",
+          "body": "Firestopping is installed to the listed UL system and inspected visually and by destructive sample per ASTM E2174, 10% minimum. Concrete: cylinder breaks per ASTM C39; slump, air and temperature per ASTM C143, C231 and C1064.",
+          "c": "ASTM E2174 · C39",
+          "field": "A firestop without a matching UL system is a deficiency even if it looks complete."
+        }
+      ],
+      "quiz": {
+        "q": "What is the wet sprinkler hydrostatic test?",
+        "opts": [
+          "150 psi for 4 hours",
+          "200 psi for 2 hours",
+          "200 psi for 30 minutes"
+        ],
+        "a": 1,
+        "why": "NFPA 13: 200 psi for 2 hours."
+      }
+    },
+    {
+      "trade": true,
+      "code": "CT",
+      "levelLabel": "Trade focus · Controls",
+      "title": "Controls / BMS / EPMS",
+      "sub": "P2P, alarms, sequences",
+      "summary": "Controls readiness for L3C and L4: devices, points, network, alarms, trends, graphics and sequences.",
+      "leads": "Baker Group",
+      "witness": "DLB · Suffolk Cx",
+      "role": {
+        "aw": "Every point must be proven from the device to the graphic.",
+        "pr": "Witness point-to-point, check calibration records, and confirm alarms reach the BMS/EPMS.",
+        "ad": "Track L1C and L3C checklists and P2P completion by system."
+      },
+      "rules": [
+        {
+          "t": "Every point mapped, addressed and verified (P2P)",
+          "c": "Training v2"
+        },
+        {
+          "t": "Sensor and transmitter calibration records on file",
+          "c": "Training v2"
+        },
+        {
+          "t": "Sequences validated against approved control drawings",
+          "c": "Training v2"
+        },
+        {
+          "t": "L3C checklist marked Owner Agent Reviewed before L4",
+          "c": "Inspection Tracker"
+        }
+      ],
+      "checklists": [
+        "L1C - EPMS/BMS - Equip Designation",
+        "L3C - EPMS/BMS - Equip Designation"
+      ],
+      "gate": [
+        "P2P complete for every point",
+        "Network, alarms, trends and graphics validated",
+        "Sequence of operations verified"
+      ],
+      "steps": [
+        {
+          "title": "Devices and calibration",
+          "body": "Devices installed and controllers labeled, with sensor and transmitter calibration records on file.",
+          "c": "Training v2",
+          "field": "L1C covers FAT/SFAT of BMS panels for first of kind or first in a production line."
+        },
+        {
+          "title": "Point-to-point",
+          "body": "Every point is mapped, addressed and verified from the field device to the BMS or EPMS.",
+          "c": "Training v2",
+          "field": "A point that reads correctly at the controller but is mislabeled on the graphic fails P2P."
+        },
+        {
+          "title": "Network, alarms and sequences",
+          "body": "Network verification, alarm testing, trend verification and graphics validation, then sequence of operations validation against approved control drawings. L4 FPT is logged in CxAlloy.",
+          "c": "Training v2",
+          "field": "The CxA marks L3C \"Owner Agent Reviewed\" when controls are ready for L4."
+        }
+      ],
+      "quiz": {
+        "q": "What does point-to-point verification prove?",
+        "opts": [
+          "The controller powers on",
+          "Every point is mapped, addressed and verified from device to BMS/EPMS",
+          "The network switch is configured"
+        ],
+        "a": 1,
+        "why": "P2P traces each point end to end."
+      }
+    }
+  ],
+  "practiceSort": {
+    "options": [
+      [
+        "QA",
+        "QA/QC"
+      ],
+      [
+        "L1",
+        "FWT"
+      ],
+      [
+        "L2",
+        "Install"
+      ],
+      [
+        "L3",
+        "Startup"
+      ],
+      [
+        "L4",
+        "FPT"
+      ],
+      [
+        "L5",
+        "IST"
+      ],
+      [
+        "CO",
+        "Closeout"
+      ]
+    ],
+    "items": [
+      {
+        "text": "Witnessing a generator load test at the manufacturer",
+        "a": "L1",
+        "why": "Factory witness testing is Level 1 in Flowchart R5."
+      },
+      {
+        "text": "Completing the Site Arrival Inspection with the bill of lading attached",
+        "a": "L2",
+        "why": "SAI (L2E/M/C - SAI) is Level 2 site acceptance."
+      },
+      {
+        "text": "Applying a tamper-evident FOD seal after the clean walk",
+        "a": "L2",
+        "why": "The clean walk (CW) and seal close out Level 2 before energization."
+      },
+      {
+        "text": "OEM technician recording as-left settings on first run",
+        "a": "L3",
+        "why": "Manufacturer startup (L3V) is Level 3."
+      },
+      {
+        "text": "Prestartup audit of completed installation checks",
+        "a": "L3",
+        "why": "§3.5.E prestartup audit happens before L3 startup."
+      },
+      {
+        "text": "Independent agency balancing air and water flows",
+        "a": "L4",
+        "why": "System TAB is part of Level 4 in Flowchart R5."
+      },
+      {
+        "text": "Failing a CRAH fan per DLB script and confirming the BMS alarm",
+        "a": "L4",
+        "why": "Scripted system testing against design intent is Level 4 FPT."
+      },
+      {
+        "text": "Load banks at full load with every trade and vendor on site",
+        "a": "L5",
+        "why": "Integrated systems testing is Level 5."
+      },
+      {
+        "text": "Writing an NCR for unapproved material delivered to site",
+        "a": "QA",
+        "why": "NCRs are a QA/QC tool that runs underneath every level."
+      },
+      {
+        "text": "Removing temporary power and verifying it with QA/QC",
+        "a": "CO",
+        "why": "Temp power removal is a Closeout / Turnover step."
+      }
+    ]
+  },
+  "practiceSpot": [
+    {
+      "q": "This cable entry passed the clean walk and was sealed. An electrician now needs to pull one more cable through it. What happens?",
+      "opts": [
+        "Pull the cable and push the plug back in",
+        "The seal is broken: log a Procore observation, repeat the full FOD inspection, apply a new seal",
+        "Tape around the new cable and carry on"
+      ],
+      "a": 1,
+      "why": "If a FOD seal is broken for any reason, the full FOD inspection is repeated and a new seal applied. No exceptions.",
+      "c": "Training v2",
+      "image": "fod-cable-entry-seal.png"
+    },
+    {
+      "q": "The torque report for this joint shows a value below the approved submittal, and there is no torque mark on the bolt. Is it ready for PEI?",
+      "opts": [
+        "Yes, if it is close to spec",
+        "No: log a deficiency, re-torque to spec, mark it and update the torque report before PEI",
+        "Yes, the spring washer makes up the difference"
+      ],
+      "a": 1,
+      "why": "Torque verification and the torque report are part of L2 installation verification (EIV) and energization readiness. Below spec is a deficiency.",
+      "c": "Inspection Tracker",
+      "image": "busbar-bolted-joint-notorque.png"
+    },
+    {
+      "q": "A pre-energization check on this transformer shows OPEN instead of O.K. What happens next?",
+      "opts": [
+        "Energize it and let the vendor check it at startup",
+        "Stop: it is a failed test. Do not energize; log a deficiency/NCR, correct, retest",
+        "Re-run the test until it reads O.K."
+      ],
+      "a": 1,
+      "why": "Failed tests trigger an NCR. Energization waits until the cause is corrected and the retest passes.",
+      "c": "Training v2",
+      "image": "transformer-tester-open.png"
+    },
+    {
+      "q": "This rooftop unit was set weeks before startup. Its intake is open, with debris on the roof and birds at the louvers. What is missing?",
+      "opts": [
+        "Nothing, it will be cleaned at startup",
+        "EPP protection: cover and filter media at the intake, clean the area, log a Procore observation",
+        "Only a bird deterrent"
+      ],
+      "a": 1,
+      "why": "EPP mechanical scope: coverboard on top, plastic wrap, filter media at intakes. Debris in the unit becomes a FOD failure before L3 startup.",
+      "c": "Training v2",
+      "image": "rtu-open-intake.png"
+    },
+    {
+      "q": "This panel directory is handwritten, the panel name is blank, and loads read \"Existing load\" or \"power\". Is it ready for PEI?",
+      "opts": [
+        "Yes, the circuits are listed",
+        "No: it needs a typed panel schedule that is complete and accurate before PEI",
+        "Yes, if the electrician knows the loads"
+      ],
+      "a": 1,
+      "why": "The project uses typed panel schedules. Correct labeling and identification is an installation check and a readiness gate item.",
+      "c": "01 91 13 §3.2.C.4",
+      "image": "panel-handwritten-directory.png"
+    },
+    {
+      "q": "This tilt indicator on an OFCI transformer crate is red at delivery. What do you do?",
+      "opts": [
+        "Set the transformer; it will be tested at L3",
+        "Record it on the SAI with photos and notify QTS and the vendor within 48 hours",
+        "Peel off the indicator and continue"
+      ],
+      "a": 1,
+      "why": "OFCI damage or deviations are reported to QTS and the vendor within 48 hours, with the condition documented on the Site Arrival Inspection.",
+      "c": "Training v2",
+      "image": "tiltwatch-tripped.png"
+    }
+  ],
+  "finalExam": [
+    {
+      "q": "During an EPP walk you find a FOD seal on a UPS broken. What is required?",
+      "opts": [
+        "Re-tape the seal and note it",
+        "Procore observation, repeat the full FOD inspection, apply a new seal",
+        "Notify the vendor at startup"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "A feeder fails its megger test the day before energization. What happens?",
+      "opts": [
+        "Energize and retest after",
+        "Stop: document the failed test as a deficiency/NCR, correct, retest before energization",
+        "Lower the acceptance value"
+      ],
+      "a": 1,
+      "c": "01 40 00 · NETA ATS"
+    },
+    {
+      "q": "The spec and a referenced standard conflict on a test value. You…",
+      "opts": [
+        "Use the less stringent value",
+        "Apply the most stringent unless the Architect resolves it in writing first",
+        "Pick the trade’s usual value"
+      ],
+      "a": 1,
+      "c": "01 40 00 §1.4"
+    },
+    {
+      "q": "Unapproved material arrives on site. This triggers…",
+      "opts": [
+        "A punch item",
+        "An NCR",
+        "Nothing until installation"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "OFCI equipment arrives damaged. Notify QTS and the vendor within…",
+      "opts": [
+        "24 hours",
+        "48 hours",
+        "7 days"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "Equipment receipt must be logged in Procore RIF within…",
+      "opts": [
+        "24 hours",
+        "48 hours",
+        "72 hours"
+      ],
+      "a": 0,
+      "c": "Training v2"
+    },
+    {
+      "q": "Minimum notice for a startup or dynamic operation is…",
+      "opts": [
+        "24 hours",
+        "48 hours",
+        "7 days"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "Follow-up benchmark inspections occur at intervals no greater than…",
+      "opts": [
+        "7 days",
+        "15 days",
+        "30 days"
+      ],
+      "a": 1,
+      "c": "QA/QC Plan §12.4"
+    },
+    {
+      "q": "Who engages the Special Inspector?",
+      "opts": [
+        "The Contractor",
+        "The Owner",
+        "The Trade Partner"
+      ],
+      "a": 1,
+      "c": "01 40 00 §1.11"
+    },
+    {
+      "q": "Does Suffolk QA perform QC for the trade partner?",
+      "opts": [
+        "Yes, on critical scope",
+        "No. Suffolk verifies; the trade owns its QC",
+        "Only during L2"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "Where are L1–L5 inspections and FOD events recorded?",
+      "opts": [
+        "Procore",
+        "CxAlloy",
+        "PYPE"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "A test demonstration fails. The compliance issue report is due within…",
+      "opts": [
+        "24 hours",
+        "48 hours",
+        "1 week"
+      ],
+      "a": 0,
+      "c": "01 91 13 §3.5.K.4"
+    },
+    {
+      "q": "Can L5 IST begin with an L4 item still open?",
+      "opts": [
+        "Yes, if it is minor",
+        "No. L1–L4 must be fully closed",
+        "Yes, with QTS verbal OK"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "A foreman says a deficiency is fixed. Can you close it?",
+      "opts": [
+        "Yes, verbal is enough",
+        "No. Closure needs evidence: reinspection, photos or updated report",
+        "Yes, if the PM agrees"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    },
+    {
+      "q": "Trade partners must resolve punch items within…",
+      "opts": [
+        "24 hours",
+        "72 hours",
+        "15 days"
+      ],
+      "a": 1,
+      "c": "Training v2"
+    }
+  ],
+  "hardRules": [
+    {
+      "v": "24 hrs",
+      "rule": "L1 ERC/ORC receipt",
+      "applies": "All OFCI/CFCI equipment"
+    },
+    {
+      "v": "24 hrs min",
+      "rule": "Inspection notice",
+      "applies": "All standard inspections"
+    },
+    {
+      "v": "48 hrs min",
+      "rule": "Dynamic op notice",
+      "applies": "Startup / energization"
+    },
+    {
+      "v": "≤15 days",
+      "rule": "Follow-up benchmark",
+      "applies": "All continuing installations"
+    },
+    {
+      "v": "8 weeks",
+      "rule": "Cx schedule delivery",
+      "applies": "Suffolk to owner + trades, pre-Cx"
+    },
+    {
+      "v": "≥2× / day",
+      "rule": "EPP walks",
+      "applies": "Suffolk QA/QC"
+    },
+    {
+      "v": "7 days each",
+      "rule": "Mockup notice + review",
+      "applies": "Architect coordination"
+    },
+    {
+      "v": "5 min",
+      "rule": "Source inspections",
+      "applies": "Long-lead / high-risk, per project"
+    },
+    {
+      "v": "72 hrs",
+      "rule": "Punch resolution",
+      "applies": "Trade partner"
+    },
+    {
+      "v": "48 hrs",
+      "rule": "Suffolk punch verify",
+      "applies": "'Ready for Review' items"
+    }
+  ],
+  "systemsOfRecord": [
+    {
+      "name": "Procore",
+      "owner": "PE / QA/QC Mgr",
+      "holds": "RFIs, submittals, drawings, punch, observations, NCRs, EPP walks, daily reports"
+    },
+    {
+      "name": "CxAlloy",
+      "owner": "QA/QC Mgr / MEP Mgr",
+      "holds": "L1–L5 inspections and observations, FOD events, OFCI/CFCI tracking, test reports"
+    },
+    {
+      "name": "PYPE",
+      "owner": "PE / PM",
+      "holds": "Closeout compilation, final delivery to Owner"
+    }
+  ],
+  "glossary": [
+    {
+      "abbr": "S7117",
+      "name": "QTS CX Standard V1.4 Rev 39",
+      "def": "The Owner commissioning standard (10/23/2025). Tier 1 of the standards stack."
+    },
+    {
+      "abbr": "CxA",
+      "name": "Commissioning Authority",
+      "def": "DLB on the CDR Campus. Owns L4/L5 scripts and issues the Cx completion certificate."
+    },
+    {
+      "abbr": "DLB",
+      "name": "CxA + 3rd-party QA/QC",
+      "def": "The commissioning authority and third-party QA/QC firm."
+    },
+    {
+      "abbr": "OFCI",
+      "name": "Owner Furnished, Contractor Installed",
+      "def": "Equipment bought by QTS and installed by the contractor."
+    },
+    {
+      "abbr": "CFCI",
+      "name": "Contractor Furnished, Contractor Installed",
+      "def": "Equipment bought and installed by the contractor."
+    },
+    {
+      "abbr": "FWT",
+      "name": "Factory Witness Test",
+      "def": "Level 1 test at the manufacturer, witnessed per an approved plan. Also FAT."
+    },
+    {
+      "abbr": "OSI / OAI",
+      "name": "Offsite Storage / Offsite Arrival Inspection",
+      "def": "L1 checklists for equipment stored offsite or received at an integrator."
+    },
+    {
+      "abbr": "SAI",
+      "name": "Site Arrival Inspection",
+      "def": "L2 receipt inspection with BOL and FAT attached."
+    },
+    {
+      "abbr": "SIP",
+      "name": "Set-in-Place Inspection",
+      "def": "L2Q check by the Owner's Quality Rep; first of kind + 10%."
+    },
+    {
+      "abbr": "EIV / MIV / CIV",
+      "name": "Electrical / Mechanical / Controls Installation Verification",
+      "def": "L2 checks that installed equipment meets the specs."
+    },
+    {
+      "abbr": "VPS",
+      "name": "Vendor Pre-Startup",
+      "def": "L2V vendor forms confirming readiness for L3."
+    },
+    {
+      "abbr": "PEI",
+      "name": "Pre-Energization Inspection",
+      "def": "L2Q check by the Owner's Quality Rep before energization."
+    },
+    {
+      "abbr": "CW",
+      "name": "Clean Walk",
+      "def": "L2 FOD inspection followed by the tamper seal."
+    },
+    {
+      "abbr": "FOD",
+      "name": "Foreign Object & Debris",
+      "def": "Inspection and tamper-evident seal before energization or startup."
+    },
+    {
+      "abbr": "EPP",
+      "name": "Equipment Protection Plan",
+      "def": "Protection program with Suffolk walks at least twice daily."
+    },
+    {
+      "abbr": "NCR",
+      "name": "Non-Conformance Report",
+      "def": "Raised for unapproved material, damage, failed tests, concealed work, deviations or repeat failures."
+    },
+    {
+      "abbr": "FPT",
+      "name": "Functional Performance Test",
+      "def": "Level 4 scripted test of a system against design intent."
+    },
+    {
+      "abbr": "TAB",
+      "name": "Testing, Adjusting & Balancing",
+      "def": "Air and water balance by an independent AABC or NEBB agency."
+    },
+    {
+      "abbr": "MST",
+      "name": "Mechanical Systems Test",
+      "def": "Level 5 test of the mechanical systems ahead of IST."
+    },
+    {
+      "abbr": "IST",
+      "name": "Integrated Systems Test",
+      "def": "Level 5 full-load test of all systems together."
+    },
+    {
+      "abbr": "NETA ATS",
+      "name": "NETA Acceptance Testing Spec",
+      "def": "Field acceptance testing standard for electrical equipment."
+    },
+    {
+      "abbr": "EOR",
+      "name": "Engineer of Record",
+      "def": "The design engineer responsible for the work."
+    }
+  ],
+  "equipmentTracker": {
+    "offsiteColumns": [
+      {
+        "lvl": "L1",
+        "title": "Offsite Arrival Inspection",
+        "naming": "L1E/M/C - OAI",
+        "who": "Skid integrator facility",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L1",
+        "title": "Controls (EPMS/BMS) FAT",
+        "naming": "L1C - EPMS/BMS",
+        "who": "Controls contractor",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L1",
+        "title": "Skid/POD Integration",
+        "naming": "L1i - Integration",
+        "who": "Skid integrator facility",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L1",
+        "title": "Vendor Startup (offsite)",
+        "naming": "L1V - Startup",
+        "who": "Manufacturer",
+        "win": "48 hrs"
+      },
+      {
+        "lvl": "L1",
+        "title": "Skid Testing",
+        "naming": "L1Q - Test",
+        "who": "CxA",
+        "win": "48 hrs"
+      }
+    ],
+    "siteColumns": [
+      {
+        "lvl": "L1",
+        "title": "Offsite Storage Inspection",
+        "naming": "L1E/M - OSI",
+        "who": "CM",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L2",
+        "title": "Site Arrival Inspection",
+        "naming": "L2E/M/C - SAI",
+        "who": "Installing contractor",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L2",
+        "title": "Set-in-Place Inspection",
+        "naming": "L2Q - SIP",
+        "who": "Owner's Quality Rep",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L2",
+        "title": "Installation Verification",
+        "naming": "L2E/M/C - EIV/MIV/CIV",
+        "who": "Installing contractor(s)",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L2",
+        "title": "Vendor Pre-Startup",
+        "naming": "L2V - Prestartup",
+        "who": "Manufacturer, assisted by CM",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L2",
+        "title": "Pre-Energization",
+        "naming": "L2Q - PEI",
+        "who": "Owner's Quality Rep",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L2",
+        "title": "Clean Walk (FOD + seal)",
+        "naming": "L2E/M/C - CW",
+        "who": "CM",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L3",
+        "title": "Vendor Startup",
+        "naming": "L3V - Startup",
+        "who": "Manufacturer, assisted by CM",
+        "win": "24 hrs"
+      },
+      {
+        "lvl": "L3",
+        "title": "Controls (EPMS/BMS)",
+        "naming": "L3C - EPMS/BMS",
+        "who": "Controls integrator",
+        "win": "24 hrs"
+      }
+    ],
+    "equipment": [
+      {
+        "key": "ACR",
+        "acr": "ACR",
+        "name": "AC Reactor",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - ACR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - ACR",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - ACR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - ACR",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - ACR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - ACR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - ACR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - ACR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - ACR",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Controls (EPMS/BMS) FAT, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "ACC",
+        "acr": "ACC",
+        "name": "Air Cooled Chiller",
+        "category": "Mechanical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1M - OSI - ACC",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - ACC",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - ACC",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - ACC",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - ACC",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - ACC",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - ACC",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - ACC",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - ACC",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - ACC",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "ATS",
+        "acr": "ATS",
+        "name": "Automatic Transfer Switch",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - ATS",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - ATS",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - ATS",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - ATS",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - ATS",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - ATS",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - ATS",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - ATS",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - ATS",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - ATS",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - ATS",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - ATS",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - ATS",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - ATS",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Every tracked checklist applies."
+      },
+      {
+        "key": "BAT",
+        "acr": "BAT",
+        "name": "Batteries",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - BAT",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - BAT",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - BAT",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - BAT",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [],
+        "notRequired": "Not required: Controls (EPMS/BMS) FAT."
+      },
+      {
+        "key": "BUS",
+        "acr": "BUS",
+        "name": "Busway",
+        "category": "Electrical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - BUS",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - BUS",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - BUS",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - BUS",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup, Controls (EPMS/BMS)."
+      },
+      {
+        "key": "CRAC",
+        "acr": "CRAC",
+        "name": "Computer Room Air Conditioner",
+        "category": "Mechanical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1M - OSI - CRAC",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - CRAC",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - CRAC",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - CRAC",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - CRAC",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - CRAC",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - CRAC",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - CRAC",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - CRAC",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - CRAC",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "CRAH",
+        "acr": "CRAH",
+        "name": "Computer Room Air Handler",
+        "category": "Mechanical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1M - OSI - CRAH",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - CRAH",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - CRAH",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - CRAH",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - CRAH",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - CRAH",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - CRAH",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - CRAH",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - CRAH",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - CRAH",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "CDU",
+        "acr": "CDU",
+        "name": "Coolant Distribution Unit",
+        "category": "Mechanical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1M - OSI - CDU",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - CDU",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - CDU",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - CDU",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - CDU",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - CDU",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - CDU",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - CDU",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - CDU",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - CDU",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "COD",
+        "acr": "COD",
+        "name": "Critical Output Distribution",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - COD",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - COD",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - COD",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - COD",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - COD",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - COD",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - COD",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - COD",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - COD",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - COD",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - COD",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - COD",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - COD",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - COD",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Every tracked checklist applies."
+      },
+      {
+        "key": "DHD",
+        "acr": "DHD",
+        "name": "Data Hall Distribution",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - DHD",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - DHD",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - DHD",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - DHD",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - DHD",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - DHD",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - DHD",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - DHD",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - DHD",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Controls (EPMS/BMS) FAT, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "XFMR-D",
+        "acr": "XFMR",
+        "name": "Dry Type Transformer",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - XFMR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - XFMR",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - XFMR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - XFMR",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - XFMR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - XFMR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - XFMR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - XFMR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - XFMR",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Controls (EPMS/BMS) FAT, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "SKID",
+        "acr": "SKID",
+        "name": "Electrical Gallery Skid",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - SKID",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "EMI",
+        "acr": "EMI",
+        "name": "EMI Filter",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - EMI",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - EMI",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - EMI",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - EMI",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - EMI",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - EMI",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - EMI",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - EMI",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - EMI",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Controls (EPMS/BMS) FAT, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "ECB",
+        "acr": "ECB",
+        "name": "Enclosed Circuit Breaker",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - ECB",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [],
+        "notRequired": "Not required: Offsite Arrival Inspection, Controls (EPMS/BMS) FAT, Skid/POD Integration, Vendor Startup (offsite), Skid Testing, Site Arrival Inspection, Set-in-Place Inspection, Installation Verification, Vendor Pre-Startup, Pre-Energization, Clean Walk (FOD + seal), Vendor Startup, Controls (EPMS/BMS)."
+      },
+      {
+        "key": "GEN",
+        "acr": "GEN",
+        "name": "Generator",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - GEN",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - GEN",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - GEN",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - GEN",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - GEN",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - GEN",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - GEN",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - GEN",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - GEN",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - GEN",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "HV",
+        "acr": "HV-XFMR",
+        "name": "High Voltage Transformer",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - HV-XFMR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - HV-XFMR",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - HV-XFMR",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - HV-XFMR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - HV-XFMR",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - HV-XFMR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - HV-XFMR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - HV-XFMR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - HV-XFMR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - HV-XFMR",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "IMVG",
+        "acr": "IMVG",
+        "name": "Intermediate MV Switchgear",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - IMVG",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - IMVG",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - IMVG",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - IMVG",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - IMVG",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - IMVG",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - IMVG",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - IMVG",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - IMVG",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - IMVG",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "MV-XFMR",
+        "acr": "MV-XFMR",
+        "name": "Liquid-Filled Transformer",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - MV-XFMR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - MV-XFMR",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - MV-XFMR",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - MV-XFMR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - MV-XFMR",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - MV-XFMR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - MV-XFMR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - MV-XFMR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - MV-XFMR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - MV-XFMR",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "SWR",
+        "acr": "SWR",
+        "name": "Main Distribution Switchboard",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - SWR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - SWR",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - SWR",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - SWR",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - SWR",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - SWR",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - SWR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - SWR",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - SWR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - SWR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - SWR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - SWR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - SWR",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Controls (EPMS/BMS) FAT."
+      },
+      {
+        "key": "MBB",
+        "acr": "MBB",
+        "name": "Maintenance Bypass Board",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - MBB",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - MBB",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - MBB",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - MBB",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - MBB",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - MBB",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - MBB",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - MBB",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - MBB",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - MBB",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - MBB",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - MBB",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - MBB",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - MBB",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Every tracked checklist applies."
+      },
+      {
+        "key": "MOD",
+        "acr": "MOD",
+        "name": "Mechanical Output Distribution",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - MOD",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - MOD",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - MOD",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - MOD",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - MOD",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - MOD",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - MOD",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - MOD",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - MOD",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - MOD",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - MOD",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - MOD",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - MOD",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - MOD",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Every tracked checklist applies."
+      },
+      {
+        "key": "MVG",
+        "acr": "MVG",
+        "name": "Medium Voltage Switchgear",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - MVG",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - MVG",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - MVG",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - MVG",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - MVG",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - MVG",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - MVG",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - MVG",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - MVG",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - MVG",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "PDU",
+        "acr": "PDU",
+        "name": "Power Distribution Unit",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - PDU",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - PDU",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - PDU",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - PDU",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - PDU",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - PDU",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - PDU",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - PDU",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - PDU",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - PDU",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - PDU",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - PDU",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - PDU",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - PDU",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Every tracked checklist applies."
+      },
+      {
+        "key": "RPP",
+        "acr": "RPP",
+        "name": "Remote Power Panel",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - RPP",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - RPP",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - RPP",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - RPP",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - RPP",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - RPP",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - RPP",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - RPP",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - RPP",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - RPP",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "RTU",
+        "acr": "RTU",
+        "name": "Roof Top Unit",
+        "category": "Mechanical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1M - OSI - RTU",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - RTU",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - RTU",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - RTU",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - RTU",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - RTU",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - RTU",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - RTU",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - RTU",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - RTU",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "SCR",
+        "acr": "SCR",
+        "name": "Selective Catalytic Reduction",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - SCR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - SCR",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - SCR",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - SCR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - SCR",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - SCR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - SCR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - SCR",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - SCR",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing, Clean Walk (FOD + seal)."
+      },
+      {
+        "key": "STS",
+        "acr": "STS",
+        "name": "Static Transfer Switch",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - STS",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - STS",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - STS",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - STS",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - STS",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - STS",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - STS",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - STS",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - STS",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - STS",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - STS",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - STS",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - STS",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - STS",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Every tracked checklist applies."
+      },
+      {
+        "key": "RTB",
+        "acr": "RTB",
+        "name": "Reserve Tie Switchboard",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - RTB",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - RTB",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - RTB",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - RTB",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - RTB",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - RTB",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - RTB",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - RTB",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - RTB",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - RTB",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Arrival Inspection, Skid/POD Integration, Vendor Startup (offsite), Skid Testing."
+      },
+      {
+        "key": "UPS",
+        "acr": "UPS",
+        "name": "Uninterruptible Power Supply",
+        "category": "Electrical",
+        "offsiteRequired": [
+          {
+            "lvl": "L1",
+            "title": "Offsite Storage Inspection",
+            "naming": "L1E - OSI - UPS",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Offsite Arrival Inspection",
+            "naming": "L1E - OAI - UPS",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Controls (EPMS/BMS) FAT",
+            "naming": "L1C - EPMS/BMS - UPS",
+            "meta": "Controls contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid/POD Integration",
+            "naming": "L1i - Integration - UPS",
+            "meta": "Skid integrator facility · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Vendor Startup (offsite)",
+            "naming": "L1V - Startup - UPS",
+            "meta": "Manufacturer · upload within 48 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L1",
+            "title": "Skid Testing",
+            "naming": "L1Q - Test - UPS",
+            "meta": "CxA · upload within 48 hrs",
+            "on": true
+          }
+        ],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - UPS",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - UPS",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - UPS",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - UPS",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - UPS",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - UPS",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - UPS",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - UPS",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Every tracked checklist applies."
+      },
+      {
+        "key": "ELI",
+        "acr": "ELI",
+        "name": "Emergency Lighting Inverter",
+        "category": "Electrical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - ELI",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Set-in-Place Inspection",
+            "naming": "L2Q - SIP - ELI",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - ELI",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Vendor Pre-Startup",
+            "naming": "L2V - Prestartup - ELI",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - ELI",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - ELI",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Vendor Startup",
+            "naming": "L3V - Startup - ELI",
+            "meta": "Manufacturer, assisted by CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - ELI",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection."
+      },
+      {
+        "key": "HUM",
+        "acr": "HUM",
+        "name": "Humidifier",
+        "category": "Mechanical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - HUM",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - HUM",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - HUM",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - HUM",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - HUM",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup."
+      },
+      {
+        "key": "VAV",
+        "acr": "VAV",
+        "name": "Variable Air Volume / VAV-E",
+        "category": "Mechanical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - VAV",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - VAV",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - VAV",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - VAV",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - VAV",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup."
+      },
+      {
+        "key": "FPT",
+        "acr": "FPT",
+        "name": "Fan Powered Terminal",
+        "category": "Mechanical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - FPT",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - FPT",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - FPT",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - FPT",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - FPT",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup."
+      },
+      {
+        "key": "XFMR-G",
+        "acr": "XFMR",
+        "name": "Transformer",
+        "category": "Electrical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - XFMR",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - XFMR",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - XFMR",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - XFMR",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup, Controls (EPMS/BMS)."
+      },
+      {
+        "key": "ACCU",
+        "acr": "AC / CU",
+        "name": "Split System AC / CU",
+        "category": "Mechanical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2M - SAI - AC / CU",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2M - MIV - AC / CU",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - AC / CU",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2M - CW - AC / CU",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - AC / CU",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup."
+      },
+      {
+        "key": "PNL",
+        "acr": "PNL",
+        "name": "Panelboard",
+        "category": "Electrical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - PNL",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - PNL",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - PNL",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - PNL",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup, Controls (EPMS/BMS)."
+      },
+      {
+        "key": "SCP",
+        "acr": "SCP",
+        "name": "System Control Panel",
+        "category": "Electrical",
+        "offsiteRequired": [],
+        "siteRequired": [
+          {
+            "lvl": "L2",
+            "title": "Site Arrival Inspection",
+            "naming": "L2E - SAI - SCP",
+            "meta": "Installing contractor · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Installation Verification",
+            "naming": "L2E - EIV - SCP",
+            "meta": "Installing contractor(s) · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Pre-Energization",
+            "naming": "L2Q - PEI - SCP",
+            "meta": "Owner's Quality Rep · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L2",
+            "title": "Clean Walk (FOD + seal)",
+            "naming": "L2E - CW - SCP",
+            "meta": "CM · upload within 24 hrs",
+            "on": true
+          },
+          {
+            "lvl": "L3",
+            "title": "Controls (EPMS/BMS)",
+            "naming": "L3C - EPMS/BMS - SCP",
+            "meta": "Controls integrator · upload within 24 hrs",
+            "on": true
+          }
+        ],
+        "notRequired": "Not required: Offsite Storage Inspection, Set-in-Place Inspection, Vendor Pre-Startup, Vendor Startup."
+      }
+    ]
+  },
+  "sampleTeam": [
+    {
+      "name": "J. Alvarez",
+      "co": "Suffolk",
+      "track": "pr",
+      "mods": 7,
+      "score": 14,
+      "ack": true
+    },
+    {
+      "name": "M. Chen",
+      "co": "Suffolk",
+      "track": "ad",
+      "mods": 7,
+      "score": 15,
+      "ack": true
+    },
+    {
+      "name": "R. Patel",
+      "co": "CEI",
+      "track": "aw",
+      "mods": 5,
+      "score": null,
+      "ack": false
+    },
+    {
+      "name": "T. Brooks",
+      "co": "CEI",
+      "track": "pr",
+      "mods": 7,
+      "score": 11,
+      "ack": false
+    },
+    {
+      "name": "L. Nguyen",
+      "co": "Loenbro",
+      "track": "aw",
+      "mods": 3,
+      "score": null,
+      "ack": false
+    },
+    {
+      "name": "D. Okafor",
+      "co": "Loenbro",
+      "track": "pr",
+      "mods": 7,
+      "score": 13,
+      "ack": true
+    },
+    {
+      "name": "S. Ramirez",
+      "co": "Baker",
+      "track": "pr",
+      "mods": 6,
+      "score": null,
+      "ack": false
+    },
+    {
+      "name": "K. Ward",
+      "co": "Baker",
+      "track": "aw",
+      "mods": 7,
+      "score": 12,
+      "ack": true
+    }
+  ]
+}
