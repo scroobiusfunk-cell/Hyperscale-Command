@@ -86,6 +86,11 @@ h1 { font-size: 44px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 2p
 .sub { font-size: 16px; color: var(--muted); margin-top: 2px; white-space: nowrap;
        overflow: hidden; text-overflow: ellipsis; }
 
+/* Refraction on the focused caption only (cheap enough for a TV); set by refract.js on Chromium */
+.refract .tile:focus .caption, .refract .tile:hover .caption {
+  -webkit-backdrop-filter: url(#lg-caption) saturate(170%); backdrop-filter: url(#lg-caption) saturate(170%);
+}
+
 /* Focus: lift, tinted glow, art push-in, sheen sweep */
 .tile:focus, .tile:hover {
   transform: scale(1.08) translateY(-4px); z-index: 2;
