@@ -71,15 +71,17 @@
         b.className = 'tile';
         b.setAttribute('role', 'menuitem');
         b.style.setProperty('--tile-color', app.color || '');
-        b.innerHTML = '<span class="glass"></span><span class="icon"></span><span class="name"></span>';
+        b.innerHTML = '<span class="art"></span><span class="glass"></span>' +
+                      '<span class="caption"><span class="name"></span><span class="sub"></span></span>';
         b.querySelector('.name').textContent = app.name;
-        var icon = b.querySelector('.icon');
-        if (app.icon) {
-          var img = document.createElement('img'); img.src = app.icon; img.alt = '';
-          icon.appendChild(img);
+        b.querySelector('.sub').textContent = app.subtitle || '';
+        var art = b.querySelector('.art');
+        if (app.art) {
+          art.style.backgroundImage = 'url("' + app.art + '")';
         } else {
-          var m = document.createElement('span'); m.className = 'mono';
-          m.textContent = app.name.charAt(0); icon.appendChild(m);
+          art.className = 'art gen';
+          art.innerHTML = '<span class="ring"></span><span class="mono"></span>';
+          art.querySelector('.mono').textContent = app.name.charAt(0);
         }
         // Retint the wallpaper to the focused app, like tvOS
         b.addEventListener('focus', function () {

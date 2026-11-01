@@ -30,67 +30,68 @@ header { display: flex; justify-content: space-between; align-items: baseline; m
 h1 { font-size: 44px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 2px 20px rgba(0,0,0,.4); }
 #clock { font-size: 36px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-#grid { display: grid; grid-template-columns: repeat(5, 300px); gap: 60px 60px; justify-content: center; }
+#grid { display: grid; grid-template-columns: repeat(4, 390px); gap: 44px 40px; justify-content: center; }
 
+/* Cover-art tile: art fills the frame, glass bezel + frosted caption on top */
 .tile {
   position: relative;
-  width: 300px; height: 300px;
-  border: 0; padding: 0; background: none; color: var(--text); font: inherit;
-  outline: none;
-  transition: transform .28s cubic-bezier(.2,.8,.2,1);
-}
-/* The glass slab */
-.glass {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  border-radius: 56px;
-  background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.06) 55%, rgba(255,255,255,.12));
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  backdrop-filter: blur(28px) saturate(180%);
-  border: 1.5px solid rgba(255,255,255,.28);
-  box-shadow:
-    inset 0 2px 1px rgba(255,255,255,.55),     /* top specular edge */
-    inset 0 -14px 28px rgba(255,255,255,.06),  /* lower inner light */
-    inset 0 0 40px rgba(255,255,255,.05),
-    0 18px 40px rgba(0,0,0,.35);
+  width: 390px; height: 220px;          /* 16:9-ish, no aspect-ratio (Chromium 87) */
+  border: 0; padding: 0; color: var(--text); font: inherit;
+  border-radius: 34px;
   overflow: hidden;
-  transition: box-shadow .28s ease, border-color .28s ease, background .28s ease;
+  background: #11131a;
+  outline: none;
+  box-shadow: 0 16px 36px rgba(0,0,0,.4), 0 0 0 1.5px rgba(255,255,255,.18);
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease;
 }
-/* Curved highlight across the top half */
-.glass::before {
-  content: ""; position: absolute; left: -10%; top: -45%; width: 120%; height: 90%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 100%, rgba(255,255,255,.28), rgba(255,255,255,0) 70%);
-  opacity: .7; transition: opacity .28s ease;
+.art { position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+       background-size: cover; background-position: center;
+       transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+/* Generated cover when no image is supplied */
+.art.gen {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,255,255,.42), rgba(255,255,255,0) 46%),
+    radial-gradient(circle at 90% 105%, rgba(0,0,0,.55), rgba(0,0,0,0) 60%),
+    linear-gradient(135deg, var(--tile-color, #4a4f5c), #0b0d12 135%);
 }
-/* Diagonal sheen that sweeps across on focus */
+.art .mono { position: absolute; right: 34px; top: 8px; width: 150px; text-align: center; font-size: 150px;
+             font-weight: 800; line-height: 150px; color: rgba(255,255,255,.22); transform: rotate(-6deg); }
+.art .ring { position: absolute; left: -60px; top: -90px; width: 260px; height: 260px; border-radius: 50%;
+             border: 36px solid rgba(255,255,255,.08); }
+
+/* Glass overlay: specular rim + top highlight (no blur, so the art stays sharp) */
+.glass { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 34px; pointer-events: none;
+  box-shadow: inset 0 2px 1px rgba(255,255,255,.6), inset 0 0 0 1.5px rgba(255,255,255,.22),
+              inset 0 -30px 40px rgba(0,0,0,.18);
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0) 38%); }
 .glass::after {
-  content: ""; position: absolute; top: -20%; bottom: -20%; width: 40%; left: -60%;
-  background: linear-gradient(105deg, rgba(255,255,255,0), rgba(255,255,255,.35), rgba(255,255,255,0));
+  content: ""; position: absolute; top: -20%; bottom: -20%; width: 35%; left: -60%;
+  background: linear-gradient(105deg, rgba(255,255,255,0), rgba(255,255,255,.4), rgba(255,255,255,0));
   transform: skewX(-12deg);
 }
 
-.icon { position: absolute; top: 0; left: 0; right: 0; bottom: 70px; display: flex;
-        align-items: center; justify-content: center; z-index: 1; }
-.icon img { max-width: 62%; max-height: 62%; filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); }
-.icon .mono { font-size: 96px; font-weight: 700; text-shadow: 0 4px 24px rgba(0,0,0,.35); }
-.name { position: absolute; left: 0; right: 0; bottom: 26px; text-align: center; z-index: 1;
-        font-size: 30px; font-weight: 500; text-shadow: 0 2px 12px rgba(0,0,0,.45); }
+/* Frosted caption bar */
+.caption { position: absolute; left: 0; right: 0; bottom: 0; height: 74px; padding: 0 28px;
+  display: flex; flex-direction: column; justify-content: center;
+  background: linear-gradient(180deg, rgba(20,22,30,.28), rgba(20,22,30,.5));
+  -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  border-top: 1px solid rgba(255,255,255,.22); }
+.name { font-size: 28px; font-weight: 600; text-shadow: 0 1px 8px rgba(0,0,0,.4); white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; }
+.sub { font-size: 20px; color: var(--muted); margin-top: 2px; white-space: nowrap;
+       overflow: hidden; text-overflow: ellipsis; }
 
-/* Focus: lift, tinted glow, brighter glass, sheen sweep */
-.tile:focus, .tile:hover { transform: scale(1.12) translateY(-6px); z-index: 2; }
-.tile:focus .glass, .tile:hover .glass {
-  background: linear-gradient(145deg, rgba(255,255,255,.34), rgba(255,255,255,.12) 55%, rgba(255,255,255,.2));
-  border-color: rgba(255,255,255,.7);
+/* Focus: lift, tinted glow, art push-in, sheen sweep */
+.tile:focus, .tile:hover {
+  transform: scale(1.1) translateY(-6px); z-index: 2;
   box-shadow:
-    inset 0 2px 1px rgba(255,255,255,.8),
-    inset 0 -14px 28px rgba(255,255,255,.12),
-    0 0 0 3px rgba(255,255,255,.35),
-    0 0 50px 8px var(--tile-color, var(--accent)),          /* tight colored glow */
-    0 0 140px 30px var(--tile-color, var(--accent)),        /* wide bloom */
-    0 40px 70px rgba(0,0,0,.5);
+    0 0 0 3px rgba(255,255,255,.75),
+    0 0 46px 8px var(--tile-color, var(--accent)),
+    0 0 130px 28px var(--tile-color, var(--accent)),
+    0 40px 70px rgba(0,0,0,.55);
 }
-.tile:focus .glass::before, .tile:hover .glass::before { opacity: 1; }
+.tile:focus .art, .tile:hover .art { transform: scale(1.08); }
 .tile:focus .glass::after { animation: sheen .9s ease-out; }
-@keyframes sheen { from { left: -60%; } to { left: 130%; } }
+@keyframes sheen { from { left: -60%; } to { left: 135%; } }
 
 #status { position: fixed; left: 120px; bottom: 44px; z-index: 1; color: var(--muted); font-size: 26px; min-height: 30px; }

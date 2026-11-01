@@ -1,14 +1,59 @@
 {
-  "_comment": "Edit this list. Optional \"icon\": \"icons/netflix.png\" (transparent PNG) replaces the letter. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay).",
+  "_comment": "Edit this list. Optional: \"art\": \"art/netflix.jpg\" (16:9 cover image, ~780x440) replaces the generated cover; \"subtitle\" adds a caption line. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay).",
   "apps": [
-    { "name": "Netflix",   "id": "netflix",                    "color": "#e50914" },
-    { "name": "YouTube",   "id": "youtube.leanback.v4",        "color": "#ff0033" },
-    { "name": "Prime",     "id": "amazon",                     "color": "#00a8e1" },
-    { "name": "Disney+",   "id": "com.disney.disneyplus-prod", "color": "#113ccf" },
-    { "name": "Apple TV",  "id": "com.apple.appletv",          "color": "#2b2b2f" },
-    { "name": "HDMI 1",    "id": "com.webos.app.hdmi1",        "color": "#2f6f4f" },
-    { "name": "HDMI 2",    "id": "com.webos.app.hdmi2",        "color": "#2f6f4f" },
-    { "name": "HDMI 3",    "id": "com.webos.app.hdmi3",        "color": "#2f6f4f" },
-    { "name": "Settings",  "id": "com.palm.app.settings",      "color": "#4a4f5c" }
+    {
+      "name": "Netflix",
+      "id": "netflix",
+      "color": "#e50914",
+      "subtitle": "Continue watching"
+    },
+    {
+      "name": "YouTube",
+      "id": "youtube.leanback.v4",
+      "color": "#ff0033",
+      "subtitle": "Trending"
+    },
+    {
+      "name": "Prime",
+      "id": "amazon",
+      "color": "#00a8e1",
+      "subtitle": "Prime Video"
+    },
+    {
+      "name": "Disney+",
+      "id": "com.disney.disneyplus-prod",
+      "color": "#113ccf",
+      "subtitle": "Stream"
+    },
+    {
+      "name": "Apple TV",
+      "id": "com.apple.appletv",
+      "color": "#2b2b2f",
+      "subtitle": "Watch now"
+    },
+    {
+      "name": "HDMI 1",
+      "id": "com.webos.app.hdmi1",
+      "color": "#2f6f4f",
+      "subtitle": "Input"
+    },
+    {
+      "name": "HDMI 2",
+      "id": "com.webos.app.hdmi2",
+      "color": "#2f6f4f",
+      "subtitle": "Input"
+    },
+    {
+      "name": "HDMI 3",
+      "id": "com.webos.app.hdmi3",
+      "color": "#2f6f4f",
+      "subtitle": "Input"
+    },
+    {
+      "name": "Settings",
+      "id": "com.palm.app.settings",
+      "color": "#4a4f5c",
+      "subtitle": "TV settings"
+    }
   ]
 }
