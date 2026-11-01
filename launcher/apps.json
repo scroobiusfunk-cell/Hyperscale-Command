@@ -1,0 +1,14 @@
+{
+  "_comment": "Edit this list. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay).",
+  "apps": [
+    { "name": "Netflix",   "id": "netflix",                    "color": "#e50914" },
+    { "name": "YouTube",   "id": "youtube.leanback.v4",        "color": "#ff0033" },
+    { "name": "Prime",     "id": "amazon",                     "color": "#00a8e1" },
+    { "name": "Disney+",   "id": "com.disney.disneyplus-prod", "color": "#113ccf" },
+    { "name": "Apple TV",  "id": "com.apple.appletv",          "color": "#2b2b2f" },
+    { "name": "HDMI 1",    "id": "com.webos.app.hdmi1",        "color": "#2f6f4f" },
+    { "name": "HDMI 2",    "id": "com.webos.app.hdmi2",        "color": "#2f6f4f" },
+    { "name": "HDMI 3",    "id": "com.webos.app.hdmi3",        "color": "#2f6f4f" },
+    { "name": "Settings",  "id": "com.palm.app.settings",      "color": "#4a4f5c" }
+  ]
+}

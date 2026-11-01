@@ -1,0 +1,14 @@
+{
+  "id": "com.hyperscale.command",
+  "version": "1.0.0",
+  "vendor": "Hyperscale",
+  "type": "web",
+  "main": "index.html",
+  "title": "Command",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#0b0d12",
+  "iconColor": "#0b0d12",
+  "resolution": "1920x1080",
+  "disallowScrollingInFirstScreen": true
+}

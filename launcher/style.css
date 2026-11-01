@@ -1,0 +1,44 @@
+:root {
+  --bg: #0b0d12;
+  --panel: #151922;
+  --text: #e8eaf0;
+  --muted: #8b91a0;
+  --accent: #6ea8ff;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 32px/1.2 "LG Smart UI", system-ui, sans-serif;
+  padding: 80px 120px;
+  cursor: default;
+}
+header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 80px; }
+h1 { font-size: 56px; font-weight: 600; letter-spacing: .02em; }
+#clock { font-size: 40px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+.tile {
+  height: 220px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 36px;
+  display: flex; align-items: flex-end;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.tile::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 8px;
+  background: var(--tile-color, var(--accent));
+}
+.tile:focus, .tile:hover {
+  outline: none;
+  transform: scale(1.06);
+  box-shadow: 0 0 0 6px var(--accent), 0 20px 40px rgba(0,0,0,.5);
+}
+#status { position: fixed; left: 120px; bottom: 50px; color: var(--muted); font-size: 26px; min-height: 30px; }
