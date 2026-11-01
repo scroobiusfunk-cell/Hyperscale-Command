@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="full">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=1920, height=1080">
@@ -7,19 +7,39 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="wallpaper"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+  <div class="wallpaper" aria-hidden="true">
+    <div class="wp base"></div><div class="wp a on"></div><div class="wp b"></div>
+  </div>
+
   <header>
-    <h1>Command</h1>
-    <time id="clock"></time>
+    <div class="brand"><h1>Command</h1><div id="date"></div></div>
+    <div class="hud"><div id="wx-mini"></div><time id="clock"></time></div>
   </header>
+
   <section id="hero" aria-live="polite">
     <div class="glass"></div>
     <div class="hero-text"><div class="hero-name"></div><div class="hero-sub"></div><div class="hero-hint">Press OK to open</div></div>
   </section>
+
   <main id="grid" role="menu" aria-label="Apps"></main>
-  <footer id="status" aria-live="polite"></footer>
+
+  <button id="ticker" type="button" aria-label="News headline, press OK to read">
+    <span class="tk-label">News</span><span class="tk-text"></span><span class="tk-src"></span>
+  </button>
+
+  <div id="ambient" aria-hidden="true">
+    <div class="amb-top"><div class="amb-clock"></div><div class="amb-date"></div></div>
+    <div class="amb-wx"></div>
+    <div class="amb-news"><div class="amb-news-label">Top stories</div><div class="amb-headline"></div><div class="amb-src"></div></div>
+    <div class="amb-hint">Press any button to return</div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
   <!-- webOSTVjs ships with the webOS TV SDK; optional, see docs/DEPLOY.md -->
   <script src="webOSTV.js" onerror="void 0"></script>
+  <script src="perf.js"></script>
+  <script src="info.js"></script>
   <script src="app.js"></script>
   <script src="refract.js"></script>
 </body>

@@ -1,5 +1,22 @@
 {
-  "_comment": "Edit this list. Optional: \"art\": \"art/netflix.jpg\" (16:9 cover image, ~780x440) replaces the generated cover; \"subtitle\" adds a caption line. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay). Logos: run \"node tools/fetch-logos.js\" to download them to logos/ (kept out of git); remove \"logo\" to use the generated cover.",
+  "_comment": "Apps: 'id' is the webOS app ID (verify with: ares-device -i <device> --list-apps). Optional per app: \"art\" (16:9 cover image, ~780x440), \"subtitle\", \"logo\" (run \"node tools/fetch-logos.js\" to download logos into logos/, kept out of git). Settings: weather.location is a city name (or set lat/lon); units 'celsius' or 'fahrenheit'. news.feeds are RSS URLs. corsProxy is only needed if the TV blocks direct feed requests (prefix URL, e.g. 'https://your-proxy/?url='). idleSeconds = time before ambient screen (0 = off).",
+  "settings": {
+    "weather": {
+      "location": "London",
+      "lat": null,
+      "lon": null,
+      "units": "celsius"
+    },
+    "news": {
+      "feeds": [
+        "https://feeds.bbci.co.uk/news/rss.xml"
+      ],
+      "rotateSeconds": 9,
+      "max": 20
+    },
+    "corsProxy": "",
+    "idleSeconds": 60
+  },
   "apps": [
     {
       "name": "Netflix",

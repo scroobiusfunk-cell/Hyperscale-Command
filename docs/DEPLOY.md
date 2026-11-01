@@ -20,3 +20,9 @@ Do this from a PC on the same network as the TV.
 
 ## Making it your home screen
 Stock webOS can't replace the home launcher. Without root, press the Home button, then pick *Command* (pin it first in the app row). With root, see BLOATWARE.md for auto-start.
+
+## Weather and news
+Weather comes from Open-Meteo (no key; it sends CORS headers, so it works directly). News is plain RSS fetched from the TV.
+If the headline bar never appears, the TV is probably blocking the feed request: set `settings.corsProxy` in `apps.json`
+to a proxy you run yourself (e.g. a tiny Cloudflare Worker) that returns the URL passed after `?url=`.
+
