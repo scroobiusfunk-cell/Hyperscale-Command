@@ -108,7 +108,9 @@ h1 { font-size: 44px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 2p
 #hero { position: relative; height: 320px; margin-bottom: 36px; border-radius: 44px; overflow: hidden; background: #11131a;
   box-shadow: 0 24px 60px rgba(0,0,0,.45), 0 0 120px -20px var(--accent), 0 0 0 1.5px rgba(255,255,255,.2); }
 #hero .glass { border-radius: 44px; }
-#hero .art { animation: heroIn .55s ease-out; }
+#hero .art { animation: heroIn .45s ease-out both; }
+.hero-name.fade, .hero-sub.fade { animation: textIn .4s ease-out both; }
+.hero-sub.fade { animation-delay: .06s; }
 #hero .art .ring { left: -90px; top: -130px; width: 420px; height: 420px; border-width: 56px; }
 #hero .art .mono { right: 150px; top: 40px; width: 240px; font-size: 230px; line-height: 240px; }
 #hero .art .logo { left: auto; right: 150px; top: 50%; max-width: 380px; max-height: 170px; transform: translateY(-50%); }
@@ -127,5 +129,6 @@ h1 { font-size: 44px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 2p
   background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
 @keyframes heroIn { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+@keyframes textIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
 
 #status { position: fixed; left: 120px; bottom: 44px; z-index: 1; color: var(--muted); font-size: 26px; min-height: 30px; }

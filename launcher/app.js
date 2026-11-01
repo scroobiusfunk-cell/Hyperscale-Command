@@ -7,16 +7,37 @@
   var BACK = 461; // webOS remote Back key
 
   var hero = document.getElementById('hero');
+  var heroLayers = [], heroTimer = null;
+  var FADE_MS = 450;
   function setHero(app, tile) {
-    var art = hero.querySelector('.art');
     var src = tile.querySelector('.art');
     var fresh = document.createElement('div');
     fresh.className = src.className;               // keeps gen / has-logo
     fresh.style.cssText = src.style.cssText;       // keeps background-image
     fresh.innerHTML = src.innerHTML;
-    hero.replaceChild(fresh, art);                 // new node restarts the fade-in animation
-    hero.querySelector('.hero-name').textContent = app.name;
-    hero.querySelector('.hero-sub').textContent = app.subtitle || '';
+
+    // Crossfade: new art goes on top of the old (CSS fades it in); old is removed afterwards.
+    hero.insertBefore(fresh, hero.querySelector('.glass'));   // always just under the glass rim
+    heroLayers.push(fresh);
+    while (heroLayers.length > 3) {                // fast scrolling: drop stale layers right away
+      var old = heroLayers.shift();
+      if (old.parentNode) old.parentNode.removeChild(old);
+    }
+    clearTimeout(heroTimer);
+    heroTimer = setTimeout(function () {
+      while (heroLayers.length > 1) {
+        var o = heroLayers.shift();
+        if (o.parentNode) o.parentNode.removeChild(o);
+      }
+    }, FADE_MS + 50);
+
+    // Text: restart the fade-in animation
+    var name = hero.querySelector('.hero-name'), sub = hero.querySelector('.hero-sub');
+    name.textContent = app.name;
+    sub.textContent = app.subtitle || '';
+    [name, sub].forEach(function (el) {
+      el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade');
+    });
     hero.style.setProperty('--tile-color', app.color || '');
   }
 
