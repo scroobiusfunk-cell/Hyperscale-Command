@@ -59,6 +59,11 @@ h1 { font-size: 44px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 2p
 .art .ring { position: absolute; left: -60px; top: -90px; width: 260px; height: 260px; border-radius: 50%;
              border: 36px solid rgba(255,255,255,.08); }
 
+/* Brand logo, centered above the caption bar */
+.art .logo { position: absolute; left: 50%; top: 73px; max-width: 46%; max-height: 82px; width: auto; height: auto;
+             transform: translate(-50%, -50%); filter: drop-shadow(0 4px 14px rgba(0,0,0,.45)); }
+.art.has-logo .mono { display: none; }
+
 /* Glass overlay: specular rim + top highlight (no blur, so the art stays sharp) */
 .glass { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 34px; pointer-events: none;
   box-shadow: inset 0 2px 1px rgba(255,255,255,.6), inset 0 0 0 1.5px rgba(255,255,255,.22),

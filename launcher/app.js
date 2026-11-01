@@ -82,6 +82,15 @@
           art.className = 'art gen';
           art.innerHTML = '<span class="ring"></span><span class="mono"></span>';
           art.querySelector('.mono').textContent = app.name.charAt(0);
+          if (app.logo) {
+            // Logo replaces the monogram once it loads; a missing file just keeps the monogram.
+            var logo = document.createElement('img');
+            logo.className = 'logo'; logo.alt = '';
+            logo.onload = function () { art.className += ' has-logo'; };
+            logo.onerror = function () { logo.parentNode && logo.parentNode.removeChild(logo); };
+            logo.src = app.logo;
+            art.appendChild(logo);
+          }
         }
         // Retint the wallpaper to the focused app, like tvOS
         b.addEventListener('focus', function () {

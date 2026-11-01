@@ -1,53 +1,69 @@
 {
-  "_comment": "Edit this list. Optional: \"art\": \"art/netflix.jpg\" (16:9 cover image, ~780x440) replaces the generated cover; \"subtitle\" adds a caption line. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay).",
+  "_comment": "Edit this list. Optional: \"art\": \"art/netflix.jpg\" (16:9 cover image, ~780x440) replaces the generated cover; \"subtitle\" adds a caption line. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay). Logos: run \"node tools/fetch-logos.js\" to download them to logos/ (kept out of git); remove \"logo\" to use the generated cover.",
   "apps": [
     {
       "name": "Netflix",
       "id": "netflix",
       "color": "#e50914",
-      "subtitle": "Continue watching"
+      "subtitle": "Continue watching",
+      "logoSlug": "netflix",
+      "logo": "logos/netflix.svg"
     },
     {
       "name": "YouTube",
       "id": "youtube.leanback.v4",
       "color": "#ff0033",
-      "subtitle": "Trending"
+      "subtitle": "Trending",
+      "logoSlug": "youtube",
+      "logo": "logos/youtube.svg"
     },
     {
       "name": "Prime",
       "id": "amazon",
       "color": "#00a8e1",
-      "subtitle": "Prime Video"
+      "subtitle": "Prime Video",
+      "logoSlug": "primevideo",
+      "logo": "logos/primevideo.svg"
     },
     {
       "name": "Disney+",
       "id": "com.disney.disneyplus-prod",
       "color": "#113ccf",
-      "subtitle": "Stream"
+      "subtitle": "Stream",
+      "logoSlug": "disneyplus",
+      "logo": "logos/disneyplus.svg"
     },
     {
       "name": "Apple TV",
       "id": "com.apple.appletv",
       "color": "#2b2b2f",
-      "subtitle": "Watch now"
+      "subtitle": "Watch now",
+      "logoSlug": "appletv",
+      "logo": "logos/appletv.svg"
     },
     {
       "name": "HDMI 1",
       "id": "com.webos.app.hdmi1",
       "color": "#2f6f4f",
-      "subtitle": "Input"
+      "subtitle": "Input",
+      "logoSlug": "hdmi",
+      "logo": "logos/hdmi.svg"
     },
     {
       "name": "HDMI 2",
       "id": "com.webos.app.hdmi2",
       "color": "#2f6f4f",
-      "subtitle": "Input"
+      "subtitle": "Input",
+      "logoSlug": "hdmi",
+      "logo": "logos/hdmi.svg"
     },
     {
       "name": "HDMI 3",
       "id": "com.webos.app.hdmi3",
       "color": "#2f6f4f",
-      "subtitle": "Input"
+      "subtitle": "Input",
+      "logoSlug": "hdmi",
+      "logo": "logos/hdmi.svg"
     },
     {
       "name": "Settings",
