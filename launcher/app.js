@@ -6,6 +6,20 @@
   var clock = document.getElementById('clock');
   var BACK = 461; // webOS remote Back key
 
+  var hero = document.getElementById('hero');
+  function setHero(app, tile) {
+    var art = hero.querySelector('.art');
+    var src = tile.querySelector('.art');
+    var fresh = document.createElement('div');
+    fresh.className = src.className;               // keeps gen / has-logo
+    fresh.style.cssText = src.style.cssText;       // keeps background-image
+    fresh.innerHTML = src.innerHTML;
+    hero.replaceChild(fresh, art);                 // new node restarts the fade-in animation
+    hero.querySelector('.hero-name').textContent = app.name;
+    hero.querySelector('.hero-sub').textContent = app.subtitle || '';
+    hero.style.setProperty('--tile-color', app.color || '');
+  }
+
   function say(msg) { status.textContent = msg || ''; }
 
   function launch(app) {
@@ -95,6 +109,7 @@
         // Retint the wallpaper to the focused app, like tvOS
         b.addEventListener('focus', function () {
           document.body.style.setProperty('--accent', app.color || '#6ea8ff');
+          setHero(app, b);
         });
         b.addEventListener('click', function () { launch(app); });
         grid.appendChild(b);
