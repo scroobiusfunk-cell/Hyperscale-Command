@@ -1,5 +1,5 @@
 {
-  "_comment": "Edit this list. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay).",
+  "_comment": "Edit this list. Optional \"icon\": \"icons/netflix.png\" (transparent PNG) replaces the letter. 'id' is the webOS app ID. Verify IDs on your TV with: ares-device -i <device> --list-apps (or the Apps tab in the launcher's debug overlay).",
   "apps": [
     { "name": "Netflix",   "id": "netflix",                    "color": "#e50914" },
     { "name": "YouTube",   "id": "youtube.leanback.v4",        "color": "#ff0033" },
