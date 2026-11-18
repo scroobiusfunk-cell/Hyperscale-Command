@@ -17,5 +17,7 @@ cd viewer && npm install
 VAULT=/path/to/vault npm run build   # indexes the vault and builds ./dist  (default: ../demo-vault)
 npm run dev                          # after `npm run index`
 ```
+Single-file version (double-click, works offline, no server): `node tools/make-standalone.mjs viewer/dist viewer/public/vault.json Second-Brain.html` after a build.
+
 Or open the viewer with no `vault.json` and use **Choose your vault folder**: it reads the `.md` files locally in the browser and uploads nothing.
 Features: full-text search, area and tag filters, note reader with resolved wikilinks, backlinks, and a graph view.

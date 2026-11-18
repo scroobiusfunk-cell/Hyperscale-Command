@@ -84,7 +84,9 @@ export default function App() {
   const [id, setId] = useState(hashId());
 
   useEffect(() => {
-    fetch('./vault.json').then(r => (r.ok ? r.json() : Promise.reject(new Error('no vault.json')))).then(setIndex).catch(() => setErr('No indexed vault found. Open your vault folder below.'));
+    const embedded = (window as unknown as { __VAULT__?: VaultIndex }).__VAULT__;
+    if (embedded) setIndex(embedded);
+    else fetch('./vault.json').then(r => (r.ok ? r.json() : Promise.reject(new Error('no vault.json')))).then(setIndex).catch(() => setErr('No indexed vault found. Open your vault folder below.'));
     const onHash = () => setId(hashId());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
