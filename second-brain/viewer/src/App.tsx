@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MiniSearch from 'minisearch';
 import { marked } from 'marked';
-import { forceCenter, forceLink, forceManyBody, forceSimulation, forceCollide } from 'd3-force';
+import Brain from './Brain';
 import { buildIndex, makeResolver, type Note, type VaultIndex } from '../../tools/vault-lib.mjs';
 
 const hashId = () => decodeURIComponent(location.hash.replace(/^#\/?note\//, '')) || '';
@@ -36,51 +36,13 @@ async function readFolder(files: FileList): Promise<VaultIndex> {
   return buildIndex(list);
 }
 
-function Graph({ index, current, onOpen }: { index: VaultIndex; current: string; onOpen: (id: string) => void }) {
-  const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
-  const ref = useRef<SVGSVGElement>(null);
-  const W = 900, H = 640;
-  const areas = useMemo(() => [...new Set(index.notes.map(n => n.area))], [index]);
-  useEffect(() => {
-    const nodes = index.notes.map(n => ({ id: n.id }));
-    const links = index.edges.map(e => ({ source: e.source, target: e.target }));
-    const sim = forceSimulation(nodes as { id: string; x?: number; y?: number }[])
-      .force('link', forceLink(links).id((d: any) => d.id).distance(40).strength(0.4))
-      .force('charge', forceManyBody().strength(-60))
-      .force('center', forceCenter(W / 2, H / 2))
-      .force('collide', forceCollide(8))
-      .stop();
-    const ticks = Math.min(300, 60 + Math.ceil(nodes.length / 4));
-    for (let i = 0; i < ticks; i++) sim.tick();
-    const p: Record<string, { x: number; y: number }> = {};
-    for (const n of nodes as { id: string; x: number; y: number }[]) p[n.id] = { x: Math.max(10, Math.min(W - 10, n.x)), y: Math.max(10, Math.min(H - 10, n.y)) };
-    setPos(p);
-  }, [index]);
-  const deg = (id: string) => (index.backlinks[id]?.length || 0) + index.edges.filter(e => e.source === id).length;
-  const hue = (a: string) => `hsl(${(areas.indexOf(a) * 67 + 205) % 360} 40% 45%)`;
-  return (
-    <svg ref={ref} className="graph" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Note graph">
-      {index.edges.map(e => pos[e.source] && pos[e.target] && (
-        <line key={e.source + e.target} x1={pos[e.source].x} y1={pos[e.source].y} x2={pos[e.target].x} y2={pos[e.target].y} stroke="var(--color-divider)" />
-      ))}
-      {index.notes.map(n => pos[n.id] && (
-        <g key={n.id} transform={`translate(${pos[n.id].x},${pos[n.id].y})`} style={{ cursor: 'pointer' }} onClick={() => onOpen(n.id)}>
-          <circle r={Math.min(14, 4 + deg(n.id))} fill={hue(n.area)} stroke={n.id === current ? 'var(--color-text)' : 'none'} strokeWidth={2} />
-          <title>{n.title}</title>
-          {(index.notes.length < 80 || deg(n.id) > 4 || n.id === current) && <text x={8} y={3}>{n.title.slice(0, 28)}</text>}
-        </g>
-      ))}
-    </svg>
-  );
-}
-
 export default function App() {
   const [index, setIndex] = useState<VaultIndex | null>(null);
   const [err, setErr] = useState('');
   const [q, setQ] = useState('');
   const [area, setArea] = useState('All');
   const [tag, setTag] = useState('');
-  const [view, setView] = useState<'note' | 'graph'>('note');
+  const [view, setView] = useState<'note' | 'brain'>('brain');
   const [id, setId] = useState(hashId());
 
   useEffect(() => {
@@ -119,6 +81,7 @@ export default function App() {
   const note = byId.get(id) || (index ? byId.get('00-Index') || index.notes[0] : undefined);
   const html = useMemo(() => (note ? renderNote(note, resolve) : ''), [note, resolve]);
   const open = (nid: string) => { location.hash = `#/note/${encodeURIComponent(nid)}`; setView('note'); };
+  const select = (nid: string) => { location.hash = `#/note/${encodeURIComponent(nid)}`; };
 
   if (!index) {
     return (
@@ -157,12 +120,20 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="main" onClick={e => { const a = (e.target as HTMLElement).closest('a.wiki.missing'); if (a) e.preventDefault(); }}>
+      <main className={`main ${view === 'brain' ? 'brainmode' : ''}`} onClick={e => { const a = (e.target as HTMLElement).closest('a.wiki.missing'); if (a) e.preventDefault(); }}>
         <div className="tabs">
           <button className={`btn ${view === 'note' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('note')}>Note</button>
-          <button className={`btn ${view === 'graph' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('graph')}>Graph</button>
+          <button className={`btn ${view === 'brain' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView('brain')}>Brain</button>
         </div>
-        {view === 'graph' ? <Graph index={index} current={note?.id || ''} onOpen={open} /> : note ? (
+        {view === 'brain' && note && (
+          <div className="brain-card">
+            <div className="m">{note.area}{note.type ? ` · ${note.type}` : ''}</div>
+            <div className="t">{note.title}</div>
+            {note.summary && <div className="s">{note.summary}</div>}
+            <button className="btn btn-primary" onClick={() => setView('note')}>Read note</button>
+          </div>
+        )}
+        {view === 'brain' ? <Brain index={index} current={note?.id || ''} highlight={q.trim() ? new Set(results.map(r => r.id)) : null} onOpen={select} /> : note ? (
           <article className="note">
             <div className="meta">
               <span className="tag tag-accent">{note.area}</span>
