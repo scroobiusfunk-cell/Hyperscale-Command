@@ -38,7 +38,8 @@ const WIKI = /\[\[([^\]\n|#]+)(?:#([^\]\n|]+))?(?:\|([^\]\n]+))?\]\]/g;
 
 export function extractLinks(body) {
   const out = [];
-  for (const m of body.matchAll(WIKI)) out.push({ target: m[1].trim(), heading: m[2]?.trim(), alias: m[3]?.trim() });
+  // Inside markdown tables an alias pipe is written "\|", so a target can end in a stray backslash.
+  for (const m of body.matchAll(WIKI)) out.push({ target: m[1].trim().replace(/\\$/, ''), heading: m[2]?.trim().replace(/\\$/, ''), alias: m[3]?.trim() });
   return out;
 }
 
