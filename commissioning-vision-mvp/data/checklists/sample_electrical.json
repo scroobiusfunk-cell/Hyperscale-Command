@@ -1,0 +1,41 @@
+{
+  "id": "CL-ELEC-001",
+  "name": "Electrical Gear QA/QC - Main Distribution Walk",
+  "items": [
+    {
+      "id": "CL-001",
+      "prompt": "Verify the main breaker nameplate against the submittal",
+      "equip_id": "EQ-MCCB-101",
+      "profile_key": "nameplate_small",
+      "voice": {
+        "look": "Look at the white label on the upper door of the main breaker",
+        "frame": "Stand about an arm's length away and center the label",
+        "hint": "Tilt slightly if the light is glaring off the plate"
+      },
+      "evidence_required": true
+    },
+    {
+      "id": "CL-002",
+      "prompt": "Verify the distribution panelboard nameplate, including the AIC rating",
+      "equip_id": "EQ-PNL-201",
+      "profile_key": "nameplate_small",
+      "voice": {
+        "look": "Look at the nameplate inside the panelboard door, near the top",
+        "frame": "Open the door, step back an arm's length, and center the plate",
+        "safety": "Keep the door open with one hand and stay clear of live parts"
+      },
+      "evidence_required": true
+    },
+    {
+      "id": "CL-003",
+      "prompt": "Verify the dry-type transformer ID placard",
+      "equip_id": "EQ-XFMR-301",
+      "profile_key": "placard_large",
+      "voice": {
+        "look": "Look at the large equipment placard on the front of the transformer",
+        "frame": "Stand a few steps back and center the whole placard"
+      },
+      "evidence_required": true
+    }
+  ]
+}

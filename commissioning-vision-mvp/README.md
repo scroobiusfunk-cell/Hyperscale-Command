@@ -44,6 +44,21 @@ Each live frame is scored inside a profile's reticle (`placard_large`, `nameplat
 
 The metrics are **classical numpy proxies** (no OpenCV, no ML) for what Android ML Kit on-device text recognition will report in production; thresholds are in pixels at a 960px working resolution and need field calibration. Try it: `python spike/gate_demo.py` (synthetic frames only).
 
+## Inspection runner (checklist-driven)
+
+A QA/QC **checklist** is the spine. Each `ChecklistItem` (`src/checklist.py`) binds everything one inspection step needs: the inspection question, the `equip_id` into the registry, the gate `profile_key` (`placard_large` / `nameplate_small` / `serial_tag`), a `VoiceScript` (where to look, how to frame, optional hint/safety line), optional `expected_fields` overriding registry values, and an `evidence_required` flag. The inspector wears display-less glasses, so everything is voice + audio cues.
+
+```
+checklist -> voice -> gate -> capture -> extract -> compare -> report
+```
+
+1. `src/voice.py` (pure functions) speaks the ANNOUNCE line, coaches framing from gate state (SEARCHING "Move closer...", CLOSE "Almost, hold steady", LOCKED, CAPTURED) and speaks the RESULT. Each line is `(phase, text, cue)`: the app does TTS on text and plays the cue (gate `Cue` or a result chime).
+2. `src/inspection_runner.py::run_item` drives `GateStateMachine` over injected frames, extracts a `NameplateReading` from the captured frame, runs `compare` against the registry record (with overrides applied) and returns an `ItemResult` (PASS / DISCREPANCY / NEEDS_REVIEW / NO_CAPTURE, reading, comparison, evidence ref, voice transcript, gate trace).
+3. If the gate never locks the item is `NO_CAPTURE` with a retry prompt; nothing is fabricated. A PASS with `evidence_required` but no photo reference is downgraded to NEEDS_REVIEW.
+4. `run_checklist` aggregates into an `InspectionReport` (summary counts, per-item sections reusing `report.py`, JSON + Markdown, blank inspector sign-off).
+
+The extractor can be a real `Extractor` or a callable `(frame, item) -> NameplateReading`, so demos/tests inject readings. Try it: `python spike/inspection_demo.py` (simulated frames and readings; sample checklist in `data/checklists/sample_electrical.json`).
+
 ## Plugging in glasses/DAT camera and a real vision API
 
 Both are swappable adapters at the `Extractor` seam in `src/extract.py`; `compare` and `report` do not change.
