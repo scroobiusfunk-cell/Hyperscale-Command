@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Second Brain</title>
+<style>
+:root { --bg:#02030a; --ink:#dfe8ff; --mute:#8a9bc4; --line:rgba(140,170,255,.2); --panel:rgba(8,12,28,.88); }
+* { box-sizing:border-box; }
+html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif; overflow:hidden; }
+/* the deep-space background is CSS (painted once by the compositor), not redrawn on the canvas every frame */
+canvas { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none;
+  background:radial-gradient(ellipse 75% 75% at 50% 50%, #0b1230 0%, #050817 55%, #010208 100%); }
+.fps { position:fixed; right:16px; bottom:40px; font:11px ui-monospace,Consolas,monospace; color:#8a9bc4; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:4px 8px; pointer-events:none; display:none; }
+canvas.drag { cursor:grabbing; }
+canvas.over { cursor:pointer; }
+/* header + toolbar stack in one column, so the toolbar always sits below however many lines the header wraps to */
+.top { position:fixed; top:16px; left:16px; right:16px; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+.hud { display:flex; gap:10px; align-items:center; flex-wrap:wrap; pointer-events:none; }
+.hud > * { pointer-events:auto; }
+h1 { font-size:13px; letter-spacing:.24em; text-transform:uppercase; font-weight:600; margin:0 6px 0 0; color:#c3d0ff; text-shadow:0 0 14px rgba(120,150,255,.7); }
+.seg { display:flex; border:1px solid var(--line); border-radius:999px; background:var(--panel); overflow:hidden; }
+.seg button { all:unset; padding:7px 14px; cursor:pointer; color:var(--mute); font-size:12px; letter-spacing:.08em; }
+.seg button[aria-pressed="true"] { color:#fff; background:rgba(120,150,255,.24); }
+.seg button:focus-visible, input:focus-visible { outline:2px solid #7fa0ff; outline-offset:2px; }
+input { all:unset; min-width:0; flex:0 1 220px; padding:7px 12px; border:1px solid var(--line); border-radius:999px; background:var(--panel); font-size:12px; }
+.bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; pointer-events:none; }
+.bar > * { pointer-events:auto; }
+.tog { all:unset; padding:5px 12px; border:1px solid var(--line); border-radius:999px; background:var(--panel); color:var(--mute); font-size:11px; letter-spacing:.06em; cursor:pointer; }
+.tog[aria-pressed="true"] { color:#fff; background:rgba(120,150,255,.24); }
+.tog:focus-visible { outline:2px solid #7fa0ff; outline-offset:2px; }
+.time { display:flex; align-items:center; gap:8px; padding:3px 10px 3px 4px; border:1px solid var(--line); border-radius:999px; background:var(--panel); font-size:11px; color:var(--mute); }
+.time button { all:unset; width:22px; height:22px; border-radius:50%; text-align:center; line-height:22px; cursor:pointer; color:#dfe8ff; }
+.time button:focus-visible { outline:2px solid #7fa0ff; }
+.time input[type=range] { all:revert; width:min(260px, 40vw); accent-color:#7f9cff; }
+.time output { min-width:74px; font-variant-numeric:tabular-nums; }
+.stats { margin-left:auto; font-size:11px; color:var(--mute); letter-spacing:.04em; }
+.legend { position:fixed; left:16px; bottom:14px; right:16px; display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; color:var(--mute); pointer-events:none; }
+.legend span { display:inline-flex; align-items:center; gap:6px; pointer-events:auto; cursor:default; padding:2px 0; }
+.legend span:hover { color:var(--ink); }
+.legend i { width:8px; height:8px; border-radius:50%; box-shadow:0 0 8px currentColor; }
+.legend em { font-style:normal; opacity:.6; }
+.hint { position:fixed; right:16px; bottom:14px; font-size:11px; color:#6d80ab; pointer-events:none; text-align:right; }
+.tip { position:fixed; max-width:300px; padding:10px 12px; background:rgba(6,10,24,.93); border:1px solid rgba(140,170,255,.3); border-radius:8px; pointer-events:none; opacity:0; transition:opacity .12s; font-size:12px; box-shadow:0 0 30px rgba(80,110,255,.18); }
+.tip b { display:block; font-size:13px; margin:2px 0; }
+.tip .a { font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+.tip .s { color:#aebfe6; margin-top:4px; }
+.tip .h { color:#6d80ab; font-size:10px; margin-top:6px; }
+@media (max-width:1100px) { .hint { display:none; } }
+@media (max-width:700px) { .stats { display:none; } .legend { gap:2px 10px; } }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Animated map of the vault: notes are neurons or stars, links are synapses."></canvas>
+<div class="top">
+<div class="hud">
+  <h1>Second Brain</h1>
+  <div class="seg" role="group" aria-label="View">
+    <button data-mode="0" aria-pressed="true">Brain</button>
+    <button data-mode="1" aria-pressed="false">Galaxy</button>
+  </div>
+  <input id="q" type="search" placeholder="Search notes…" aria-label="Search notes">
+  <div class="stats" id="stats"></div>
+</div>
+<div class="bar">
+  <button class="tog" id="tFade" aria-pressed="true" title="Dim notes you haven't opened in a while (D)">Fading stars</button>
+  <button class="tog" id="tCon" aria-pressed="false" title="Draw each project as a constellation (C)">Constellations</button>
+  <div class="time" role="group" aria-label="Time-lapse">
+    <button id="tPlay" aria-label="Play time-lapse" title="Replay the vault growing (T)">▶</button>
+    <input id="tRange" type="range" min="0" max="1000" value="1000" aria-label="Show notes up to date">
+    <output id="tDate">now</output>
+  </div>
+</div>
+</div>
+<div class="legend" id="legend"></div>
+<div class="hint">hover to fire · click to open in Obsidian · scroll to zoom · drag to pan · B / G switch · D fade · C constellations · T time-lapse · F fps</div>
+<div class="tip" id="tip" role="status"></div>
+<div class="fps" id="fps"></div>
+<script>
+const DATA = /*__DATA__*/null;
+const { nodes, edges, areas } = DATA;
+// Opaque canvas (alpha:false): the compositor can skip blending it over the page every frame.
+// desynchronized: Chromium may present it straight to screen, bypassing most compositor work.
+const cv = document.getElementById('c'), ctx = cv.getContext('2d', { alpha: false, desynchronized: true });
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---- canvas sizing --------------------------------------------------------
+// quality = fraction of the screen's pixel density we render at. Glow is soft, so dropping it
+// costs little visually; the render loop lowers it automatically if frames run slow.
+let W = 0, H = 0, dpr = 1, quality = 1;
+const bgCv = document.createElement('canvas');   // the background, painted once per resize, copied each frame
+function resize() {
+  dpr = Math.max(0.6, Math.min(1.5, devicePixelRatio || 1) * quality);
+  W = innerWidth; H = innerHeight;
+  cv.width = bgCv.width = Math.round(W * dpr); cv.height = bgCv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const g = bgCv.getContext('2d'), gr = g.createRadialGradient(bgCv.width / 2, bgCv.height / 2, 0, bgCv.width / 2, bgCv.height / 2, Math.max(bgCv.width, bgCv.height) * 0.75);
+  gr.addColorStop(0, '#0b1230'); gr.addColorStop(0.55, '#050817'); gr.addColorStop(1, '#010208');
+  g.fillStyle = gr; g.fillRect(0, 0, bgCv.width, bgCv.height);
+}
+addEventListener('resize', resize); resize();
+
+// ---- seeded randomness so the layout is the same every load ---------------
+let seed = 1337;
+const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+const gauss = () => { let u = 0; while (!u) u = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rnd()); };
+const hueOf = a => (areas.indexOf(a) * 47 + 190) % 360;
+
+// ---- brain silhouette (side view, front on the left) ----------------------
+// Union of ellipses: cerebrum, temporal lobe, cerebellum, brain stem. [cx, cy, rx, ry]
+const ELL = [[0, -0.1, 1.0, 0.62], [-0.05, 0.28, 0.62, 0.25], [0.62, 0.45, 0.32, 0.2], [0.38, 0.62, 0.09, 0.25]];
+const inBrain = (x, y, s = 1) => ELL.some(([cx, cy, rx, ry]) => ((x - cx) / (rx * s)) ** 2 + ((y - cy) / (ry * s)) ** 2 <= 1);
+// Which lobe each area lives in.
+const LOBE = { Work: [-0.55, -0.12], Library: [0.55, 0.14], Training: [0.12, -0.48], Projects: [-0.32, -0.45], Orgs: [0.0, 0.3],
+  People: [-0.38, 0.24], Personal: [-0.08, -0.08], Topics: [0.3, -0.06], 'White Papers': [-0.8, 0.06], Meetings: [0.42, -0.36], Index: [0.05, -0.2] };
+
+// ---- graph prep -----------------------------------------------------------
+const adj = nodes.map(() => []);
+edges.forEach(([a, b], i) => { adj[a].push(i); adj[b].push(i); });
+const count = {}, byArea = {};
+nodes.forEach((n, i) => {
+  n.i = i; n.deg = adj[i].length; n.hue = hueOf(n.area); n.flash = 0;
+  n.r = Math.min(9, 1.6 + Math.sqrt(n.deg) * 1.1);
+  count[n.area] = (count[n.area] || 0) + 1; (byArea[n.area] ||= []).push(n);
+});
+nodes.forEach(n => {
+  const c = LOBE[n.area] || [(rnd() - 0.5) * 1.2, (rnd() - 0.5) * 0.6];
+  const sp = 0.06 + 0.035 * Math.sqrt(count[n.area]);
+  let x, y, t = 0;
+  do { x = c[0] + gauss() * sp; y = c[1] + gauss() * sp * 0.8; } while (!inBrain(x, y, 0.94) && ++t < 60);
+  if (t >= 60) { x = c[0]; y = c[1]; }
+  n.bx = x; n.by = y;
+});
+
+// Place one note in the flat galaxy plane (unit coords: centre 0,0, outer edge ~1.1).
+// The renderer tilts and slowly spins this plane, so return untilted x, y.
+//   areaIdx: this note's area (0..nAreas-1)    k: its rank in that area by link count (0 = the area's hub)
+//   count:   notes in that area                node: the note ({title, area, deg, ...})
+// The background star dust uses ARMS spiral arms that wind as  angle = arm * 2π/ARMS + r * TWIST.
+const ARMS = 4, TWIST = 3.2;
+function galaxyPosition(areaIdx, nAreas, k, count, node) {
+  if (node.id === '00-Index') return { x: 0, y: 0 };            // the index is the galactic core
+  const arm = areaIdx % ARMS;                                     // ~3 areas share each dust arm...
+  const lane = (Math.floor(areaIdx / ARMS) - 1) * 0.16;           // ...in parallel lanes so they stay distinct
+  const q = count > 1 ? k / (count - 1) : 0;                      // 0 = area hub, 1 = least-linked note
+  const r = 0.17 + 0.92 * Math.pow(q, 0.75) + gauss() * 0.03;     // hubs hug the core, niche notes drift out
+  const th = arm * 2 * Math.PI / ARMS + r * TWIST + lane + gauss() * 0.1 * (0.4 + r);
+  return { x: r * Math.cos(th) + gauss() * 0.02, y: r * Math.sin(th) + gauss() * 0.02 };
+}
+Object.entries(byArea).forEach(([area, list]) => {
+  const ai = areas.indexOf(area);
+  [...list].sort((a, b) => b.deg - a.deg).forEach((n, k) => {
+    const p = galaxyPosition(ai, areas.length, k, list.length, n);
+    n.gx = p.x; n.gy = p.y;
+  });
+});
+
+// ---- fading stars: notes you haven't opened in a while dim and drift outward ------------------------
+// n.seen (ms) comes from the plugin: your last visit, or the note's own date if never opened.
+// Fully bright for 30 days, then fades over the next ~11 months. Clicking a note makes it flare back.
+const NOW = DATA.now || Date.now(), DAY = 864e5;
+let fadeOn = true;
+nodes.forEach(n => {
+  const age = n.seen ? (NOW - n.seen) / DAY : 400;
+  n.fade = n.id === '00-Index' ? 0 : Math.min(1, Math.max(0, (age - 30) / 335));
+  n.fadeShown = n.fade;
+  const k = 1 + 0.16 * n.fade;              // drift out in the galaxy plane, decided once so cached links still line up
+  n.gx *= k; n.gy *= k;
+});
+
+// ---- time-lapse: replay the vault forming in order of note dates -----------------------------------
+const bornMs = nodes.map(n => (n.born ? Date.parse(n.born) : NaN));
+const datedMs = bornMs.filter(isFinite);
+const T0 = datedMs.length ? Math.min(...datedMs) : NOW, T1 = Math.max(NOW, ...datedMs);
+nodes.forEach((n, i) => { n.bornT = isFinite(bornMs[i]) ? bornMs[i] : T0; n.vis = 1; n.appear = 1; });
+let cutT = Infinity, playing = false, visCount = nodes.length;
+const isVis = n => n.bornT <= cutT;
+
+// ---- constellations: each project's key notes joined by a minimum spanning tree (looks like a star chart)
+const cons = (DATA.constellations || []).map(c => {
+  const m = [...new Set(c.members)].filter(i => nodes[i]);     // de-duplicate, or the tree loop never finishes
+  if (m.length < 2) return null;
+  const lines = [], inTree = new Set([m[0]]);
+  while (inTree.size < m.length) {                              // Prim's algorithm on galaxy-plane distance
+    let best = null;
+    for (const a of inTree) for (const b of m) if (!inTree.has(b)) {
+      const d = (nodes[a].gx - nodes[b].gx) ** 2 + (nodes[a].gy - nodes[b].gy) ** 2;
+      if (!best || d < best[2]) best = [a, b, d];
+    }
+    if (!best) break;
+    lines.push([best[0], best[1]]); inTree.add(best[1]);
+  }
+  return { name: c.name, hub: m[0], members: m, lines };
+}).filter(Boolean);
+let consOn = false;
+
+// ---- star dust: brain cortex texture <-> galaxy arms ----------------------
+const dust = [];
+for (let i = 0, N = reduce ? 1200 : 3200; i < N; i++) {
+  const rim = rnd() < 0.45; let x, y, t = 0;
+  do { x = rnd() * 2.1 - 1.05; y = rnd() * 1.75 - 0.75; } while (!(inBrain(x, y) && (!rim || !inBrain(x, y, 0.9))) && ++t < 200);
+  let gx, gy, warm;
+  if (rnd() < 0.22) { const r = Math.abs(gauss()) * 0.16, a = rnd() * 6.2832; gx = r * Math.cos(a); gy = r * Math.sin(a); warm = 1; }
+  else {
+    const r = 0.08 + Math.pow(rnd(), 0.7) * 1.15, th = (i % ARMS) * 2 * Math.PI / ARMS + r * TWIST + gauss() * 0.22, j = gauss() * 0.03;
+    gx = r * Math.cos(th) + j; gy = r * Math.sin(th) + j; warm = Math.max(0, 1 - r * 2.5);
+  }
+  const hb = 200 + rnd() * 80;
+  dust.push({ bx: x, by: y, gx, gy, s: 0.5 + rnd() * 1.2, ph: rnd() * 6.28, hb, hg: warm > 0.5 ? 28 + rnd() * 25 : hb, warm, rim: rim ? 1 : 0 });
+}
+const stars = Array.from({ length: 260 }, () => ({ x: rnd(), y: rnd(), s: rnd() < 0.1 ? 1.6 : 0.9, a: 0.15 + rnd() * 0.45, f: 0.5 + rnd() * 2, ph: rnd() * 6.28 }));
+
+// ---- glow sprites ---------------------------------------------------------
+const SPR = {};
+function spr(h) {
+  if (SPR[h]) return SPR[h];
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)');
+  gr.addColorStop(0.16, `hsla(${h},95%,80%,0.95)`);
+  gr.addColorStop(0.42, `hsla(${h},90%,62%,0.32)`);
+  gr.addColorStop(1, `hsla(${h},90%,62%,0)`);
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return (SPR[h] = c);
+}
+const edgesByArea = areas.map(() => []);
+edges.forEach((e, i) => edgesByArea[areas.indexOf(nodes[e[0]].area)].push(i));
+// ---- cached synapse layer -------------------------------------------------
+// Links are the costliest thing to draw (hundreds of anti-aliased curves). In pure brain mode or
+// pure galaxy mode every link moves rigidly with the whole picture (breathing = scale, galaxy spin =
+// rotate + tilt), so they are drawn once into an offscreen canvas in "unit" coordinates and painted
+// each frame with a single transformed drawImage. Only the ~2 s morph between modes draws them live.
+const LAYER_R = 1.35, LAYER_MAX = 4096;
+const edgeLayer = { cv: document.createElement('canvas'), key: null, galaxy: -1, scale: 1, size: 0 };
+// Decide when the cached layer is stale. pxPerUnit = device pixels per layout unit (changes with
+// zoom and window size). Return any value: the layer is redrawn whenever it changes.
+function edgeLayerKey(pxPerUnit) {
+  // 4 steps per doubling of zoom: the cached image is never more than ~9% off its drawn size
+  // (too little to see as blur), and a wheel zoom redraws it every few notches, not every notch.
+  return Math.round(Math.log2(pxPerUnit) * 4);
+}
+function buildEdgeLayer(galaxy, pxPerUnit) {
+  const L = edgeLayer, size = Math.ceil(2 * LAYER_R * pxPerUnit);
+  const g = L.cv.getContext('2d');
+  if (L.cv.width !== size) { L.cv.width = L.cv.height = size; }           // reallocate only when the size changes
+  else { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, size, size); }
+  L.size = size; L.galaxy = galaxy; L.scale = pxPerUnit;
+  g.setTransform(pxPerUnit, 0, 0, pxPerUnit, size / 2, size / 2);
+  g.globalCompositeOperation = 'lighter';
+  g.lineWidth = (galaxy ? 0.9 : 0.7) * dpr / pxPerUnit;   // galaxy tilt squashes lines, so start a bit thicker
+  areas.forEach((a, h) => {
+    if (!edgesByArea[h].length) return;
+    g.strokeStyle = `hsla(${hueOf(a)},90%,65%,0.07)`;
+    g.beginPath();
+    for (const k of edgesByArea[h]) {
+      const A = nodes[edges[k][0]], B = nodes[edges[k][1]];
+      if (!isVis(A) || !isVis(B)) continue;                      // time-lapse: only links between notes that exist yet
+      const ax = galaxy ? A.gx : A.bx, ay = galaxy ? A.gy : A.by, bx = galaxy ? B.gx : B.bx, by = galaxy ? B.gy : B.by;
+      g.moveTo(ax, ay); g.quadraticCurveTo((ax + bx) * 0.41, (ay + by) * 0.41, bx, by);  // midpoint pulled 18% to centre
+    }
+    g.stroke();
+  });
+}
+const dustBuckets = Array.from({ length: 61 }, () => []);   // dust grouped by hue (6° steps) per frame
+const LABEL_DEG = [...nodes].map(n => n.deg).sort((a, b) => b - a)[Math.min(11, nodes.length - 1)] || 1;
+
+// ---- synapse pulses -------------------------------------------------------
+const pulses = [], MAXP = reduce ? 12 : 110;
+function fire(i, gen = 0) {
+  if (!adj[i].length || pulses.length >= MAXP || !isVis(nodes[i])) return;
+  const [a, b] = edges[adj[i][Math.floor(Math.random() * adj[i].length)]], to = a === i ? b : a;
+  if (!isVis(nodes[to])) return;                                  // time-lapse: don't fire into notes not yet written
+  pulses.push({ from: i, to, t: 0, sp: 0.007 + Math.random() * 0.013, gen });
+  nodes[i].flash = Math.max(nodes[i].flash, 0.7);
+}
+
+// ---- state + interaction --------------------------------------------------
+let mode = 0, mt = 0, rot = 0, time = 0, last = performance.now();
+let zoom = 1, panX = 0, panY = 0, hover = -1, nbr = new Set(), areaFocus = null, query = '', matchCount = 0;
+const tip = document.getElementById('tip');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.mode === m)));
+}
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setMode(+b.dataset.mode)));
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'b' || e.key === 'B') setMode(0);
+  if (e.key === 'g' || e.key === 'G') setMode(1);
+});
+
+function setHover(i, x, y) {
+  if (i !== hover) {
+    hover = i; nbr = new Set();
+    if (i >= 0) {
+      let shownLinks = 0;
+      adj[i].forEach(e => { const [a, b] = edges[e]; if (isVis(nodes[a]) && isVis(nodes[b])) { nbr.add(a); nbr.add(b); shownLinks++; } });
+      for (let k = 0; k < 4; k++) fire(i);
+      const n = nodes[i];
+      tip.innerHTML = `<span class="a" style="color:hsl(${n.hue} 90% 68%)">${esc(n.area)}</span><b>${esc(n.title)}</b>` +
+        (n.summary ? `<div class="s">${esc(n.summary)}</div>` : '') + `<div class="h">${shownLinks} links · click to open in Obsidian</div>`;
+    }
+    cv.classList.toggle('over', i >= 0);
+  }
+  tip.style.opacity = i >= 0 ? 1 : 0;
+  if (i >= 0) {
+    const r = tip.getBoundingClientRect();
+    tip.style.left = Math.min(W - r.width - 12, x + 16) + 'px';
+    tip.style.top = Math.min(H - r.height - 12, y + 16) + 'px';
+  }
+}
+function hit(x, y) {
+  let best = -1, bd = Infinity;
+  for (const n of nodes) {
+    if (!isVis(n)) continue;
+    const d = (n.sx - x) ** 2 + (n.sy - y) ** 2, lim = Math.max(12, n.r * 2.4 * Math.sqrt(zoom)) ** 2;
+    if (d < lim && d < bd) { bd = d; best = n.i; }
+  }
+  return best;
+}
+// Inside Obsidian (the Second Brain Galaxy plugin's sandboxed frame) ask the plugin to open the note;
+// in a normal browser tab, hand off to Obsidian with its URI scheme.
+const openNote = n => {
+  n.fade = 0; n.flash = 2; for (let k = 0; k < 6; k++) fire(n.i);   // a revisited star flares back to full brightness
+  if (window.parent !== window) window.parent.postMessage({ type: 'sb-open', id: n.id }, '*');
+  else location.href = 'obsidian://open?vault=' + encodeURIComponent(DATA.vault) + '&file=' + encodeURIComponent(n.id);
+};
+
+let down = null;
+cv.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, px: panX, py: panY, moved: false }; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => {
+  if (down) {
+    const dx = e.clientX - down.x, dy = e.clientY - down.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) { down.moved = true; cv.classList.add('drag'); }
+    if (down.moved) { panX = down.px + dx; panY = down.py + dy; setHover(-1); return; }
+  }
+  if (e.pointerType === 'mouse') setHover(hit(e.clientX, e.clientY), e.clientX, e.clientY);
+});
+cv.addEventListener('pointerup', e => {
+  cv.classList.remove('drag');
+  const was = down; down = null;
+  if (!was || was.moved) return;
+  const i = hit(e.clientX, e.clientY);
+  if (e.pointerType === 'mouse') { if (i >= 0) openNote(nodes[i]); }
+  else if (i >= 0 && i === hover) openNote(nodes[i]);
+  else setHover(i, e.clientX, e.clientY);
+});
+cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !down) setHover(-1); });
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const nz = Math.min(6, Math.max(0.5, zoom * Math.exp(-e.deltaY * 0.0015))), k = nz / zoom;
+  const ox = W / 2 + panX, oy = H * 0.53 + panY;
+  panX = e.clientX - (e.clientX - ox) * k - W / 2; panY = e.clientY - (e.clientY - oy) * k - H * 0.53;
+  zoom = nz;
+}, { passive: false });
+
+document.getElementById('q').addEventListener('input', e => {
+  query = e.target.value.trim().toLowerCase(); matchCount = 0;
+  for (const n of nodes) {
+    n.match = !!query && isVis(n) && (n.title + ' ' + n.summary + ' ' + n.area).toLowerCase().includes(query);
+    if (n.match && matchCount++ < 12) fire(n.i);
+  }
+});
+const legend = document.getElementById('legend');
+areas.filter(a => count[a]).forEach(a => {
+  const s = document.createElement('span'), col = `hsl(${hueOf(a)} 90% 62%)`;
+  s.innerHTML = `<i style="background:${col};color:${col}"></i>${esc(a)} <em>${count[a]}</em>`;
+  s.addEventListener('mouseenter', () => { areaFocus = a; byArea[a].slice(0, 8).forEach(n => fire(n.i)); });
+  s.addEventListener('mouseleave', () => { areaFocus = null; });
+  legend.appendChild(s);
+});
+const statsEl = document.getElementById('stats');
+const setStats = () => { statsEl.textContent = `${visCount} notes · ${edges.filter(([a, b]) => isVis(nodes[a]) && isVis(nodes[b])).length} synapses`; };
+setStats();
+
+// ---- toggles + time-lapse controls ------------------------------------------------------------------
+const tFade = document.getElementById('tFade'), tCon = document.getElementById('tCon');
+const tPlay = document.getElementById('tPlay'), tRange = document.getElementById('tRange'), tDate = document.getElementById('tDate');
+const press = (b, on) => b.setAttribute('aria-pressed', String(on));
+const toggleFade = () => { fadeOn = !fadeOn; press(tFade, fadeOn); };
+const toggleCons = () => { consOn = !consOn; press(tCon, consOn); if (consOn) cons.forEach(c => fire(c.hub)); };
+tFade.addEventListener('click', toggleFade);
+tCon.addEventListener('click', toggleCons);
+const monthFmt = new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' });
+let playV = 1000;                                        // exact position (the slider itself rounds to whole steps)
+function setCut(v) {                                     // v: 0..1000 along T0..T1; 1000 = everything, "now"
+  playV = v;
+  const step = String(Math.round(v));
+  if (tRange.value !== step) tRange.value = step;
+  cutT = v >= 1000 ? Infinity : T0 + (T1 - T0) * v / 1000;
+  const label = v >= 1000 ? 'now' : monthFmt.format(cutT);
+  if (tDate.textContent !== label) tDate.textContent = label;
+  const before = visCount;
+  visCount = 0; for (const n of nodes) if (isVis(n)) visCount++;
+  if (visCount === before) return;                       // nothing appeared or vanished: skip the DOM work
+  if (visCount < before) { pulses.length = 0; if (hover >= 0 && !isVis(nodes[hover])) setHover(-1); }
+  else nodes.forEach(n => { if (isVis(n) && n.appear >= 1 && n.bornT > cutT - (T1 - T0) / 40) { n.appear = 0; n.flash = 1; } });
+  setStats();
+}
+const setPlaying = on => {
+  playing = on; tPlay.textContent = on ? '❚❚' : '▶';
+  tPlay.setAttribute('aria-label', on ? 'Pause time-lapse' : 'Play time-lapse');
+};
+tRange.addEventListener('input', () => { setPlaying(false); setCut(+tRange.value); });
+const togglePlay = () => {
+  setPlaying(!playing);
+  if (playing && playV >= 1000) setCut(0);
+};
+tPlay.addEventListener('click', togglePlay);
+addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+  if (e.key === 'd' || e.key === 'D') toggleFade();
+  if (e.key === 'c' || e.key === 'C') toggleCons();
+  if (e.key === 't' || e.key === 'T') togglePlay();
+});
+const PLAY_SECONDS = 14;
+function advancePlay(dt) {
+  if (!playing) return;
+  const v = Math.min(1000, playV + dt * 1000 / PLAY_SECONDS);
+  setCut(v);
+  if (v >= 1000) setPlaying(false);
+}
+
+// ---- adaptive resolution + FPS readout (press F) --------------------------
+// Every second, look at the real frame rate. If it is under 50 fps while the picture is settled
+// (not mid-morph, tab not just woken from the background), render at 15% fewer pixels per side.
+const fpsEl = document.getElementById('fps');
+const perf = { start: 0, frames: 0, worst: 0, cooldown: 2000, last: 0, samples: [], locked: false,
+  lockFps: 0, slow: 0, reprobes: 0, manual: false };
+// Given [{q, fps}] measured on the way down, pick the sharpest quality within 10% of the best fps seen.
+// (Gains are not linear: on software-composited machines the first step can do nothing and later ones a lot.)
+function pickQuality(samples) {
+  const best = Math.max(...samples.map(s => s.fps));
+  return Math.max(...samples.filter(s => s.fps >= best * 0.9).map(s => s.q));
+}
+function adapt(now, e) {
+  const gap = perf.last ? now - perf.last : 0; perf.last = now;
+  if (!perf.start) { perf.start = now; return; }
+  perf.frames++; perf.worst = Math.max(perf.worst, gap);
+  const span = now - perf.start;
+  if (span < 1000) return;
+  const fps = perf.frames * 1000 / span, settled = (e < 0.001 || e > 0.999) && perf.worst < 250;
+  fpsEl.textContent = `${fps.toFixed(0)} fps · ${cv.width}×${cv.height} · quality ${Math.round(quality * 100)}%`;
+  perf.cooldown -= span;
+  if (settled && perf.cooldown <= 0 && !perf.locked) {
+    perf.samples.push({ q: quality, fps });
+    if (fps < 50 && quality > 0.45) {
+      // still slow: try the next step down and measure again
+      quality = Math.max(0.45, quality * 0.85); resize(); perf.cooldown = 2000;
+    } else {
+      // fast enough, or at the floor: settle on the sharpest step that was nearly as fast as the best
+      const q = pickQuality(perf.samples);
+      perf.lockFps = Math.max(...perf.samples.map(s => s.fps)); perf.firstFps = perf.samples[0].fps;
+      if (q !== quality) { quality = q; resize(); }
+      perf.locked = true; perf.slow = 0; perf.cooldown = 2000;
+    }
+  } else if (settled && perf.locked && !perf.manual && perf.cooldown <= 0) {
+    // The probe can be fooled (e.g. it ran while Obsidian was in the background and throttled).
+    // A throttled probe looks flat: no level beat full quality by 20%. If the probe was flat and we are
+    // still under 50 fps 10 s later, probe again from the top (at most twice). A probe that found a
+    // real gain is trusted and left alone.
+    const flat = perf.lockFps < perf.firstFps * 1.2;
+    perf.slow = flat && fps < 50 ? perf.slow + 1 : 0;
+    if (perf.slow >= 10 && perf.reprobes < 2) {
+      perf.reprobes++; perf.locked = false; perf.samples = []; quality = 1; resize(); perf.cooldown = 2000;
+    }
+  }
+  if (perf.manual) fpsEl.textContent += ' (manual: [ ] to change)';
+  else if (perf.locked) fpsEl.textContent += ' (settled)';
+  else fpsEl.textContent += ' (testing…)';
+  perf.start = now; perf.frames = 0; perf.worst = 0;
+}
+addEventListener('keydown', ev => {
+  if (ev.target.tagName === 'INPUT') return;
+  if (ev.key === 'f' || ev.key === 'F') fpsEl.style.display = fpsEl.style.display === 'block' ? 'none' : 'block';
+  if (ev.key === '[' || ev.key === ']') {   // manual quality: overrides and stops the auto probe
+    quality = Math.min(1, Math.max(0.3, ev.key === '[' ? quality * 0.85 : quality / 0.85));
+    perf.manual = perf.locked = true; resize(); fpsEl.style.display = 'block';
+  }
+});
+
+// ---- render loop ----------------------------------------------------------
+function frame(now) {
+  const dt = Math.max(0, Math.min(50, now - last)) / 1000; last = now; time += dt;
+  advancePlay(dt);
+  mt +=(mode - mt) * Math.min(1, dt * 2.2);
+  const e = mt * mt * (3 - 2 * mt);
+  if (!reduce) rot += dt * 0.05 * e;
+  const S = Math.min(W / 2.5, H / 2.05) * zoom, ox = W / 2 + panX, oy = H * 0.53 + panY, TILT = 0.58;
+  const br = 1 + (reduce ? 0 : 0.006 * Math.sin(time * 1.3)) * (1 - e), c = Math.cos(rot), s = Math.sin(rot);
+  const P = (bx, by, gx, gy) => {
+    const x2 = gx * c - gy * s, y2 = (gx * s + gy * c) * TILT;
+    return [ox + (bx * br + (x2 - bx * br) * e) * S, oy + (by * br + (y2 - by * br) * e) * S];
+  };
+  const zr = Math.sqrt(zoom);
+
+  ctx.globalCompositeOperation = 'copy'; ctx.globalAlpha = 1;
+  ctx.drawImage(bgCv, 0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter';
+  // one colour for all stars; twinkle via globalAlpha (a number) instead of a new CSS string per star
+  ctx.fillStyle = 'rgb(200,215,255)';
+  for (const st of stars) {
+    ctx.globalAlpha = st.a * (0.6 + 0.4 * Math.sin(time * st.f + st.ph));
+    ctx.fillRect(st.x * W, st.y * H, st.s, st.s);
+  }
+  ctx.globalAlpha = 1;
+  if (e > 0.01) {
+    const R = S * 0.6, g = ctx.createRadialGradient(ox, oy, 0, ox, oy, R);
+    g.addColorStop(0, `rgba(255,220,170,${0.6 * e})`); g.addColorStop(0.22, `rgba(255,160,120,${0.2 * e})`); g.addColorStop(1, 'rgba(90,60,170,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(ox, oy, R, R * TILT, 0, 0, 6.2832); ctx.fill();
+  }
+  // dust: bucket by hue so fillStyle (parsed as CSS) is set a few dozen times, not 3200
+  for (const d of dust) dustBuckets[Math.max(0, Math.min(60, Math.round((d.hb + (d.hg - d.hb) * e) / 6)))].push(d);
+  dustBuckets.forEach((list, bi) => {
+    if (!list.length) return;
+    ctx.fillStyle = `hsl(${bi * 6},80%,72%)`;
+    for (const d of list) {
+      const [x, y] = P(d.bx, d.by, d.gx, d.gy);
+      ctx.globalAlpha = Math.min(1, (0.16 + 0.12 * Math.sin(time * 0.9 + d.ph)) * (1 + d.rim * (1 - e) * 1.4 + d.warm * e * 1.6));
+      const z = d.s * zr; ctx.fillRect(x, y, z, z);
+    }
+    list.length = 0;
+  });
+  ctx.globalAlpha = 1;
+  for (const n of nodes) [n.sx, n.sy] = P(n.bx, n.by, n.gx, n.gy);
+
+  // synapses (links), curved slightly toward the centre
+  const dim = hover >= 0 || query || areaFocus;
+  ctx.lineWidth = 0.7;
+  const curve = (A, B) => { const mx = (A.sx + B.sx) / 2, my = (A.sy + B.sy) / 2; ctx.moveTo(A.sx, A.sy); ctx.quadraticCurveTo(mx + (ox - mx) * 0.18, my + (oy - my) * 0.18, B.sx, B.sy); };
+  const pxu = S * dpr, linkAlpha = (dim ? 0.025 / 0.07 : 1) * (1 - e * 0.35);
+  if ((e < 0.001 || e > 0.999) && 2 * LAYER_R * pxu <= LAYER_MAX) {
+    const galaxy = e > 0.5 ? 1 : 0, key = edgeLayerKey(pxu), L = edgeLayer;
+    // During time-lapse playback, redraw the cached links at most 4×/s (new notes appear in between anyway).
+    const visStale = L.vis !== visCount && (!playing || now - (L.builtAt || 0) > 250);
+    if (L.galaxy !== galaxy || L.key !== key || visStale) { buildEdgeLayer(galaxy, pxu); L.key = key; L.vis = visCount; L.builtAt = now; }
+    // unit -> device matrix (brain: breathe-scale; galaxy: spin then tilt), divided by the layer's own scale
+    const k = dpr * S / L.scale;
+    if (galaxy) ctx.setTransform(k * c, k * TILT * s, -k * s, k * TILT * c, dpr * ox, dpr * oy);
+    else ctx.setTransform(k * br, 0, 0, k * br, dpr * ox, dpr * oy);
+    ctx.globalAlpha = linkAlpha;
+    ctx.drawImage(L.cv, -L.size / 2, -L.size / 2);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 1;
+  } else {
+    areas.forEach((a, h) => {
+      if (!edgesByArea[h].length) return;
+      ctx.strokeStyle = `hsla(${hueOf(a)},90%,65%,${0.07 * linkAlpha})`;
+      ctx.beginPath();
+      for (const k of edgesByArea[h]) { const A = nodes[edges[k][0]], B = nodes[edges[k][1]]; if (isVis(A) && isVis(B)) curve(A, B); }
+      ctx.stroke();
+    });
+  }
+  if (hover >= 0) {
+    ctx.lineWidth = 1.1; ctx.strokeStyle = `hsla(${nodes[hover].hue},95%,72%,0.55)`; ctx.beginPath();
+    for (const k of adj[hover]) { const A = nodes[edges[k][0]], B = nodes[edges[k][1]]; if (isVis(A) && isVis(B)) curve(A, B); }
+    ctx.stroke();
+  }
+
+  // spontaneous firing, weighted by connectivity
+  if (!reduce || Math.random() < 0.05) {
+    if (Math.random() < dt * 14) { const [a, b] = edges[Math.floor(Math.random() * edges.length)]; fire(Math.random() < 0.5 ? a : b); }
+  }
+  for (let i = pulses.length - 1; i >= 0; i--) {
+    const p = pulses[i]; p.t += p.sp * dt * 60;
+    const A = nodes[p.from], B = nodes[p.to];
+    if (p.t >= 1) {
+      B.flash = 1; pulses.splice(i, 1);
+      if (p.gen < 7 && Math.random() < 0.6) fire(B.i, p.gen + 1);
+      if (p.gen < 3 && Math.random() < 0.15) fire(B.i, p.gen + 1);
+      continue;
+    }
+    const mx = (A.sx + B.sx) / 2, my = (A.sy + B.sy) / 2, qx = mx + (ox - mx) * 0.18, qy = my + (oy - my) * 0.18, sp = spr(A.hue);
+    for (let j = 0; j < 7; j++) {
+      const t = p.t - j * 0.022; if (t < 0) break;
+      const u = 1 - t, x = u * u * A.sx + 2 * u * t * qx + t * t * B.sx, y = u * u * A.sy + 2 * u * t * qy + t * t * B.sy;
+      const z = (j ? 7 - j * 0.8 : 9) * zr;
+      ctx.globalAlpha = (1 - j / 7) * 0.9; ctx.drawImage(sp, x - z, y - z, z * 2, z * 2);
+    }
+  }
+
+  // neurons / stars
+  for (const n of nodes) {
+    if (!isVis(n)) continue;
+    n.flash *= Math.pow(0.15, dt);
+    n.appear = Math.min(1, n.appear + dt * 2.5);                               // time-lapse: new notes grow in
+    n.fadeShown += ((fadeOn ? n.fade : 0) - n.fadeShown) * Math.min(1, dt * 3);   // smooth toggle and flare-back
+    let a = 1;
+    if (hover >= 0) a = n.i === hover || nbr.has(n.i) ? 1 : 0.16;
+    else if (query) a = n.match ? 1 : 0.1;
+    else if (areaFocus) a = n.area === areaFocus ? 1 : 0.14;
+    const f = n.fadeShown, z = n.r * (2.6 + n.flash * 2.4) * zr * (1 - 0.3 * f) * (0.3 + 0.7 * n.appear);
+    ctx.globalAlpha = Math.min(1, a * (0.72 + 0.28 * n.flash) * (1 - 0.68 * f) * n.appear);
+    ctx.drawImage(spr(n.hue), n.sx - z, n.sy - z, z * 2, z * 2);
+  }
+
+  // constellations: thin star-chart lines through each project's key notes, named at the project
+  if (consOn) {
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    ctx.lineWidth = 1; ctx.setLineDash([3, 4]); ctx.strokeStyle = 'rgba(220,230,255,0.42)';
+    ctx.beginPath();
+    for (const cn of cons) for (const [a, b] of cn.lines) {
+      const A = nodes[a], B = nodes[b];
+      if (isVis(A) && isVis(B)) { ctx.moveTo(A.sx, A.sy); ctx.lineTo(B.sx, B.sy); }
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = 'italic 11px Georgia,serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(235,225,190,0.85)';
+    for (const cn of cons) { const h = nodes[cn.hub]; if (isVis(h)) ctx.fillText(cn.name, h.sx, h.sy + h.r * 2.6 * zr + 14); }
+  }
+
+  // labels on the biggest hubs, the hovered note and search hits
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  ctx.font = '11px system-ui,-apple-system,"Segoe UI",sans-serif'; ctx.textAlign = 'center';
+  for (const n of nodes) {
+    if (!isVis(n)) continue;
+    const show = n.i === hover || (hover < 0 && !query && !areaFocus && n.deg >= LABEL_DEG && e < 0.5) || (query && n.match && matchCount <= 20) || (areaFocus === n.area && n.deg >= 3);
+    if (!show) continue;
+    ctx.fillStyle = `rgba(225,234,255,${n.i === hover ? 0.95 : 0.6})`;
+    ctx.fillText(n.title.length > 38 ? n.title.slice(0, 36) + '…' : n.title, n.sx, n.sy - n.r * 2.2 * zr - 5);
+  }
+  adapt(now, e);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

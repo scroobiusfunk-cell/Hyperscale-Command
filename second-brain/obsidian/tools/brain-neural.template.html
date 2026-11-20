@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural Brain</title>
+<style>
+  :root { --bg: #070b10; --ink: #dfeaf2; --muted: #7f93a3; --panel: rgba(10, 18, 26, .84); --line: rgba(110, 220, 255, .16); --cyan: #5ee6ff; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden;
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; cursor: grab; touch-action: none; }
+  canvas.drag { cursor: grabbing; }
+  .hud { position: fixed; top: 14px; left: 16px; right: 16px; display: flex; gap: 12px; align-items: flex-start; pointer-events: none; }
+  .title h1 { margin: 0; font: 600 14px ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); }
+  .title p { margin: 2px 0 0; color: var(--muted); font: 11px ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .04em; }
+  .search { margin-left: auto; pointer-events: auto; }
+  .search input { width: 220px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+    color: var(--ink); font: inherit; outline: none; }
+  .search input:focus { border-color: rgba(94, 230, 255, .6); box-shadow: 0 0 0 3px rgba(94, 230, 255, .12); }
+  .legend { position: fixed; left: 16px; bottom: 16px; padding: 10px 12px; border-radius: 10px; background: var(--panel);
+    border: 1px solid var(--line); display: grid; gap: 4px; font-size: 12px; }
+  .legend button { all: unset; cursor: pointer; display: flex; gap: 8px; align-items: center; padding: 2px 4px; border-radius: 6px; }
+  .legend button:hover, .legend button:focus-visible { background: rgba(255, 255, 255, .06); }
+  .legend i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .legend b { font-weight: 600; min-width: 92px; }
+  .legend span { color: var(--muted); }
+  .tip { position: fixed; max-width: 320px; padding: 9px 11px; border-radius: 9px; background: rgba(18, 16, 20, .94);
+    border: 1px solid var(--line); pointer-events: none; display: none; box-shadow: 0 6px 24px rgba(0, 0, 0, .4); }
+  .tip b { display: block; font-size: 13px; }
+  .tip em { display: block; font-style: normal; color: var(--muted); font-size: 11px; margin: 2px 0 5px; }
+  .tip div { font-size: 12px; color: #d3c9cd; }
+  .hint { position: fixed; right: 16px; bottom: 16px; color: var(--muted); font-size: 11px; text-align: right; }
+  .fps { position: fixed; right: 16px; bottom: 44px; color: var(--muted); font: 11px ui-monospace, monospace; display: none; }
+  @media (max-width: 640px) { .search input { width: 140px; } .legend span { display: none; } .hint { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Rotating 3D neural map of your notes"></canvas>
+<div class="hud">
+  <div class="title"><h1 id="t">Second Brain</h1><p id="sub"></p></div>
+  <div class="search"><input id="q" type="search" placeholder="Search neurons…" aria-label="Search notes"></div>
+</div>
+<div class="legend" id="legend" aria-label="Brain regions"></div>
+<div class="tip" id="tip"></div>
+<div class="fps" id="fps"></div>
+<div class="hint">Click a neuron to fire it and open the note · drag to rotate · scroll to zoom<br>R auto-rotate · Space pause firing · + / − firing rate · F fps · 0 reset</div>
+<script>
+'use strict';
+const DATA = /*__DATA__*/null;
+const { nodes, edges } = DATA;
+const N = nodes.length;
+
+// ---------- seeded randomness (layout and anatomy are the same every time) ----------
+function seeded(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const rand = seeded('neural:' + DATA.vault);
+
+// ---------- anatomy ----------
+// The side profile (x forward-back, y down) plus a width profile gives a 3D volume: two hemispheres either side of
+// the midline, a cerebellum underneath at the back, and the brain stem below. Frontal lobe points to -x.
+const CEREBRUM = [[-1.05, .20], [-1.15, -.05], [-1.09, -.36], [-.88, -.62], [-.52, -.80], [-.06, -.87], [.40, -.81], [.78, -.63],
+  [1.05, -.37], [1.17, -.06], [1.12, .21], [.96, .36], [.66, .38], [.40, .41], [.10, .52], [-.24, .56], [-.50, .47], [-.63, .31],
+  [-.76, .27], [-.93, .30]];
+const CBL = { x: .74, y: .57, rx: .40, ry: .21, rz: .42 };
+const STEM = { x0: .38, y0: .40, x1: .44, y1: 1.04, r: .10 };
+const LATERAL_FISSURE = [[-.64, .27], [-.42, .20], [-.15, .10], [.12, .04], [.36, -.04], [.48, -.10]];
+const CENTRAL_SULCUS = [[-.10, -.86], [-.04, -.64], [-.12, -.45], [-.03, -.25], [-.09, -.06], [.00, .07]];
+const GAP = .025;                                                     // half-width of the longitudinal fissure
+
+function splinePath(pts, s = 1) {
+  const p = new Path2D(), n = pts.length, P = i => pts[(i + n) % n];
+  p.moveTo(pts[0][0] * s, pts[0][1] * s);
+  for (let i = 0; i < n; i++) {
+    const p0 = P(i - 1), p1 = P(i), p2 = P(i + 1), p3 = P(i + 2);
+    p.bezierCurveTo((p1[0] + (p2[0] - p0[0]) / 6) * s, (p1[1] + (p2[1] - p0[1]) / 6) * s,
+      (p2[0] - (p3[0] - p1[0]) / 6) * s, (p2[1] - (p3[1] - p1[1]) / 6) * s, p2[0] * s, p2[1] * s);
+  }
+  p.closePath(); return p;
+}
+const scratch = document.createElement('canvas').getContext('2d');
+const CER_HIT = splinePath(CEREBRUM, 1000);
+const inProfile = (x, y) => scratch.isPointInPath(CER_HIT, x * 1000, y * 1000);
+// A hemisphere is flat on its inner (midline) face and domes outward: beyond FLAT from the midline the side
+// profile shrinks smoothly toward its centre, reaching nothing at FLAT + DOME. That gives rounded cortex, not a slab.
+const FLAT = .22, DOME = .5, PC = [-.02, -.12];
+function inHemi(x, y, z, s) {
+  const a = s * z;
+  if (a < GAP) return false;
+  const t = a <= FLAT ? 0 : (a - FLAT) / DOME;
+  if (t >= 1) return false;
+  const f = Math.sqrt(1 - t * t);
+  return inProfile(PC[0] + (x - PC[0]) / f, PC[1] + (y - PC[1]) / f);
+}
+// The outer surface at (x, y) on side s: march outward from just off the midline.
+function surfaceZ(x, y, s) { let lo = GAP + .005, hi = FLAT + DOME; if (!inHemi(x, y, s * lo, s)) return s * lo; for (let i = 0; i < 16; i++) { const m = (lo + hi) / 2; if (inHemi(x, y, s * m, s)) lo = m; else hi = m; } return s * lo; }
+const inCbl = (x, y, z) => ((x - CBL.x) / CBL.rx) ** 2 + ((y - CBL.y) / CBL.ry) ** 2 + (z / CBL.rz) ** 2 <= 1;
+const inStem = (x, y) => { if (y < STEM.y0 || y > STEM.y1) return false; const t = (y - STEM.y0) / (STEM.y1 - STEM.y0); return Math.abs(x - (STEM.x0 + (STEM.x1 - STEM.x0) * t)) <= STEM.r; };
+const inEllipse = (x, y, cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+
+// Regions: where each area's neurons live (tested on the side profile).
+const REGIONS = [
+  { key: 'frontal', name: 'Frontal lobe', color: '#ff9a62', areas: ['Work'], test: (x, y) => inProfile(x, y) && x < -.18 && y < .20, label: [-.72, -.32] },
+  { key: 'parietal', name: 'Parietal lobe', color: '#ffd166', areas: ['Projects'], test: (x, y) => inProfile(x, y) && x >= -.10 && x < .62 && y < -.12, label: [.26, -.58] },
+  { key: 'temporal', name: 'Temporal lobe', color: '#ff6f9c', areas: ['People', 'Orgs', 'Meetings'], test: (x, y) => inProfile(x, y) && y > .14 && x > -.60 && x < .50, label: [-.12, .34] },
+  { key: 'occipital', name: 'Occipital lobe', color: '#7cd3ff', areas: ['Library', 'Topics', 'White Papers'], test: (x, y) => inProfile(x, y) && x >= .66 && y < .30, label: [.92, -.10] },
+  { key: 'cerebellum', name: 'Cerebellum', color: '#b394ff', areas: ['Training'], test: (x, y) => inEllipse(x, y, CBL.x, CBL.y, CBL.rx, CBL.ry) && !inProfile(x, y) && !inStem(x, y), label: [.88, .62] },
+  { key: 'limbic', name: 'Limbic system', color: '#78f0b4', areas: ['Personal'], test: (x, y) => inEllipse(x, y, .10, -.02, .30, .12) && inProfile(x, y), label: [.10, -.02] },
+  { key: 'core', name: 'Brain stem', color: '#f2ece8', areas: ['Index'], test: (x, y) => inStem(x, y), label: [.41, .86] },
+];
+const regionOfArea = a => REGIONS.find(r => r.areas.includes(a)) || REGIONS[1];   // unknown areas → parietal
+
+// ---------- layout: place each neuron in its region on the side profile, relax, then give it depth ----------
+const deg = new Array(N).fill(0), adj = nodes.map(() => []);
+edges.forEach(([a, b], e) => { deg[a]++; deg[b]++; adj[a].push({ j: b, e }); adj[b].push({ j: a, e }); });
+const P2 = nodes.map((n, idx) => {
+  const r = regionOfArea(n.area);
+  n.region = r; n.r = 1.6 + Math.sqrt(deg[idx]) * .85;
+  for (let k = 0; k < 4000; k++) { const x = -1.2 + rand() * 2.4, y = -.9 + rand() * 1.95; if (r.test(x, y)) return [x, y]; }
+  return [0, 0];
+});
+for (let it = 0; it < 70; it++) {
+  const F = P2.map(() => [0, 0]), cool = 1 - it / 70;
+  for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+    const dx = P2[i][0] - P2[j][0], dy = P2[i][1] - P2[j][1], d2 = dx * dx + dy * dy + 1e-4;
+    if (d2 > .09) continue;
+    const f = .00012 / d2; F[i][0] += dx * f; F[i][1] += dy * f; F[j][0] -= dx * f; F[j][1] -= dy * f;
+  }
+  for (const [a, b] of edges) {
+    if (nodes[a].region !== nodes[b].region) continue;
+    const dx = P2[b][0] - P2[a][0], dy = P2[b][1] - P2[a][1];
+    F[a][0] += dx * .01; F[a][1] += dy * .01; F[b][0] -= dx * .01; F[b][1] -= dy * .01;
+  }
+  for (let i = 0; i < N; i++) {
+    const m = Math.hypot(F[i][0], F[i][1]), lim = .03 * cool, s = m > lim ? lim / m : 1;
+    const nx = P2[i][0] + F[i][0] * s, ny = P2[i][1] + F[i][1] * s;
+    if (nodes[i].region.test(nx, ny)) P2[i] = [nx, ny];
+  }
+}
+const P = P2.map(([x, y], i) => {                                    // depth: inside a hemisphere, or near the midline
+  const key = nodes[i].region.key, side = rand() < .5 ? -1 : 1;
+  let z;
+  if (key === 'cerebellum') { const q = 1 - ((x - CBL.x) / CBL.rx) ** 2 - ((y - CBL.y) / CBL.ry) ** 2; z = (rand() * 2 - 1) * CBL.rz * Math.sqrt(Math.max(q, .05)) * .8; }
+  else if (key === 'core') z = (rand() * 2 - 1) * .06;
+  else if (key === 'limbic') z = side * (.04 + rand() * .14);
+  else { const out = Math.abs(surfaceZ(x, y, side)); z = side * (GAP + .04 + rand() * Math.max(.02, out * .88 - GAP - .04)); }
+  return [x, y, z];
+});
+const CTRL = edges.map(([a, b]) => {                                 // each link bends a little, like a dendrite
+  const A = P[a], B = P[b], len = Math.hypot(B[0] - A[0], B[1] - A[1], B[2] - A[2]);
+  return [0, 1, 2].map(k => (A[k] + B[k]) / 2 + (rand() - .5) * .45 * len);
+});
+const LEN = edges.map(([a, b], e) => Math.hypot(...[0, 1, 2].map(k => P[a][k] - CTRL[e][k])) + Math.hypot(...[0, 1, 2].map(k => P[b][k] - CTRL[e][k])));
+
+// ---------- tissue model: surface samples (for the outline) and fold curves (lying on the surface) ----------
+const tr = seeded('folds:' + DATA.vault);
+const norm = v => { const m = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / m, v[1] / m, v[2] / m]; };
+function raycast(C, d, test) {                                       // last inside point along C + t*d
+  let lo = 0, hi = 1.7;
+  for (let i = 0; i < 16; i++) { const m = (lo + hi) / 2; if (test(C[0] + d[0] * m, C[1] + d[1] * m, C[2] + d[2] * m)) lo = m; else hi = m; }
+  return [C[0] + d[0] * lo, C[1] + d[1] * lo, C[2] + d[2] * lo];
+}
+// Surface normal from the shape itself: a central-difference gradient of the inside test, blurred over a
+// small neighbourhood (the test is binary, so a single difference would be too coarse).
+function hemiNormal(p, s) {
+  if (Math.abs(p[2]) < GAP + .02) return [0, 0, -s];
+  const h = .05, g = [0, 0, 0];
+  for (const [dx, dy, dz] of [[h, 0, 0], [0, h, 0], [0, 0, h], [h, h, 0], [h, 0, h], [0, h, h], [h, -h, 0], [h, 0, -h], [0, h, -h]]) {
+    const out = (inHemi(p[0] + dx, p[1] + dy, p[2] + dz, s) ? 0 : 1) - (inHemi(p[0] - dx, p[1] - dy, p[2] - dz, s) ? 0 : 1);
+    g[0] += out * dx; g[1] += out * dy; g[2] += out * dz;
+  }
+  const n = norm(g);
+  return (n[0] || n[1] || n[2]) ? n : norm([p[0] - PC[0], p[1] - PC[1], p[2]]);
+}
+function fib(n) { const out = [], g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = 1 - 2 * (i + .5) / n, r = Math.sqrt(1 - y * y); out.push([Math.cos(g * i) * r, y, Math.sin(g * i) * r]); } return out; }
+// gyri: fold lines follow one smooth flow field over the surface, so neighbours meander together
+const flow = p => 2.1 * Math.sin(p[0] * 3.3 + 1.4 * Math.cos(p[1] * 4.6 + p[2] * 2)) + 1.6 * Math.cos(p[1] * 3.9 - p[0] * 2.4 + p[2] * 3.1) + .8 * Math.sin((p[0] + p[1] - p[2]) * 7.1);
+
+const PARTS = [];
+for (const s of [-1, 1]) {
+  const C = [-.02, -.12, s * .2], test = (x, y, z) => inHemi(x, y, z, s);
+  const shell = fib(900).map(d => raycast(C, d, test));
+  const folds = [];
+  for (let c = 0; c < 300; c++) {
+    let d = norm([tr() * 2 - 1, tr() * 2 - 1, (tr() * 2 - 1) + s * .6]);
+    const pts = [], steps = 6 + Math.floor(tr() * 14), dir = tr() < .5 ? 1 : -1;
+    for (let k = 0; k < steps; k++) {
+      const p = raycast(C, d, test);
+      if (Math.abs(p[2]) < GAP + .03) break;                            // skip the hidden midline face
+      pts.push(p);
+      const e1 = norm([d[1], -d[0], 0]), e2 = [d[1] * e1[2] - d[2] * e1[1], d[2] * e1[0] - d[0] * e1[2], d[0] * e1[1] - d[1] * e1[0]];
+      const a = flow(p) + (tr() - .5) * .25, st = .045 * dir;
+      d = norm([d[0] + (e1[0] * Math.cos(a) + e2[0] * Math.sin(a)) * st, d[1] + (e1[1] * Math.cos(a) + e2[1] * Math.sin(a)) * st, d[2] + (e1[2] * Math.cos(a) + e2[2] * Math.sin(a)) * st]);
+    }
+    if (pts.length >= 3) folds.push({ pts, w: 2 + tr() * 2.2 });
+  }
+  for (const f of [LATERAL_FISSURE, CENTRAL_SULCUS]) {                   // the two big landmarks, on the outer face
+    const pts = []; for (let i = 0; i < f.length - 1; i++) for (let t = 0; t < 1; t += .2) {
+      const x = f[i][0] + (f[i + 1][0] - f[i][0]) * t, y = f[i][1] + (f[i + 1][1] - f[i][1]) * t; pts.push([x, y, surfaceZ(x, y, s)]); }
+    folds.push({ pts, w: 5 });
+  }
+  folds.forEach(f => f.n = f.pts.map(p => hemiNormal(p, s)));
+  PARTS.push({ key: s < 0 ? 'left' : 'right', shell, folds, center: [.02, -.1, s * .4], normal: p => hemiNormal(p, s),
+    // two hulls (upper cerebrum + temporal lobe) keep the notch under the frontal lobe
+    groups: [p => p[1] < .24, p => p[1] > .02 && p[0] > -.72 && p[0] < .62],
+    colors: ['#c3ceda', '#5f6d7e', '#121820'] });
+}
+{
+  const shell = fib(420).map(d => [CBL.x + d[0] * CBL.rx, CBL.y + d[1] * CBL.ry, d[2] * CBL.rz]);
+  const folds = [];
+  for (let i = -9; i <= 9; i++) {                                        // folia: tight parallel bands
+    const dy = i / 10, f = Math.sqrt(1 - dy * dy), pts = [];
+    for (let a = 0; a <= 48; a++) { const t = a / 48 * Math.PI * 2; pts.push([CBL.x + CBL.rx * f * Math.cos(t), CBL.y + CBL.ry * dy, CBL.rz * f * Math.sin(t)]); }
+    folds.push({ pts, w: 1.8 });
+  }
+  const normal = p => norm([(p[0] - CBL.x) / CBL.rx ** 2, (p[1] - CBL.y) / CBL.ry ** 2, p[2] / CBL.rz ** 2]);
+  folds.forEach(f => f.n = f.pts.map(normal));
+  PARTS.push({ key: 'cerebellum', shell, folds, center: [CBL.x, CBL.y, 0], normal, groups: [() => true], colors: ['#a3b0be', '#4a5666', '#0f141b'] });
+}
+{
+  const shell = [], folds = [];
+  for (let i = 0; i <= 8; i++) for (let a = 0; a < 20; a++) {
+    const t = i / 8, x = STEM.x0 + (STEM.x1 - STEM.x0) * t, y = STEM.y0 + (STEM.y1 - STEM.y0) * t, ang = a / 20 * Math.PI * 2;
+    shell.push([x + Math.cos(ang) * STEM.r, y, Math.sin(ang) * STEM.r]);
+  }
+  for (let a = 0; a < 8; a++) { const ang = a / 8 * Math.PI * 2, pts = []; for (let i = 0; i <= 8; i++) { const t = i / 8; pts.push([STEM.x0 + (STEM.x1 - STEM.x0) * t + Math.cos(ang) * STEM.r, STEM.y0 + (STEM.y1 - STEM.y0) * t, Math.sin(ang) * STEM.r]); } folds.push({ pts, w: 1.4 }); }
+  for (let i = 1; i < 8; i++) {                                          // ring segments, like a cable spine
+    const t = i / 8, pts = [];
+    for (let a = 0; a <= 24; a++) { const ang = a / 24 * Math.PI * 2; pts.push([STEM.x0 + (STEM.x1 - STEM.x0) * t + Math.cos(ang) * STEM.r, STEM.y0 + (STEM.y1 - STEM.y0) * t, Math.sin(ang) * STEM.r]); }
+    folds.push({ pts, w: 1.4, ring: true });
+  }
+  const normal = p => norm([p[0] - STEM.x0, 0, p[2]]);
+  folds.forEach(f => f.n = f.pts.map(normal));
+  PARTS.push({ key: 'stem', shell, folds, center: [.41, .72, 0], normal, groups: [() => true], colors: ['#8e9aa8', '#3f4a58', '#0d1117'] });
+}
+
+// ---------- camera ----------
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d', { alpha: false, desynchronized: true });
+let W = 0, H = 0, dpr = 1, quality = 1;
+const CAM = 3.6, PIVOT = [.02, .08, 0];
+const view = { k: 1, fitK: 1, yaw: .55, pitch: .16, auto: true, resumeAt: 0 };
+let cyw = 1, syw = 0, cpt = 1, spt = 0;
+const setRot = () => { cyw = Math.cos(view.yaw); syw = Math.sin(view.yaw); cpt = Math.cos(view.pitch); spt = Math.sin(view.pitch); };
+// rotate (yaw about y, then pitch about x) around the pivot; returns camera-space [x, y, z] (z > 0 is away from you)
+function rot(p, out, translate = true) {
+  const x = p[0] - (translate ? PIVOT[0] : 0), y = p[1] - (translate ? PIVOT[1] : 0), z = p[2] - (translate ? PIVOT[2] : 0);
+  const x1 = x * cyw + z * syw, z1 = -x * syw + z * cyw;
+  out[0] = x1; out[1] = y * cpt - z1 * spt; out[2] = y * spt + z1 * cpt; return out;
+}
+const scaleAt = z => view.k * CAM / (CAM + z);
+const R = [0, 0, 0], RN = [0, 0, 0];
+function project(p, out) { rot(p, R); const s = scaleAt(R[2]); out[0] = W / 2 + R[0] * s; out[1] = H / 2 + R[1] * s; out[2] = R[2]; out[3] = s; return out; }
+
+function fit() { view.fitK = view.k = Math.min(W / 2.9, H / 2.5); }
+function resize() {
+  dpr = Math.min(1.5, window.devicePixelRatio || 1) * quality;
+  const first = !W; W = innerWidth; H = innerHeight;
+  if (first) fit(); else { const z = view.k / view.fitK; view.fitK = Math.min(W / 2.9, H / 2.5); view.k = view.fitK * z; }
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  buildBackground();
+}
+let bgCv = null;                                                       // dark lab background: vignette and a faint engineering grid, drawn once
+function buildBackground() {
+  bgCv = document.createElement('canvas'); bgCv.width = cv.width; bgCv.height = cv.height;
+  const g = bgCv.getContext('2d'), grd = g.createRadialGradient(bgCv.width / 2, bgCv.height * .48, 0, bgCv.width / 2, bgCv.height * .48, Math.max(bgCv.width, bgCv.height) * .75);
+  grd.addColorStop(0, '#0f1823'); grd.addColorStop(1, '#05080c');
+  g.fillStyle = grd; g.fillRect(0, 0, bgCv.width, bgCv.height);
+  const step = Math.round(36 * dpr), cx = bgCv.width / 2, cy = bgCv.height * .48, far = Math.max(bgCv.width, bgCv.height) * .6;
+  for (const [w, a, every] of [[1, .035, 1], [1, .07, 4]]) {
+    g.beginPath();
+    for (let x = cx % (step * every); x < bgCv.width; x += step * every) { g.moveTo(x + .5, 0); g.lineTo(x + .5, bgCv.height); }
+    for (let y = cy % (step * every); y < bgCv.height; y += step * every) { g.moveTo(0, y + .5); g.lineTo(bgCv.width, y + .5); }
+    g.lineWidth = w; g.strokeStyle = `rgba(94,200,255,${a})`; g.stroke();
+  }
+  const fade = g.createRadialGradient(cx, cy, far * .25, cx, cy, far * 1.2);    // grid fades out toward the edges
+  fade.addColorStop(0, 'rgba(5,8,12,0)'); fade.addColorStop(1, 'rgba(5,8,12,.92)');
+  g.fillStyle = fade; g.fillRect(0, 0, bgCv.width, bgCv.height);
+}
+
+// Convex hull (monotone chain) of projected points.
+function hull(pts) {
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const p of pts) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  up.pop(); lo.pop(); return lo.concat(up);
+}
+const LIGHT = norm([-.45, -.6, -.66]);                                 // from upper left, towards you
+
+// Glow sprites, one per colour: cheap to stamp, no full-screen blending.
+const sprites = {};
+function sprite(col) {
+  if (sprites[col]) return sprites[col];
+  const s = document.createElement('canvas'); s.width = s.height = 64;
+  const g = s.getContext('2d'), grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, col); grd.addColorStop(.25, col + 'aa'); grd.addColorStop(1, col + '00');
+  g.fillStyle = grd; g.fillRect(0, 0, 64, 64);
+  return (sprites[col] = s);
+}
+
+// ---------- firing ----------
+const flash = new Float32Array(N);
+let pulses = [], rate = 5, paused = matchMedia('(prefers-reduced-motion: reduce)').matches, fireClock = 0;
+const MAX_PULSES = 170;
+function fire(i, gen = 0, branches = gen ? 3 : 5) {
+  flash[i] = 1;
+  const out = adj[i].slice();
+  for (let k = out.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [out[k], out[j]] = [out[j], out[k]]; }
+  for (const { j, e } of out.slice(0, branches)) {
+    if (pulses.length >= MAX_PULSES) break;
+    pulses.push({ e, from: i, to: j, t: 0, v: (.9 + Math.random() * .5) / Math.max(.05, LEN[e]), gen });
+  }
+}
+function pointOn(p, t) {
+  const A = P[p.from], B = P[p.to], C = CTRL[p.e], u = 1 - t, a = u * u, b = 2 * u * t, c = t * t;
+  return [a * A[0] + b * C[0] + c * B[0], a * A[1] + b * C[1] + c * B[1], a * A[2] + b * C[2] + c * B[2]];
+}
+// scanner: a ring sweeps down through the brain every few seconds, waking the neurons it passes
+const SCAN = { top: -.95, bottom: 1.08, period: 6.5, rx: 1.3, rz: .82 };
+let scanT = 0, scanY = SCAN.top, scanGlow = 0;
+const weighted = (() => { const w = []; nodes.forEach((n, i) => { for (let k = 0; k < 1 + Math.min(deg[i], 12); k++) w.push(i); }); return w; })();
+function step(dt, now) {
+  if (view.auto && !drag && hover < 0 && now >= view.resumeAt) view.yaw += dt * .16;
+  if (!paused) {
+    fireClock += dt * rate;
+    while (fireClock >= 1) { fireClock -= 1; if (weighted.length) fire(weighted[Math.floor(Math.random() * weighted.length)]); }
+  }
+  for (let i = 0; i < N; i++) if (flash[i] > 0) flash[i] = Math.max(0, flash[i] - dt * 1.6);
+  if (!paused) {
+    scanT = (scanT + dt / SCAN.period) % 1;
+    scanY = SCAN.top + (SCAN.bottom - SCAN.top) * scanT;
+    scanGlow = Math.sin(scanT * Math.PI);
+    for (let i = 0; i < N; i++) if (Math.abs(P[i][1] - scanY) < .03) flash[i] = Math.max(flash[i], .32);
+  }
+  const current = pulses; pulses = [];
+  for (const p of current) {
+    p.t += p.v * dt;
+    if (p.t < 1) { pulses.push(p); continue; }
+    flash[p.to] = Math.max(flash[p.to], .85);
+    if (p.gen < 3 && Math.random() < .42) fire(p.to, p.gen + 1, 2);
+  }
+}
+
+// ---------- drawing ----------
+const SX = new Float32Array(N), SY = new Float32Array(N), SZ = new Float32Array(N), SS = new Float32Array(N);
+const CX = new Float32Array(edges.length), CY = new Float32Array(edges.length);
+let hover = -1, matches = null;
+const tmp = [0, 0, 0, 0];
+
+function drawPart(part, alpha, rs) {
+  // outline: hull(s) of the projected surface samples, shaded from the light's side
+  const proj = part.shell.map(p => { project(p, tmp); return [tmp[0], tmp[1], p]; });
+  project(part.center, tmp);
+  const cx = tmp[0], cy = tmp[1];
+  let rad = 1; for (const q of proj) rad = Math.max(rad, Math.hypot(q[0] - cx, q[1] - cy));
+  const path = new Path2D();
+  for (const g of part.groups) {
+    const h = hull(proj.filter(q => g(q[2])).map(q => [q[0], q[1]]));
+    if (h.length < 3) continue;
+    path.moveTo(h[0][0], h[0][1]); for (let i = 1; i < h.length; i++) path.lineTo(h[i][0], h[i][1]); path.closePath();
+  }
+  // brushed alloy: a hard specular hotspot towards the light, falling off to gunmetal at the rim
+  const grd = ctx.createRadialGradient(cx - rad * .38, cy - rad * .45, rad * .02, cx, cy, rad * 1.08);
+  grd.addColorStop(0, '#f4f8fc'); grd.addColorStop(.14, part.colors[0]); grd.addColorStop(.58, part.colors[1]); grd.addColorStop(1, part.colors[2]);
+  ctx.globalAlpha = alpha; ctx.fillStyle = grd; ctx.fill(path);
+  // folds, only the stretches facing you: each gyrus is a panel seam with a glowing circuit trace beside it,
+  // ending in a solder pad (via)
+  const groove = new Path2D(), trace = new Path2D(), vias = new Path2D();
+  const via = (x, y) => { const r = 1.6 * rs; vias.moveTo(x + r, y); vias.arc(x, y, r, 0, Math.PI * 2); };
+  for (const f of part.folds) {
+    let pen = false, lx = 0, ly = 0;
+    for (let i = 0; i < f.pts.length; i++) {
+      rot(f.n[i], RN, false);
+      if (RN[2] > -.05) { if (pen && !f.ring) via(lx, ly); pen = false; continue; }   // facing away: hidden behind the shell
+      project(f.pts[i], tmp);
+      if (!pen) { groove.moveTo(tmp[0], tmp[1]); trace.moveTo(tmp[0] - 1.4, tmp[1] - 1.4); if (!f.ring && f.w < 5) via(tmp[0] - 1.4, tmp[1] - 1.4); pen = true; }
+      else { groove.lineTo(tmp[0], tmp[1]); trace.lineTo(tmp[0] - 1.4, tmp[1] - 1.4); }
+      lx = tmp[0] - 1.4; ly = tmp[1] - 1.4;
+    }
+    if (pen && !f.ring && f.w < 5) via(lx, ly);
+  }
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(3,7,12,.62)'; ctx.lineWidth = 2.2 * rs; ctx.stroke(groove);
+  ctx.globalAlpha = alpha * (.55 + .25 * scanGlow); ctx.strokeStyle = '#5ee6ff'; ctx.lineWidth = .9; ctx.stroke(trace);
+  ctx.fillStyle = '#9ff1ff'; ctx.fill(vias);
+  ctx.globalAlpha = .7; ctx.strokeStyle = 'rgba(94,230,255,.45)'; ctx.lineWidth = 1.2; ctx.stroke(path);   // cyan rim light
+  ctx.globalAlpha = 1;
+}
+
+function draw() {
+  if (!cv.width || !cv.height) { if (innerWidth && innerHeight) resize(); return; }   // hidden pane: nothing to draw yet
+  setRot();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'copy'; ctx.drawImage(bgCv, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const zoom = view.k / view.fitK, rs = Math.min(2.2, Math.max(.8, Math.sqrt(zoom)));
+  for (let i = 0; i < N; i++) { project(P[i], tmp); SX[i] = tmp[0]; SY[i] = tmp[1]; SZ[i] = tmp[2]; SS[i] = tmp[3] / view.k; }
+  for (let e = 0; e < edges.length; e++) { project(CTRL[e], tmp); CX[e] = tmp[0]; CY[e] = tmp[1]; }
+
+  // tissue, back to front; the nearest hemisphere is translucent so the firing inside shows through
+  const order = PARTS.map(p => ({ p, z: rot(p.center, [0, 0, 0])[2] })).sort((a, b) => b.z - a.z);
+  const nearestHemi = order.filter(o => o.p.key === 'left' || o.p.key === 'right').pop().p;
+  for (const { p } of order) drawPart(p, p === nearestHemi ? .62 : .96, rs);
+
+  // scanner ring: the front half bright, the back half faint
+  if (!paused) {
+    const back = new Path2D(), front = new Path2D(), q = [0, 0, 0, 0];
+    let prevFront = null;
+    for (let a = 0; a <= 64; a++) {
+      const t = a / 64 * Math.PI * 2;
+      project([PIVOT[0] + Math.cos(t) * SCAN.rx, scanY, Math.sin(t) * SCAN.rz], q);
+      const isFront = q[2] < 0, path = isFront ? front : back;
+      if (isFront !== prevFront) path.moveTo(q[0], q[1]); else path.lineTo(q[0], q[1]);
+      prevFront = isFront;
+    }
+    const a = .25 + .45 * scanGlow;
+    ctx.lineWidth = 1; ctx.strokeStyle = '#5ee6ff';
+    ctx.globalAlpha = a * .35; ctx.stroke(back);
+    ctx.globalAlpha = a; ctx.lineWidth = 1.5; ctx.stroke(front);
+    ctx.globalAlpha = 1;
+  }
+
+  // synapses (links), batched by colour
+  ctx.lineWidth = .7; ctx.globalAlpha = .28;
+  for (const r of REGIONS) {
+    ctx.strokeStyle = r.color; ctx.beginPath();
+    for (let e = 0; e < edges.length; e++) {
+      const [a, b] = edges[e]; if (nodes[a].region !== r) continue;
+      ctx.moveTo(SX[a], SY[a]); ctx.quadraticCurveTo(CX[e], CY[e], SX[b], SY[b]);
+    }
+    ctx.stroke();
+  }
+  if (hover >= 0) {
+    ctx.lineWidth = 1.4; ctx.strokeStyle = nodes[hover].region.color; ctx.globalAlpha = .85; ctx.beginPath();
+    for (const { e } of adj[hover]) { const [a, b] = edges[e]; ctx.moveTo(SX[a], SY[a]); ctx.quadraticCurveTo(CX[e], CY[e], SX[b], SY[b]); }
+    ctx.stroke();
+  }
+  // neuron bodies: nearer ones brighter and larger
+  for (const r of REGIONS) {
+    ctx.fillStyle = r.color;
+    for (const band of [0, 1, 2]) {
+      ctx.globalAlpha = (matches ? .22 : 1) * [.38, .66, .95][band]; ctx.beginPath();
+      for (let i = 0; i < N; i++) {
+        if (nodes[i].region !== r || (matches && matches.has(i))) continue;
+        const b = SZ[i] > .25 ? 0 : SZ[i] > -.25 ? 1 : 2; if (b !== band) continue;
+        const rr = nodes[i].r * rs * SS[i]; ctx.moveTo(SX[i] + rr, SY[i]); ctx.arc(SX[i], SY[i], rr, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  // glows: firing neurons, search matches, and impulses travelling along the synapses
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < N; i++) {
+    const f = Math.max(flash[i], matches && matches.has(i) ? .55 : 0, i === hover ? .7 : 0);
+    if (f < .03) continue;
+    const s = nodes[i].r * rs * SS[i] * (5 + 7 * f);
+    ctx.globalAlpha = Math.min(1, f + .15); ctx.drawImage(sprite(nodes[i].region.color), SX[i] - s / 2, SY[i] - s / 2, s, s);
+    ctx.globalAlpha = Math.min(1, f * 1.2); ctx.drawImage(sprite('#ffffff'), SX[i] - s / 6, SY[i] - s / 6, s / 3, s / 3);
+  }
+  ctx.lineCap = 'round';
+  const a1 = [0, 0, 0, 0], a2 = [0, 0, 0, 0];
+  for (const p of pulses) {
+    const col = nodes[p.from].region.color;
+    project(pointOn(p, p.t), tmp); project(pointOn(p, Math.max(0, p.t - .06)), a1); project(pointOn(p, Math.max(0, p.t - .13)), a2);
+    const sc = tmp[3] / view.k;
+    ctx.globalAlpha = .55; ctx.strokeStyle = col; ctx.lineWidth = 1.6 * rs * sc; ctx.beginPath();
+    ctx.moveTo(a2[0], a2[1]); ctx.lineTo(a1[0], a1[1]); ctx.lineTo(tmp[0], tmp[1]); ctx.stroke();
+    const s = 10 * rs * sc; ctx.globalAlpha = .95; ctx.drawImage(sprite(col), tmp[0] - s / 2, tmp[1] - s / 2, s, s);
+    ctx.drawImage(sprite('#ffffff'), tmp[0] - s / 6, tmp[1] - s / 6, s / 3, s / 3);
+  }
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  // region names, on whichever side faces you
+  ctx.font = '600 10px ui-monospace, Consolas, monospace'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(150,235,255,.5)';
+  for (const r of REGIONS) {
+    const [x, y] = r.label;
+    const zs = r.key === 'cerebellum' ? [-CBL.rz * .9, CBL.rz * .9] : r.key === 'core' ? [-STEM.r, STEM.r] : r.key === 'limbic' ? [0, 0] : [-1, 1].map(s => surfaceZ(x, y, s));
+    const near = zs.map(z => project([x, y, z], [0, 0, 0, 0])).sort((a, b) => a[2] - b[2])[0];
+    ctx.fillText(r.name.toUpperCase(), near[0], near[1]);
+  }
+  // labels: matches, the hovered neuron, and big hubs once you zoom in
+  ctx.font = '12px system-ui, sans-serif'; ctx.fillStyle = '#f4ecef';
+  const label = (i, a) => { ctx.globalAlpha = a; ctx.fillText(nodes[i].title.slice(0, 42), SX[i], SY[i] - nodes[i].r * rs * SS[i] - 6); };
+  if (matches && matches.size <= 30) for (const i of matches) label(i, .95);
+  else if (zoom > 1.6) for (let i = 0; i < N; i++) if (deg[i] >= 12 / Math.min(zoom, 4) + 4 && SZ[i] < .1) label(i, .7);
+  if (hover >= 0) label(hover, 1);
+  ctx.globalAlpha = 1;
+}
+
+// ---------- adaptive quality + loop ----------
+const fpsEl = document.getElementById('fps');
+let last = performance.now(), frames = 0, acc = 0, slow = 0, fast = 0;
+function loop(now) {
+  const dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now;
+  step(dt, now); draw();
+  frames++; acc += dt;
+  if (acc >= 1) {
+    const fps = frames / acc; frames = 0; acc = 0;
+    fpsEl.textContent = `${fps.toFixed(0)} fps · ${Math.round(quality * 100)}% · ${pulses.length} impulses`;
+    if (fps < 38) { slow++; fast = 0; } else if (fps > 57) { fast++; slow = 0; } else { slow = fast = 0; }
+    if (slow >= 2 && quality > .55) { quality = Math.max(.55, quality - .15); slow = 0; resize(); }
+    else if (fast >= 6 && quality < 1) { quality = Math.min(1, quality + .15); fast = 0; resize(); }
+  }
+  requestAnimationFrame(loop);
+}
+
+// ---------- interaction ----------
+const tip = document.getElementById('tip');
+function pick(mx, my) {
+  let best = -1, bd = 14 * 14, bz = 9;
+  for (let i = 0; i < N; i++) {
+    const dx = SX[i] - mx, dy = SY[i] - my, d = dx * dx + dy * dy;
+    if (d < bd || (d < 14 * 14 && Math.abs(d - bd) < 20 && SZ[i] < bz)) { bd = d; best = i; bz = SZ[i]; }   // prefer the nearer of overlapping neurons
+  }
+  return best;
+}
+function showTip(i, mx, my) {
+  if (i < 0) { tip.style.display = 'none'; return; }
+  const n = nodes[i];
+  tip.replaceChildren();
+  const b = document.createElement('b'); b.textContent = n.title;
+  const em = document.createElement('em'); em.textContent = `${n.region.name} · ${n.area} · ${deg[i]} synapse${deg[i] === 1 ? '' : 's'}`;
+  tip.append(b, em);
+  if (n.summary) { const d = document.createElement('div'); d.textContent = n.summary; tip.append(d); }
+  tip.style.display = 'block';
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(innerWidth - r.width - 10, mx + 16) + 'px';
+  tip.style.top = Math.min(innerHeight - r.height - 10, my + 14) + 'px';
+}
+let drag = null, moved = false;
+const openNote = i => { fire(i, 0, 8); if (window.parent !== window) window.parent.postMessage({ type: 'sb-open', id: nodes[i].id }, '*'); };
+cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch }; moved = false; cv.setPointerCapture(e.pointerId); cv.classList.add('drag'); });
+cv.addEventListener('pointermove', e => {
+  if (drag) {
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+    if (moved) {
+      view.yaw = drag.yaw + dx * .008;
+      view.pitch = Math.max(-1.2, Math.min(1.2, drag.pitch - dy * .006));
+      showTip(-1); hover = -1; return;
+    }
+  }
+  hover = pick(e.clientX, e.clientY); showTip(hover, e.clientX, e.clientY);
+});
+cv.addEventListener('pointerup', e => {
+  cv.classList.remove('drag');
+  if (drag && !moved) { const i = pick(e.clientX, e.clientY); if (i >= 0) openNote(i); }
+  if (drag && moved) view.resumeAt = performance.now() + 2500;           // let you look before it turns again
+  drag = null;
+});
+cv.addEventListener('pointerleave', () => { hover = -1; showTip(-1); });
+cv.addEventListener('wheel', e => { e.preventDefault(); view.k = Math.min(view.fitK * 6, Math.max(view.fitK * .5, view.k * Math.exp(-e.deltaY * .0015))); }, { passive: false });
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === ' ') { e.preventDefault(); paused = !paused; }
+  else if (e.key === 'r' || e.key === 'R') view.auto = !view.auto;
+  else if (e.key === '+' || e.key === '=') rate = Math.min(30, rate * 1.5);
+  else if (e.key === '-' || e.key === '_') rate = Math.max(.5, rate / 1.5);
+  else if (e.key === 'f' || e.key === 'F') fpsEl.style.display = fpsEl.style.display === 'block' ? 'none' : 'block';
+  else if (e.key === '0') { fit(); view.yaw = .55; view.pitch = .16; }
+  else if (e.key === 'ArrowLeft') view.yaw -= .2;
+  else if (e.key === 'ArrowRight') view.yaw += .2;
+});
+const q = document.getElementById('q');
+q.addEventListener('input', () => {
+  const s = q.value.trim().toLowerCase();
+  if (!s) { matches = null; return; }
+  matches = new Set();
+  nodes.forEach((n, i) => { if ((n.title + ' ' + n.summary).toLowerCase().includes(s)) matches.add(i); });
+  for (const i of [...matches].slice(0, 12)) fire(i, 2, 2);
+});
+q.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { q.value = ''; matches = null; q.blur(); }
+  if (e.key === 'Enter' && matches && matches.size) openNote([...matches][0]);
+});
+
+const legend = document.getElementById('legend');
+for (const r of REGIONS) {
+  const members = nodes.map((n, i) => (n.region === r ? i : -1)).filter(i => i >= 0);
+  if (!members.length) continue;
+  const b = document.createElement('button'); b.title = `Fire the ${r.name.toLowerCase()}`;
+  const dot = document.createElement('i'); dot.style.background = r.color; dot.style.boxShadow = `0 0 8px ${r.color}`;
+  const name = document.createElement('b'); name.textContent = r.name;
+  const what = document.createElement('span'); what.textContent = `${r.areas.join(', ')} · ${members.length}`;
+  b.append(dot, name, what);
+  b.onclick = () => { for (const i of members.slice().sort(() => Math.random() - .5).slice(0, 14)) fire(i, 1, 3); };
+  legend.append(b);
+}
+document.getElementById('t').textContent = `${DATA.vault} · Neural Core`;
+document.getElementById('sub').textContent = `${N} neurons · ${edges.length} synapses · online`;
+
+addEventListener('resize', resize);
+resize();
+for (let i = 0; i < 6; i++) fire(weighted[Math.floor(Math.random() * weighted.length)] ?? 0);
+requestAnimationFrame(t => { last = t; loop(t); });
+</script>
+</body>
+</html>

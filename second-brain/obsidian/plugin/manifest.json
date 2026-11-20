@@ -1,0 +1,9 @@
+{
+  "id": "second-brain-galaxy",
+  "name": "Second Brain",
+  "version": "1.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Neural Brain: a rotating 3D brain of your notes with synapses firing, in a sandboxed frame (click a neuron to open its note). Also flashcard review.",
+  "author": "Second Brain",
+  "isDesktopOnly": false
+}
