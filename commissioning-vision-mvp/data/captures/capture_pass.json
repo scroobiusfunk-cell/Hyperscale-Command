@@ -1,0 +1,14 @@
+{
+  "capture_id": "CAP-0001",
+  "equip_id_tag": "EQ-MCCB-101",
+  "captured_at": "2026-11-20T14:02:11Z",
+  "evidence_photo": "photos/CAP-0001_nameplate.jpg",
+  "fields": {
+    "manufacturer": {"value": "Sq D", "confidence": 0.97},
+    "model": {"value": "LJL36225", "confidence": 0.93},
+    "voltage": {"value": "480 VAC", "confidence": 0.95},
+    "amp_rating": {"value": "225 A", "confidence": 0.96},
+    "aic_rating": {"value": "65 kA", "confidence": 0.91},
+    "poles": {"value": "3P", "confidence": 0.94}
+  }
+}

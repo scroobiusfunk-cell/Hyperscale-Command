@@ -1,0 +1,14 @@
+{
+  "capture_id": "CAP-0002",
+  "equip_id_tag": "EQ-PNL-201",
+  "captured_at": "2026-11-20T14:20:45Z",
+  "evidence_photo": "photos/CAP-0002_nameplate.jpg",
+  "fields": {
+    "manufacturer": {"value": "Eaton", "confidence": 0.98},
+    "model": {"value": "PRL2A", "confidence": 0.90},
+    "voltage": {"value": "480Y/277V", "confidence": 0.92},
+    "amp_rating": {"value": "400A", "confidence": 0.95},
+    "aic_rating": {"value": "22 kA", "confidence": 0.94},
+    "poles": {"value": "3", "confidence": 0.88}
+  }
+}

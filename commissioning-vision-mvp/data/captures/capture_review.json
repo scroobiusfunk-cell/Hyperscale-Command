@@ -1,0 +1,12 @@
+{
+  "capture_id": "CAP-0003",
+  "equip_id_tag": "EQ-XFMR-301",
+  "captured_at": "2026-11-20T14:41:03Z",
+  "evidence_photo": "photos/CAP-0003_nameplate_glare.jpg",
+  "fields": {
+    "manufacturer": {"value": "ABB", "confidence": 0.96},
+    "model": {"value": "EE-DT3-5?0K", "confidence": 0.41},
+    "voltage": {"value": "480", "confidence": 0.93},
+    "amp_rating": {"value": "600 A", "confidence": 0.90}
+  }
+}

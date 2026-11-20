@@ -1,0 +1,53 @@
+{
+  "project": "DEMO-DC-01 (hyperscale data center, Phase 1)",
+  "items": [
+    {
+      "equip_id": "EQ-MCCB-101",
+      "type": "molded_case_breaker",
+      "manufacturer": "Square D",
+      "model": "LJL36225",
+      "voltage": "480V",
+      "amp_rating": 225,
+      "aic_rating": 65,
+      "poles": 3,
+      "spec_section": "26 28 16",
+      "submittal_ref": "SUB-26-0142 Rev B"
+    },
+    {
+      "equip_id": "EQ-PNL-201",
+      "type": "panelboard",
+      "manufacturer": "Eaton",
+      "model": "PRL2A",
+      "voltage": "480Y/277V",
+      "amp_rating": 400,
+      "aic_rating": 65,
+      "poles": 3,
+      "spec_section": "26 24 16",
+      "submittal_ref": "SUB-26-0088 Rev A"
+    },
+    {
+      "equip_id": "EQ-XFMR-301",
+      "type": "dry_type_transformer",
+      "manufacturer": "ABB",
+      "model": "EE-DT3-500K",
+      "voltage": "480V",
+      "amp_rating": 600,
+      "aic_rating": null,
+      "poles": null,
+      "spec_section": "26 22 13",
+      "submittal_ref": "SUB-26-0061 Rev C"
+    },
+    {
+      "equip_id": "EQ-DISC-401",
+      "type": "disconnect_switch",
+      "manufacturer": "Eaton",
+      "model": "DH364UGK",
+      "voltage": "480V",
+      "amp_rating": 200,
+      "aic_rating": 100,
+      "poles": 3,
+      "spec_section": "26 28 16",
+      "submittal_ref": "SUB-26-0150 Rev A"
+    }
+  ]
+}
