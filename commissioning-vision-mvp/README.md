@@ -23,6 +23,27 @@ src/report.py    JSON record + Markdown inspection report
 demo.py          end-to-end run over data/captures/*.json -> out/
 ```
 
+## Capture gate
+
+`src/capture_gate.py` + `src/inspection_profile.py` sit in front of extraction so the inspector never saves an unreadable frame:
+
+```
+glasses frames -> capture gate -> capture -> extract.py -> compare -> report
+```
+
+Each live frame is scored inside a profile's reticle (`placard_large`, `nameplate_small`, `serial_tag`) for sharpness (Laplacian variance), text height in px, reticle coverage and glare. `GateStateMachine.update(frame)` returns `(state, cue)`; it auto-captures only after N *consecutive* all-pass frames (any failure resets the count) and keeps the sharpest frame of that run. `select_best_frame` picks the best still from a burst. Conservative by design: unreadable, blank or ambiguous frames never lock.
+
+**Feedback is audio/haptic, not visual** - standard Ray-Ban Meta has no in-lens display. The gate emits a `Cue` per state and the phone app turns it into sound/vibration:
+
+| State | Cue | Meaning |
+|---|---|---|
+| SEARCHING | `BEEP_SLOW` | nothing usable yet |
+| CLOSE | `BEEP_FAST` | text found, adjust distance/angle/light |
+| LOCKED | `TONE_SOLID` | hold still |
+| CAPTURED | `SHUTTER` | frame saved |
+
+The metrics are **classical numpy proxies** (no OpenCV, no ML) for what Android ML Kit on-device text recognition will report in production; thresholds are in pixels at a 960px working resolution and need field calibration. Try it: `python spike/gate_demo.py` (synthetic frames only).
+
 ## Plugging in glasses/DAT camera and a real vision API
 
 Both are swappable adapters at the `Extractor` seam in `src/extract.py`; `compare` and `report` do not change.
@@ -37,7 +58,7 @@ python demo.py          # prints summary table, writes out/*.md and out/*.json
 python -m pytest -q     # needs pytest
 ```
 
-Standard library only; no network, no API keys.
+Core demo is standard library only; the capture gate needs `numpy` and `Pillow`. No network, no API keys.
 
 ## Limitations & not yet built
 
